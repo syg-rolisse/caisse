@@ -1,0 +1,11 @@
+{
+  "extends": "@adonisjs/tsconfig/tsconfig.app.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "./build",
+    "baseUrl": ".", // Définit la racine des chemins relatifs (la racine du projet)
+    "paths": {
+      "#ressources/*": ["./app/ressources/*.js"] // Ajout de l'alias
+    }
+  }
+}

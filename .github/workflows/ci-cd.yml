@@ -1,0 +1,181 @@
+name: caisse CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      # - name: 🛠️ Checkout du code
+      #   uses: actions/checkout@v4 && sudo apt-get install -y docker-compose
+
+      - name: 📦 update des packages
+        run: sudo apt-get update
+
+  deploy-apis:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛠️ Checkout du code
+        uses: actions/checkout@v4
+
+      # Cache des dépendances Backend
+      - name: 🚚 Restaurer le cache des dépendances Backend
+        uses: actions/cache@v3
+        with:
+          path: ./apis/node_modules
+          key: ${{ runner.os }}-backend-node-modules-${{ hashFiles('**/apis/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-node-modules-
+
+      - name: 📦 Installer les dépendances Backend
+        working-directory: ./apis
+        run: npm install
+
+        # Connexion au VPS et préparation du répertoire
+      - name: 🔑 Connexion au VPS et préparation du répertoire
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            rm -rf /opt/caisse/apis/
+            mkdir -p /opt/caisse/apis/
+            echo "Répertoire /opt/caisse/apis/ prêt"
+
+      # Copier les fichiers du Backend vers le VPS (structure respectée)
+      - name: 📤 Copier les fichiers Backend sur le VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          source: "apis/*"
+          target: /opt/caisse/apis/
+          strip_components: 1
+
+      # Copier le fichier .env sur le VPS
+      - name: 📤 Copier le fichier .env sur le VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /opt/caisse/apis
+            touch .env
+            echo ${{ secrets.APIS_ENV_TZ }} >> .env
+            echo ${{ secrets.APIS_ENV_PORT }} >> .env
+            echo ${{ secrets.APIS_ENV_HOST }} >> .env
+            echo ${{ secrets.APIS_ENV_LOG_LEVEL }} >> .env
+            echo ${{ secrets.APIS_ENV_APP_KEY }} >> .env
+            echo ${{ secrets.APIS_ENV_NODE_ENV }} >> .env
+            echo ${{ secrets.APIS_ENV_DB_HOST }} >> .env
+            echo ${{ secrets.APIS_ENV_DB_PORT }} >> .env
+            echo ${{ secrets.APIS_ENV_DB_USER }} >> .env
+            echo ${{ secrets.APIS_ENV_DB_PASSWORD }} >> .env
+            echo ${{ secrets.APIS_ENV_DB_DATABASE }} >> .env
+            echo ${{ secrets.APIS_ENV_SMTP_HOST }} >> .env
+            echo ${{ secrets.APIS_ENV_SMTP_PORT }} >> .env
+            echo ${{ secrets.APIS_ENV_SMTP_USERNAME }} >> .env
+            echo ${{ secrets.APIS_ENV_SMTP_PASSWORD }} >> .env
+            echo ${{ secrets.APIS_ENV_CACHE_VIEWS }} >> .env
+            echo ${{ secrets.APIS_ENV_VITE_FRONT_URL }} >> .env
+            echo "Fichier .env copié avec succès sur le VPS"
+
+  deploy-apps:
+    needs: deploy-apis
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛠️ Checkout du code
+        uses: actions/checkout@v4
+
+      # Cache des dépendances Frontend
+      - name: 🚚 Restaurer le cache des dépendances Frontend
+        uses: actions/cache@v3
+        with:
+          path: ./apps/node_modules
+          key: ${{ runner.os }}-frontend-node-modules-${{ hashFiles('**/apps/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-node-modules-
+
+      - name: 📦 Installer les dépendances Frontend
+        working-directory: ./apps
+        run: npm install
+
+        # Connexion au VPS et préparation du répertoire
+      - name: 🔑 Connexion au VPS et préparation du répertoire
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            sudo chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }}/opt
+            rm -rf /opt/caisse/apps/
+            sudo mkdir -p /opt/caisse/apps
+            cd /opt/caisse/apps
+            touch .env
+            echo ".env ajouté"
+            echo "Répertoire /opt/caisse prêt"
+
+      - name: 📤 Copier les fichiers Frontend sur le VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          source: "apps/*"
+          target: "/opt/caisse/apps/"
+          strip_components: 1
+
+      # Copier le fichier docker-compose.yml sur le VPS
+      - name: Copy docker-compose.yml via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          source: "docker-compose.yml"
+          target: /opt/caisse/
+
+        # Copier le fichier .env sur le VPS
+      - name: 📤 Copier le fichier .env sur le VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /opt/caisse/apps
+            touch .env
+            echo ${{ secrets.APP_ENV }} >> .env
+
+      # Lancer Docker Compose et démarrer les services sur le VPS
+      - name: Deploy and start Docker services on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /opt/caisse
+            docker-compose down || true
+            docker-compose up --build -d
+            docker image prune -f
+            docker ps

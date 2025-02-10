@@ -1,0 +1,60 @@
+services:
+  audit-qcm-db:
+    image: postgres:15
+    container_name: qcm_db
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=qcm
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "qcm"]
+      interval: 30s
+      retries: 5
+      start_period: 60s
+      timeout: 30s
+    networks:
+      - qcm_network
+
+  audit-qcm-apis:
+    build:
+      context: ./apis
+      dockerfile: Dockerfile
+    container_name: qcm_apis
+    restart: "no"
+    ports:
+      - "3333:3333"
+    depends_on:
+      audit-qcm-db:
+        condition: service_healthy
+    env_file:
+      - ./apis/.env
+    networks:
+      - qcm_network
+    command:
+      ["sh", "-c", "node ace migration:run && node ace serve --watch"]
+  
+  audit-qcm-apps:
+    build:
+      context: ./apps
+      dockerfile: Dockerfile
+    container_name: qcm_apps
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - audit-qcm-apis
+    networks:
+      - qcm_network
+    command: ["npm", "run", "dev"]
+
+volumes:
+  pg_data:
+
+networks:
+  qcm_network:
+    driver: bridge
