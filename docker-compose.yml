@@ -4,7 +4,7 @@ services:
     container_name: caisse_db
     restart: always
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     env_file:
