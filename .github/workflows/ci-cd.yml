@@ -9,36 +9,99 @@ on:
       - develop
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
+  test-step:
+    runs-on: ubuntu-latest # L'environnement d'exécution
+
     steps:
-      # - name: 🛠️ Checkout du code
-      #   uses: actions/checkout@v4 && sudo apt-get install -y docker-compose
+      # 1. Cloner le dépôt
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: 📦 update des packages
-        run: sudo apt-get update
+      - name: 📤 Copier le fichier .env du back
+        run: |
+          cd /home/runner/work/caisse/caisse/apis
+          touch .env
+          echo ${{ secrets.APIS_ENV_TZ }} >> .env
+          echo ${{ secrets.APIS_ENV_PORT }} >> .env
+          echo ${{ secrets.APIS_ENV_HOST }} >> .env
+          echo ${{ secrets.APIS_ENV_LOG_LEVEL }} >> .env
+          echo ${{ secrets.APIS_ENV_APP_KEY }} >> .env
+          echo ${{ secrets.APIS_ENV_NODE_ENV }} >> .env
+          echo ${{ secrets.APIS_ENV_DB_HOST }} >> .env
+          echo ${{ secrets.APIS_ENV_DB_PORT }} >> .env
+          echo ${{ secrets.APIS_ENV_DB_USER }} >> .env
+          echo ${{ secrets.APIS_ENV_DB_PASSWORD }} >> .env
+          echo ${{ secrets.APIS_ENV_DB_DATABASE }} >> .env
+          echo ${{ secrets.APIS_ENV_SMTP_HOST }} >> .env
+          echo ${{ secrets.APIS_ENV_SMTP_PORT }} >> .env
+          echo ${{ secrets.APIS_ENV_SMTP_USERNAME }} >> .env
+          echo ${{ secrets.APIS_ENV_SMTP_PASSWORD }} >> .env
+          echo ${{ secrets.APIS_ENV_CACHE_VIEWS }} >> .env
+          echo ${{ secrets.APIS_ENV_VITE_FRONT_URL }} >> .env
+          echo "Fichier .env copié avec succès"
 
-  deploy-apis:
-    needs: setup
+      - name: 📤 Copier le fichier .env.db du back
+        run: |
+          cd /home/runner/work/caisse/caisse/apis
+          touch .env.db
+          echo ${{ secrets.POSTGRES_USER }} >> .env.db
+          echo ${{ secrets.POSTGRES_PASSWORD }} >> .env.db
+          echo ${{ secrets.POSTGRES_DB }} >> .env.db
+          echo "Fichier .env.db copié avec succès"
+
+      - name: 📤 Copier le fichier .env du front
+        run: |
+          cd /home/runner/work/caisse/caisse/apps
+          touch .env
+          echo ${{ secrets.APP_ENV }} >> .env
+          echo "Fichier .env du front copié avec succès"
+
+      # 2. Cache des dépendances Node.js (si applicable)
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/apis/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      # 3. Installer Docker et Docker Compose
+      - name: Install Docker and Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl gnupg lsb-release
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/trusted.gpg.d/docker.asc
+          echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          sudo apt-get install -y docker-compose
+          sudo usermod -aG docker $USER  # Donne les droits d'exécution à Docker
+
+      # 4. Lancer Docker Compose
+      - name: Run Docker Compose
+        run: |
+          pwd
+          ls -al
+          sudo docker volume ls
+          sudo docker-compose down || true
+          sudo docker-compose up --build -d
+          sudo docker image prune -f
+          sudo docker ps
+
+      # 5. Vérifier que tous les conteneurs sont bien up
+      - name: Verify Docker Containers
+        run: |
+          docker ps  # Affiche les conteneurs actifs et vérifie leur statut
+          docker-compose ps  # Vérifie l'état des conteneurs définis dans docker-compose.yml
+
+  qcm-apis-deploy:
+    needs: test-step
     runs-on: ubuntu-latest
     steps:
       - name: 🛠️ Checkout du code
         uses: actions/checkout@v4
 
-      # Cache des dépendances Backend
-      - name: 🚚 Restaurer le cache des dépendances Backend
-        uses: actions/cache@v3
-        with:
-          path: ./apis/node_modules
-          key: ${{ runner.os }}-backend-node-modules-${{ hashFiles('**/apis/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-backend-node-modules-
-
-      - name: 📦 Installer les dépendances Backend
-        working-directory: ./apis
-        run: npm install
-
-        # Connexion au VPS et préparation du répertoire
+      # 2. Connexion au VPS et préparation du répertoire
       - name: 🔑 Connexion au VPS et préparation du répertoire
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -51,7 +114,7 @@ jobs:
             mkdir -p /opt/caisse/apis/
             echo "Répertoire /opt/caisse/apis/ prêt"
 
-      # Copier les fichiers du Backend vers le VPS (structure respectée)
+      # 3. Copier les fichiers du Backend vers le VPS (structure respectée)
       - name: 📤 Copier les fichiers Backend sur le VPS
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -63,7 +126,7 @@ jobs:
           target: /opt/caisse/apis/
           strip_components: 1
 
-      # Copier le fichier .env sur le VPS
+      # 4. Copier le fichier .env sur le VPS
       - name: 📤 Copier le fichier .env sur le VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -91,10 +154,20 @@ jobs:
             echo ${{ secrets.APIS_ENV_SMTP_PASSWORD }} >> .env
             echo ${{ secrets.APIS_ENV_CACHE_VIEWS }} >> .env
             echo ${{ secrets.APIS_ENV_VITE_FRONT_URL }} >> .env
+            echo ${{ secrets.POSTGRES_USER }} >> .env
+            echo ${{ secrets.POSTGRES_PASSWORD }} >> .env
+            echo ${{ secrets.POSTGRES_DB }} >> .env
             echo "Fichier .env copié avec succès sur le VPS"
+            echo "copie du .env.db"
+            cd /opt/caisse/apis
+            touch .env.db
+            echo ${{ secrets.POSTGRES_USER }} >> .env.db
+            echo ${{ secrets.POSTGRES_PASSWORD }} >> .env.db
+            echo ${{ secrets.POSTGRES_DB }} >> .env.db
+            echo "Fichier .env.db copié avec succès"
 
-  deploy-apps:
-    needs: deploy-apis
+  qcm-apps-deploy:
+    needs: qcm-apis-deploy
     runs-on: ubuntu-latest
     steps:
       - name: 🛠️ Checkout du code
@@ -113,7 +186,7 @@ jobs:
         working-directory: ./apps
         run: npm install
 
-        # Connexion au VPS et préparation du répertoire
+        # Connexion au VPS et préparation du répertoire #chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} /opt
       - name: 🔑 Connexion au VPS et préparation du répertoire
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -122,9 +195,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PORT }}
           script: |
-            sudo chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }}/opt
             rm -rf /opt/caisse/apps/
-            sudo mkdir -p /opt/caisse/apps
+            mkdir -p /opt/caisse/apps
             cd /opt/caisse/apps
             touch .env
             echo ".env ajouté"
@@ -165,8 +237,12 @@ jobs:
             touch .env
             echo ${{ secrets.APP_ENV }} >> .env
 
-      # Lancer Docker Compose et démarrer les services sur le VPS
-      - name: Deploy and start Docker services on VPS
+  deploy-docker-container:
+    needs: qcm-apps-deploy
+    runs-on: ubuntu-latest
+    steps:
+      # Etape 2: Connexion au VPS et démarrage des services Docker
+      - name: 🔑 Connexion au VPS et démarrer les services Docker
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_IP }}
@@ -174,8 +250,14 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PORT }}
           script: |
+            # Aller dans le répertoire où se trouve le docker-compose
             cd /opt/caisse
-            docker-compose down || true
+
+            # Démarrer les services Docker avec build si nécessaire
             docker-compose up --build -d
+
+            # Supprimer les images non utilisées pour libérer de l'espace
             docker image prune -f
+
+            # Afficher les conteneurs en cours d'exécution
             docker ps
