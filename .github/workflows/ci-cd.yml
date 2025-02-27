@@ -253,6 +253,8 @@ jobs:
             # Aller dans le répertoire où se trouve le docker-compose
             cd /opt/caisse
 
+            docker-compose down || true
+            
             # Démarrer les services Docker avec build si nécessaire
             docker-compose up --build -d
 
