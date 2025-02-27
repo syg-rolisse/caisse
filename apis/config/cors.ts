@@ -8,7 +8,7 @@ import { defineConfig } from '@adonisjs/cors'
  */
 const corsConfig = defineConfig({
   enabled: true,
-  origin: ['https://ma-caisse.netlify.app', 'http://localhost:5173'], // Autoriser cette origine spécifique
+  origin: ['http://82.112.254.228:5174', 'http://localhost:5173'], // Autoriser cette origine spécifique
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
   headers: true,
   exposeHeaders: [],
