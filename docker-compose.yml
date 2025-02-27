@@ -34,7 +34,7 @@ services:
     networks:
       - caisse_network
     command: ["node", "./bin/server.js"]
-    #command: ["sh", "-c", "node ace migration:run && node ace serve --watch"] n,,,
+    #command: ["sh", "-c", "node ace migration:run && node ace serve --watch"]
 
   caisse-apps:
     build:
