@@ -94,7 +94,7 @@ jobs:
           docker ps  # Affiche les conteneurs actifs et vérifie leur statut
           docker-compose ps  # Vérifie l'état des conteneurs définis dans docker-compose.yml
 
-  qcm-apis-deploy:
+  caisse-apis-deploy:
     needs: test-step
     runs-on: ubuntu-latest
     steps:
@@ -166,8 +166,8 @@ jobs:
             echo ${{ secrets.POSTGRES_DB }} >> .env.db
             echo "Fichier .env.db copié avec succès"
 
-  qcm-apps-deploy:
-    needs: qcm-apis-deploy
+  caisse-apps-deploy:
+    needs: caisse-apis-deploy
     runs-on: ubuntu-latest
     steps:
       - name: 🛠️ Checkout du code
@@ -238,7 +238,7 @@ jobs:
             echo ${{ secrets.APP_ENV }} >> .env
 
   deploy-docker-container:
-    needs: qcm-apps-deploy
+    needs: caisse-apps-deploy
     runs-on: ubuntu-latest
     steps:
       # Etape 2: Connexion au VPS et démarrage des services Docker

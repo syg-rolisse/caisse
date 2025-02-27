@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
 import { SocketContext } from "../../context/socket";
 
-function CreateSortie({ currentDepenseId, currentSortieId, refreshSortie }) {
+function CreateSortie({ currentDepenseId, currentSortieId,forceUpdate, refreshSortie }) {
   const [currentSortie, setCurrentDepense] = useState(null);
   // eslint-disable-next-line no-unused-vars
   const [isConnected, setIsConnected] = useState(false);
@@ -129,7 +129,7 @@ function CreateSortie({ currentDepenseId, currentSortieId, refreshSortie }) {
 
       addSortieLinkRef.current?.click();
     }
-  }, [currentDepenseId]);
+  }, [currentDepenseId,forceUpdate]);
 
   // useEffect(() => {
   //   if (currentSortieId || currentDepenseId) {
@@ -253,6 +253,7 @@ function CreateSortie({ currentDepenseId, currentSortieId, refreshSortie }) {
 CreateSortie.propTypes = {
   currentSortieId: PropTypes.number,
   currentDepenseId: PropTypes.number,
+  forceUpdate: PropTypes.bool,
   refreshSortie: PropTypes.func.isRequired,
 };
 

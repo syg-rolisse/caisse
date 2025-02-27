@@ -6,7 +6,11 @@ import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
 import { SocketContext } from "../../context/socket";
 
-function CreateTypeDepense({ currentTypeDepenseId, refreshTypeDepense }) {
+function CreateTypeDepense({
+  currentTypeDepenseId,
+  forceUpdate,
+  refreshTypeDepense,
+}) {
   const [currentTypeDepense, setCurrentTypeDepense] = useState(null);
   // eslint-disable-next-line no-unused-vars
   const [isConnected, setIsConnected] = useState(false);
@@ -133,15 +137,12 @@ function CreateTypeDepense({ currentTypeDepenseId, refreshTypeDepense }) {
   }, [socket, refreshTypeDepense]);
 
   useEffect(() => {
-    if (
-      currentTypeDepenseId &&
-      currentTypeDepenseId !== prevTypeDepenseIdRef.current
-    ) {
+    if (currentTypeDepenseId) {
       prevTypeDepenseIdRef.current = currentTypeDepenseId;
       fetchTypeDepense.mutate(currentTypeDepenseId);
       addTypeDepenseLinkRef.current?.click();
     }
-  }, [currentTypeDepenseId]);
+  }, [currentTypeDepenseId, forceUpdate]);
 
   useEffect(() => {
     if (currentTypeDepense) {
@@ -244,6 +245,7 @@ function CreateTypeDepense({ currentTypeDepenseId, refreshTypeDepense }) {
 
 CreateTypeDepense.propTypes = {
   currentTypeDepenseId: PropTypes.number,
+  forceUpdate: PropTypes.bool,
   refreshTypeDepense: PropTypes.func.isRequired,
 };
 

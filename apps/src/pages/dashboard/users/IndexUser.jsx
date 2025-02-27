@@ -14,6 +14,7 @@ function IndexUser() {
   const [currentUserId, setCurrentUserId] = useState();
   const [currentDeleteUserId, setDeleteUserId] = useState();
   const [status] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(false);
   const [errorMessage, setErrorMessage] = useState();
   const user = JSON.parse(localStorage.getItem("user"));
   const fetchUsers = useMutation(
@@ -58,6 +59,7 @@ function IndexUser() {
 
   const handleEditClick = (userId) => {
     setCurrentUserId(userId);
+    setForceUpdate((prev) => !prev);
   };
 
   const handleDeleteClick = (userId) => {
@@ -105,6 +107,7 @@ function IndexUser() {
                 <div className="btn-group btn-sm">
                   <UpdateUser
                     currentUserId={currentUserId}
+                    forceUpdate={forceUpdate}
                     refreshUserList={refreshUserList}
                   />
                 </div>
@@ -154,7 +157,6 @@ function IndexUser() {
                           <th className="wd-25p tw-text-center fw-bold">
                             Photo
                           </th>
-
 
                           <th className="fw-bold tw-text-center">
                             Mail valide
@@ -229,7 +231,6 @@ function IndexUser() {
                                 />
                               </td>
 
-                           
                               <td className="text-center">
                                 <span
                                   className={`badge badge-sm rounded-pill ${

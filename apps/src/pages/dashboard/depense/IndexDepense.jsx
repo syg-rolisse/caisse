@@ -15,6 +15,7 @@ const IndexDepense = () => {
   const [currentDepenseId, setCurrentDepenseId] = useState();
   const [perpage, setPerPage] = useState(10);
   const [meta, setMeta] = useState([]);
+  const [forceUpdate, setForceUpdate] = useState(false);
   const [depenses, setDepenses] = useState();
   const [allDepense, setAllDepense] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,6 +25,7 @@ const IndexDepense = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const handleEditClick = (depenseId) => {
     setCurrentDepenseId(depenseId);
+    setForceUpdate((prev) => !prev);
   };
 
   const handlePerPageChange = (e) => {
@@ -190,6 +192,7 @@ const IndexDepense = () => {
                     <div className="btn-group btn-sm">
                       <CreateDepense
                         currentDepenseId={currentDepenseId}
+                        forceUpdate={forceUpdate}
                         refreshDepense={refreshDepense}
                       />
                     </div>

@@ -15,6 +15,7 @@ function IndexSortie() {
   const [currentSortieId, setSortieId] = useState();
   const [currentDepenseId, setCurrentDepenseId] = useState();
   const [currentDeleteSortieId, setDeleteSortieId] = useState();
+  const [forceUpdate, setForceUpdate] = useState(false);
   const [currentRejeteDepenseId, setRejeteDepenseId] = useState();
   const [currentBloquereDepenseId, setBloquereDepenseId] = useState();
   const [errorMessage, setErrorMessage] = useState();
@@ -66,6 +67,7 @@ function IndexSortie() {
 
   const handleAddClick = (depenseId) => {
     setCurrentDepenseId(depenseId);
+    setForceUpdate((prev) => !prev);
   };
 
   const handleEditClick = (sortieId) => {
@@ -156,6 +158,7 @@ function IndexSortie() {
                 <div className="btn-group btn-sm">
                   <CreateSortie
                     currentSortieId={currentSortieId}
+                    forceUpdate={forceUpdate}
                     currentDepenseId={currentDepenseId}
                     refreshSortie={refreshSortie}
                   />

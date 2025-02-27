@@ -15,6 +15,7 @@ function IndexTypeDepense() {
   const [currentTypeDepenseId, setTypeDepenseId] = useState();
   const [currentDeleteTypeDepenseId, setDeleteTypeDepenseId] = useState();
   const [errorMessage, setErrorMessage] = useState();
+  const [forceUpdate, setForceUpdate] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // Search term state
   const user = JSON.parse(localStorage.getItem("user"));
   const fetchTypeDepenses = useMutation(
@@ -55,12 +56,13 @@ function IndexTypeDepense() {
     fetchTypeDepenses.mutate({ page, perpage });
   }, [page, perpage]);
 
-  const handleEditClick = (domainId) => {
-    setTypeDepenseId(domainId);
+  const handleEditClick = (typeDepenseId) => {
+    setTypeDepenseId(typeDepenseId);
+    setForceUpdate((prev) => !prev);
   };
 
-  const handleDeleteClick = (domainId) => {
-    setDeleteTypeDepenseId(domainId);
+  const handleDeleteClick = (typeDepenseId) => {
+    setDeleteTypeDepenseId(typeDepenseId);
   };
 
   const handlePerPageChange = (e) => {
@@ -131,6 +133,7 @@ function IndexTypeDepense() {
                 <div className="btn-group btn-sm">
                   <CreateTypeDepense
                     currentTypeDepenseId={currentTypeDepenseId}
+                    forceUpdate={forceUpdate}
                     refreshTypeDepense={refreshTypeDepense}
                   />
                 </div>
@@ -340,12 +343,12 @@ function IndexTypeDepense() {
           </div>
         </div>
       </div>
-      {currentTypeDepenseId && (
+      {/* {currentTypeDepenseId && (
         <CreateTypeDepense
           currentTypeDepenseId={currentTypeDepenseId}
           refreshTypeDepense={refreshTypeDepense}
         />
-      )}
+      )} */}
       {currentDeleteTypeDepenseId && (
         <DeleteTypeDepense
           currentDeleteTypeDepenseId={currentDeleteTypeDepenseId}
