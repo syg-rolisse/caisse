@@ -41,14 +41,28 @@ services:
       context: ./apps
       dockerfile: Dockerfile
     container_name: caisse_apps
+    image: caisse-apps:latest
     restart: always
     ports:
-      - "5174:5173"
-    depends_on:
-      - caisse-apis
+      - "5174:80" # Nginx sert l'app sur le port 80, mappé sur 5174 en local
     networks:
       - caisse_network
-    command: ["npm", "run", "dev"]
+    depends_on:
+      - caisse-apis
+
+  # caisse-apps:
+  #   build:
+  #     context: ./apps
+  #     dockerfile: Dockerfile
+  #   container_name: caisse_apps
+  #   restart: always
+  #   ports:
+  #     - "5174:5173"
+  #   depends_on:
+  #     - caisse-apis
+  #   networks:
+  #     - caisse_network
+  #   command: ["npm", "run", "dev"]
 
 volumes:
   pg_data:
