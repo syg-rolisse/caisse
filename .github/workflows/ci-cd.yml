@@ -68,7 +68,7 @@ jobs:
       # 3. Lancer les conteneurs avec Docker Compose
       # Pas besoin d'installer Docker, il est déjà disponible sur le runner.
       - name: Lancer Docker Compose
-        run: docker-compose up --build -d
+        run: docker compose up --build -d
 
       # 4. Vérifier que tous les conteneurs sont bien démarrés
       - name: Vérifier l'état des conteneurs
@@ -76,9 +76,9 @@ jobs:
           echo "Attente de 15 secondes pour la stabilisation des conteneurs..."
           sleep 15
           echo "Vérification des conteneurs en cours :"
-          docker-compose ps
+          docker compose ps
           # Cette commande échouera si un conteneur n'est pas 'Up' ou 'running'
-          if [ $(docker-compose ps | grep -c "Up") -lt $(docker-compose ps -q | wc -l) ]; then
+          if [ $(docker compose ps | grep -c "Up") -lt $(docker compose ps -q | wc -l) ]; then
             echo "Erreur : Un ou plusieurs conteneurs ne sont pas démarrés correctement."
             exit 1
           fi
@@ -160,10 +160,10 @@ jobs:
             EOF
             
             echo "Arrêt des anciens conteneurs..."
-            docker-compose down || true
+            docker compose down || true
             
             echo "Lancement des nouveaux conteneurs..."
-            docker-compose up --build -d
+            docker compose up --build -d
             
             echo "Nettoyage des anciennes images Docker..."
             docker image prune -f
