@@ -50,20 +50,6 @@ services:
     depends_on:
       - caisse-apis
 
-  # caisse-apps:
-  #   build:
-  #     context: ./apps
-  #     dockerfile: Dockerfile
-  #   container_name: caisse_apps
-  #   restart: always
-  #   ports:
-  #     - "5174:5173"
-  #   depends_on:
-  #     - caisse-apis
-  #   networks:
-  #     - caisse_network
-  #   command: ["npm", "run", "dev"]
-
 volumes:
   pg_data:
 

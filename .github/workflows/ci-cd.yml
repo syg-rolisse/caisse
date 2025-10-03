@@ -1,5 +1,7 @@
-name: caisse CI/CD Pipeline
+# Nom du pipeline CI/CD
+name: Caisse CI/CD Pipeline
 
+# Déclencheurs du workflow
 on:
   push:
     branches:
@@ -9,125 +11,111 @@ on:
       - develop
 
 jobs:
-  test-step:
-    runs-on: ubuntu-latest # L'environnement d'exécution
+  # ===================================================================
+  #  JOB 1: Tester la construction et le lancement des conteneurs
+  # ===================================================================
+  # Ce job s'exécute sur chaque push et pull request vers 'develop'.
+  # Son but est de s'assurer que l'application est fonctionnelle
+  # AVANT de penser au déploiement.
+  # ===================================================================
+  test-and-build:
+    name: 🧪 Tester l'application avec Docker
+    runs-on: ubuntu-latest # L'environnement d'exécution de GitHub
 
     steps:
-      # 1. Cloner le dépôt
-      - name: Checkout Code
+      # 1. Récupérer le code source du dépôt
+      - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: 📤 Copier le fichier .env du back
+      # 2. Créer les fichiers .env nécessaires pour les tests
+      - name: Créer les fichiers .env pour l'environnement de test
         run: |
-          cd /home/runner/work/caisse/caisse/apis
-          touch .env
-          echo ${{ secrets.APIS_ENV_TZ }} >> .env
-          echo ${{ secrets.APIS_ENV_PORT }} >> .env
-          echo ${{ secrets.APIS_ENV_HOST }} >> .env
-          echo ${{ secrets.APIS_ENV_LOG_LEVEL }} >> .env
-          echo ${{ secrets.APIS_ENV_APP_KEY }} >> .env
-          echo ${{ secrets.APIS_ENV_NODE_ENV }} >> .env
-          echo ${{ secrets.APIS_ENV_DB_HOST }} >> .env
-          echo ${{ secrets.APIS_ENV_DB_PORT }} >> .env
-          echo ${{ secrets.APIS_ENV_DB_USER }} >> .env
-          echo ${{ secrets.APIS_ENV_DB_PASSWORD }} >> .env
-          echo ${{ secrets.APIS_ENV_DB_DATABASE }} >> .env
-          echo ${{ secrets.APIS_ENV_SMTP_HOST }} >> .env
-          echo ${{ secrets.APIS_ENV_SMTP_PORT }} >> .env
-          echo ${{ secrets.APIS_ENV_SMTP_USERNAME }} >> .env
-          echo ${{ secrets.APIS_ENV_SMTP_PASSWORD }} >> .env
-          echo ${{ secrets.APIS_ENV_CACHE_VIEWS }} >> .env
-          echo ${{ secrets.APIS_ENV_VITE_FRONT_URL }} >> .env
-          echo "Fichier .env copié avec succès"
+          # Fichier .env pour le backend (apis)
+          cat <<EOF > ./apis/.env
+          ${{ secrets.APIS_ENV_TZ }}
+          ${{ secrets.APIS_ENV_PORT }}
+          ${{ secrets.APIS_ENV_HOST }}
+          ${{ secrets.APIS_ENV_LOG_LEVEL }}
+          ${{ secrets.APIS_ENV_APP_KEY }}
+          ${{ secrets.APIS_ENV_NODE_ENV }}
+          ${{ secrets.APIS_ENV_DB_HOST }}
+          ${{ secrets.APIS_ENV_DB_PORT }}
+          ${{ secrets.APIS_ENV_DB_USER }}
+          ${{ secrets.APIS_ENV_DB_PASSWORD }}
+          ${{ secrets.APIS_ENV_DB_DATABASE }}
+          ${{ secrets.APIS_ENV_SMTP_HOST }}
+          ${{ secrets.APIS_ENV_SMTP_PORT }}
+          ${{ secrets.APIS_ENV_SMTP_USERNAME }}
+          ${{ secrets.APIS_ENV_SMTP_PASSWORD }}
+          ${{ secrets.APIS_ENV_CACHE_VIEWS }}
+          ${{ secrets.APIS_ENV_VITE_FRONT_URL }}
+          EOF
 
-      - name: 📤 Copier le fichier .env.db du back
+          # Fichier .env.db pour la base de données
+          cat <<EOF > ./apis/.env.db
+          ${{ secrets.POSTGRES_USER }}
+          ${{ secrets.POSTGRES_PASSWORD }}
+          ${{ secrets.POSTGRES_DB }}
+          EOF
+
+          # Fichier .env pour le frontend (apps)
+          cat <<EOF > ./apps/.env
+          ${{ secrets.APP_ENV }}
+          EOF
+          
+          echo "Fichiers .env pour le test créés avec succès."
+
+      # 3. Lancer les conteneurs avec Docker Compose
+      # Pas besoin d'installer Docker, il est déjà disponible sur le runner.
+      - name: Lancer Docker Compose
+        run: docker-compose up --build -d
+
+      # 4. Vérifier que tous les conteneurs sont bien démarrés
+      - name: Vérifier l'état des conteneurs
         run: |
-          cd /home/runner/work/caisse/caisse/apis
-          touch .env.db
-          echo ${{ secrets.POSTGRES_USER }} >> .env.db
-          echo ${{ secrets.POSTGRES_PASSWORD }} >> .env.db
-          echo ${{ secrets.POSTGRES_DB }} >> .env.db
-          echo "Fichier .env.db copié avec succès"
+          echo "Attente de 15 secondes pour la stabilisation des conteneurs..."
+          sleep 15
+          echo "Vérification des conteneurs en cours :"
+          docker-compose ps
+          # Cette commande échouera si un conteneur n'est pas 'Up' ou 'running'
+          if [ $(docker-compose ps | grep -c "Up") -lt $(docker-compose ps -q | wc -l) ]; then
+            echo "Erreur : Un ou plusieurs conteneurs ne sont pas démarrés correctement."
+            exit 1
+          fi
+          echo "Tous les conteneurs sont démarrés avec succès."
 
-      - name: 📤 Copier le fichier .env du front
-        run: |
-          cd /home/runner/work/caisse/caisse/apps
-          touch .env
-          echo ${{ secrets.APP_ENV }} >> .env
-          echo "Fichier .env du front copié avec succès"
-
-      # 2. Cache des dépendances Node.js (si applicable)
-      - name: Cache Node.js dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/apis/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
-
-      # 3. Installer Docker et Docker Compose
-      - name: Install Docker and Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates curl gnupg lsb-release
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/trusted.gpg.d/docker.asc
-          echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-          sudo apt-get install -y docker-compose
-          sudo usermod -aG docker $USER  # Donne les droits d'exécution à Docker
-
-      # 4. Lancer Docker Compose
-      - name: Run Docker Compose
-        run: |
-          pwd
-          ls -al
-          sudo docker volume ls
-          sudo docker-compose down || true
-          sudo docker-compose up --build -d
-          sudo docker image prune -f
-          sudo docker ps
-
-      # 5. Vérifier que tous les conteneurs sont bien up
-      - name: Verify Docker Containers
-        run: |
-          docker ps  # Affiche les conteneurs actifs et vérifie leur statut
-          docker-compose ps  # Vérifie l'état des conteneurs définis dans docker-compose.yml
-
-  caisse-apis-deploy:
-    needs: test-step
+  # ===================================================================
+  #  JOB 2: Déployer l'application sur le serveur de production
+  # ===================================================================
+  # Ce job dépend du succès du job 'test-and-build'.
+  # Il ne s'exécute QUE sur un push vers la branche 'develop'.
+  # ===================================================================
+  deploy:
+    name: 🚀 Déployer sur le serveur
+    needs: test-and-build # Dépend du job de test
     runs-on: ubuntu-latest
+    # Condition : ne s'exécute que lors d'un push sur la branche 'develop'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+
     steps:
-      - name: 🛠️ Checkout du code
+      # 1. Récupérer le code source du dépôt
+      - name: Checkout du code
         uses: actions/checkout@v4
 
-      # 2. Connexion au VPS et préparation du répertoire
-      - name: 🔑 Connexion au VPS et préparation du répertoire
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            rm -rf /opt/caisse/apis/
-            mkdir -p /opt/caisse/apis/
-            echo "Répertoire /opt/caisse/apis/ prêt"
-
-      # 3. Copier les fichiers du Backend vers le VPS (structure respectée)
-      - name: 📤 Copier les fichiers Backend sur le VPS
+      # 2. Copier tous les fichiers du projet sur le serveur en une seule fois
+      - name: Copier les fichiers du projet sur le VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PORT }}
-          source: "apis/*"
-          target: /opt/caisse/apis/
-          strip_components: 1
+          source: "." # Copie tout le répertoire courant
+          target: "/opt/caisse"
+          rm: true # Supprime le contenu de /opt/caisse avant la copie
 
-      # 4. Copier le fichier .env sur le VPS
-      - name: 📤 Copier le fichier .env sur le VPS
+      # 3. Se connecter au VPS pour créer les .env et lancer Docker Compose
+      - name: Créer les .env et redémarrer les services
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_IP }}
@@ -135,131 +123,50 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PORT }}
           script: |
-            cd /opt/caisse/apis
-            touch .env
-            echo ${{ secrets.APIS_ENV_TZ }} >> .env
-            echo ${{ secrets.APIS_ENV_PORT }} >> .env
-            echo ${{ secrets.APIS_ENV_HOST }} >> .env
-            echo ${{ secrets.APIS_ENV_LOG_LEVEL }} >> .env
-            echo ${{ secrets.APIS_ENV_APP_KEY }} >> .env
-            echo ${{ secrets.APIS_ENV_NODE_ENV }} >> .env
-            echo ${{ secrets.APIS_ENV_DB_HOST }} >> .env
-            echo ${{ secrets.APIS_ENV_DB_PORT }} >> .env
-            echo ${{ secrets.APIS_ENV_DB_USER }} >> .env
-            echo ${{ secrets.APIS_ENV_DB_PASSWORD }} >> .env
-            echo ${{ secrets.APIS_ENV_DB_DATABASE }} >> .env
-            echo ${{ secrets.APIS_ENV_SMTP_HOST }} >> .env
-            echo ${{ secrets.APIS_ENV_SMTP_PORT }} >> .env
-            echo ${{ secrets.APIS_ENV_SMTP_USERNAME }} >> .env
-            echo ${{ secrets.APIS_ENV_SMTP_PASSWORD }} >> .env
-            echo ${{ secrets.APIS_ENV_CACHE_VIEWS }} >> .env
-            echo ${{ secrets.APIS_ENV_VITE_FRONT_URL }} >> .env
-            echo ${{ secrets.POSTGRES_USER }} >> .env
-            echo ${{ secrets.POSTGRES_PASSWORD }} >> .env
-            echo ${{ secrets.POSTGRES_DB }} >> .env
-            echo "Fichier .env copié avec succès sur le VPS"
-            echo "copie du .env.db"
-            cd /opt/caisse/apis
-            touch .env.db
-            echo ${{ secrets.POSTGRES_USER }} >> .env.db
-            echo ${{ secrets.POSTGRES_PASSWORD }} >> .env.db
-            echo ${{ secrets.POSTGRES_DB }} >> .env.db
-            echo "Fichier .env.db copié avec succès"
-
-  caisse-apps-deploy:
-    needs: caisse-apis-deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🛠️ Checkout du code
-        uses: actions/checkout@v4
-
-      # Cache des dépendances Frontend
-      - name: 🚚 Restaurer le cache des dépendances Frontend
-        uses: actions/cache@v3
-        with:
-          path: ./apps/node_modules
-          key: ${{ runner.os }}-frontend-node-modules-${{ hashFiles('**/apps/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-frontend-node-modules-
-
-      - name: 📦 Installer les dépendances Frontend
-        working-directory: ./apps
-        run: npm install
-
-        # Connexion au VPS et préparation du répertoire #chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} /opt
-      - name: 🔑 Connexion au VPS et préparation du répertoire
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            rm -rf /opt/caisse/apps/
-            mkdir -p /opt/caisse/apps
-            cd /opt/caisse/apps
-            touch .env
-            echo ".env ajouté"
-            echo "Répertoire /opt/caisse prêt"
-
-      - name: 📤 Copier les fichiers Frontend sur le VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-          source: "apps/*"
-          target: "/opt/caisse/apps/"
-          strip_components: 1
-
-      # Copier le fichier docker-compose.yml sur le VPS
-      - name: Copy docker-compose.yml via SSH
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-          source: "docker-compose.yml"
-          target: /opt/caisse/
-
-        # Copier le fichier .env sur le VPS
-      - name: 📤 Copier le fichier .env sur le VPS
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            cd /opt/caisse/apps
-            touch .env
-            echo ${{ secrets.APP_ENV }} >> .env
-
-  deploy-docker-container:
-    needs: caisse-apps-deploy
-    runs-on: ubuntu-latest
-    steps:
-      # Etape 2: Connexion au VPS et démarrage des services Docker
-      - name: 🔑 Connexion au VPS et démarrer les services Docker
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            # Aller dans le répertoire où se trouve le docker-compose
+            # Se placer dans le répertoire du projet sur le serveur
             cd /opt/caisse
 
+            echo "Création du fichier .env pour le backend..."
+            cat <<EOF > ./apis/.env
+            ${{ secrets.APIS_ENV_TZ }}
+            ${{ secrets.APIS_ENV_PORT }}
+            ${{ secrets.APIS_ENV_HOST }}
+            ${{ secrets.APIS_ENV_LOG_LEVEL }}
+            ${{ secrets.APIS_ENV_APP_KEY }}
+            ${{ secrets.APIS_ENV_NODE_ENV }}
+            ${{ secrets.APIS_ENV_DB_HOST }}
+            ${{ secrets.APIS_ENV_DB_PORT }}
+            ${{ secrets.APIS_ENV_DB_USER }}
+            ${{ secrets.APIS_ENV_DB_PASSWORD }}
+            ${{ secrets.APIS_ENV_DB_DATABASE }}
+            ${{ secrets.APIS_ENV_SMTP_HOST }}
+            ${{ secrets.APIS_ENV_SMTP_PORT }}
+            ${{ secrets.APIS_ENV_SMTP_USERNAME }}
+            ${{ secrets.APIS_ENV_SMTP_PASSWORD }}
+            ${{ secrets.APIS_ENV_CACHE_VIEWS }}
+            ${{ secrets.APIS_ENV_VITE_FRONT_URL }}
+            EOF
+
+            echo "Création du fichier .env.db..."
+            cat <<EOF > ./apis/.env.db
+            ${{ secrets.POSTGRES_USER }}
+            ${{ secrets.POSTGRES_PASSWORD }}
+            ${{ secrets.POSTGRES_DB }}
+            EOF
+
+            echo "Création du fichier .env pour le frontend..."
+            cat <<EOF > ./apps/.env
+            ${{ secrets.APP_ENV }}
+            EOF
+            
+            echo "Arrêt des anciens conteneurs..."
             docker-compose down || true
             
-            # Démarrer les services Docker avec build si nécessaire
+            echo "Lancement des nouveaux conteneurs..."
             docker-compose up --build -d
-
-            # Supprimer les images non utilisées pour libérer de l'espace
+            
+            echo "Nettoyage des anciennes images Docker..."
             docker image prune -f
-
-            # Afficher les conteneurs en cours d'exécution
+            
+            echo "Déploiement terminé. Conteneurs en cours d'exécution :"
             docker ps
