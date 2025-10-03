@@ -12,6 +12,7 @@ export default class extends BaseSchema {
       table.string('logo_url').nullable()
       table.string('avatar').nullable()
       table.boolean('status').defaultTo(false)
+      table.boolean('show_company_name').defaultTo(false)
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

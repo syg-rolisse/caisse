@@ -215,7 +215,7 @@ function AllUser() {
                                   }/uploads/${
                                     user?.avatarUrl
                                       ? user.avatarUrl
-                                      : "avatars/ri3uadefault.png"
+                                      : "avatars/ri3uadefault.jpg"
                                   }`}
                                   alt="Avatar"
                                   style={{
@@ -238,7 +238,7 @@ function AllUser() {
                                     }/uploads/${
                                       user?.Companies?.logoUrl
                                         ? user?.Companies?.logoUrl
-                                        : "logo/ri3uadefault.png"
+                                        : "logo/ri3uadefault.jpg"
                                     }`}
                                     alt="Avatar"
                                     className="tw-w-9 tw-h-9 tw-object-cover tw-rounded-full"

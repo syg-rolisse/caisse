@@ -4,7 +4,7 @@ const TypeDeDepensesController = () => import('#controllers/type_de_depenses_con
 
 router
   .group(() => {
-    router.get('all_type_depense', [TypeDeDepensesController, 'index'])
+    router.get('type_depense/all', [TypeDeDepensesController, 'index'])
     router.get('editions', [TypeDeDepensesController, 'editions'])
     router.get('totalTypeDepense', [TypeDeDepensesController, 'totalTypeDepense'])
     router.get('type_depense', [TypeDeDepensesController, 'show'])

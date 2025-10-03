@@ -6,7 +6,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data_caisse:/var/lib/postgresql/data
     env_file:
       - ./apis/.env.db
     healthcheck:
@@ -35,6 +35,9 @@ services:
       - caisse_network
     command: ["node", "./bin/server.js"]
     #command: ["sh", "-c", "node ace migration:run && node ace serve --watch"]
+    volumes:
+      - /var/lib/olufona/uploads:/app/uploads
+
 
   caisse-apps:
     build:

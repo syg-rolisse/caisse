@@ -15,5 +15,6 @@ export const UpdateCompanieValidator = vine.compile(
     companyName: vine.string().trim(),
     address: vine.string().trim(),
     phoneNumber: vine.string().trim(),
+    showCompanyName: vine.boolean().optional(),
   })
 )

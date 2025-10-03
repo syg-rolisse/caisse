@@ -3,6 +3,7 @@ import MainLayout from "../components/MainLayout";
 import AuthMiddleware from "../middleware/AuthMiddleware";
 import IndexApprovisionnement from "../pages/dashboard/approvisionnement/IndexApprovisionnement";
 import Dashboard from "../pages/dashboard/Dashboard";
+import OldDashboard from "../pages/dashboard/OldDashboard";
 import IndexDepense from "../pages/dashboard/depense/IndexDepense";
 import IndexSortie from "../pages/dashboard/mouvement-caisse/IndexSortie";
 import Editions from "../pages/dashboard/Editions";
@@ -41,6 +42,10 @@ const routes = [
           {
             path: "dashboard",
             element: <Dashboard />,
+          },
+          {
+            path: "old-dashboard",
+            element: <OldDashboard />,
           },
           {
             path: "editions",

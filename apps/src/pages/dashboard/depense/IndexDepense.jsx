@@ -1,40 +1,36 @@
 import { useMutation } from "@tanstack/react-query";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import CreateDepense from "../../../components/Depense/CreateDepense";
+import PageHeaderActions from "../../../components/common/PageHeaderActions";
 import DeleteDepense from "../../../components/Depense/DeleteDepense";
 import Spinner from "../../../components/Spinner";
 import axiosInstance from "../../../config/axiosConfig";
-import { SocketContext } from "../../../context/socket";
 import useSocketEvents from "../../../components/UseSocketEvents";
+import WelcomeModal from "../../../components/WelcomeModal";
+import DepenseForm from "../../../components/Depense/DepenseForm";
+import Pagination from "../../../components/Pagination";
+import DepenseCard from "../../../components/Depense/DepenseCard";
+import { AnimatePresence } from 'framer-motion'; // 👈 Importer AnimatePresence
+
 
 const IndexDepense = () => {
-  const socket = useContext(SocketContext);
   const [page, setPage] = useState(1);
-  const [currentDeleteDepenseId, setCurrentDeleteDepenseId] = useState();
-  const [currentDepenseId, setCurrentDepenseId] = useState();
+  const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [perpage, setPerPage] = useState(10);
   const [meta, setMeta] = useState([]);
-  const [forceUpdate, setForceUpdate] = useState(false);
   const [depenses, setDepenses] = useState();
+  const [currentDepense, setCurrentDepense] = useState();
   const [allDepense, setAllDepense] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
- 
-  const {shouldRefreshDepense} = useSocketEvents()
+
+  const { shouldRefreshDepense } = useSocketEvents();
 
   const user = JSON.parse(localStorage.getItem("user"));
-  const handleEditClick = (depenseId) => {
-    setCurrentDepenseId(depenseId);
-    setForceUpdate((prev) => !prev);
-  };
 
   const handlePerPageChange = (e) => {
     setPerPage(Number(e.target.value));
     setPage(1);
-  };
-
-  const handleDeleteClick = (depenseId) => {
-    setCurrentDeleteDepenseId(depenseId);
   };
 
   const fetchDepense = useMutation(
@@ -61,43 +57,24 @@ const IndexDepense = () => {
   );
 
   const refreshDepense = () => {
-    setCurrentDepenseId(null);
     fetchDepense.mutate({ page, perpage });
-    setCurrentDeleteDepenseId(null);
   };
 
-  useEffect(()=> {
-    refreshDepense()
-  },[shouldRefreshDepense])
-
   useEffect(() => {
-    if (socket) {
-      // Écoute des événements pour rafraîchir les données
-      const handleSocketEvent = () => {
-        fetchDepense.mutate({ page, perpage }); // Rafraîchir les données
-      };
-
-      socket.on("user_created", handleSocketEvent);
-      socket.on("user_deleted", handleSocketEvent);
-
-      socket.on("thematique_created", handleSocketEvent);
-      socket.on("thematique_deleted", handleSocketEvent);
-
-      return () => {
-        socket.off("user_created", handleSocketEvent);
-        socket.off("user_deleted", handleSocketEvent);
-
-        socket.off("test_created", handleSocketEvent);
-
-        socket.off("thematique_created", handleSocketEvent);
-        socket.off("thematique_deleted", handleSocketEvent);
-      };
-    }
-  }, [socket, fetchDepense]);
+    refreshDepense();
+    
+  }, [shouldRefreshDepense]);
 
   useEffect(() => {
     fetchDepense.mutate({ page, perpage }); // Récupérer les données initiales lors du montage du composant
   }, []);
+
+  const handleSuccess = () => {
+    setShowModal(false);
+    setShowDeleteModal(false);
+    setCurrentDepense(null);
+    refreshDepense();
+  };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value); // Update search term
@@ -131,6 +108,22 @@ const IndexDepense = () => {
 
   return (
     <div className="">
+      <WelcomeModal
+        isActive={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setCurrentDepense(null);
+        }}
+      >
+        <DepenseForm depense={currentDepense} onSuccess={handleSuccess} />
+      </WelcomeModal>
+      <WelcomeModal
+        isActive={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      >
+        <DeleteDepense depense={currentDepense} onSuccess={handleSuccess} onClose={() => setShowDeleteModal(false)} />
+      </WelcomeModal>
+
       <div className="p-3 header-secondary row">
         <div className="col">
           <div className="d-flex">
@@ -175,43 +168,11 @@ const IndexDepense = () => {
             </div>
           </div>
           <div className="ms-auto pageheader-btn">
-            <nav>
-              <div className="breadcrumb mb-0">
-                <div className="d-flex">
-                  <div className="input-group me-2">
-                    {/* <div className="input-group-text text-muted bg-primary text-fixed-white me-0 border-0 pe-0">
-                      <i className="ri-calendar-line mt-1"></i>
-                    </div>
-                    <input
-                      type="text"
-                      className="form-control flatpickr-input bg-primary text-fixed-white border-0 ps-2"
-                      id="daterange"
-                      placeholder="Ajouter une dépense"
-                    /> */}
-
-                    <div className="btn-group btn-sm">
-                      <CreateDepense
-                        currentDepenseId={currentDepenseId}
-                        forceUpdate={forceUpdate}
-                        refreshDepense={refreshDepense}
-                      />
-                    </div>
-                  </div>
-                  <a
-                    href="#"
-                    className="btn btn-secondary text-fixed-white"
-                    data-bs-toggle="tooltip"
-                    title=""
-                    data-placement="bottom"
-                    data-original-title="Rating"
-                  >
-                    <span>
-                      <i className="fe fe-star"></i>
-                    </span>
-                  </a>
-                </div>
-              </div>
-            </nav>
+            <PageHeaderActions 
+            primaryActionLabel="Ajouter une dépense"
+            onPrimaryActionClick={() => setShowModal(true)} // La magie est ici !
+            />
+           
           </div>
         </div>
         {/* Page Header Close */}
@@ -271,239 +232,37 @@ const IndexDepense = () => {
                 </span>
               </div>
             )}
-          {!fetchDepense.isLoading &&
-            !fetchDepense.isError &&
-            filteredDepense?.length > 0 &&
-            filteredDepense?.map((depense, index) => (
-              <div
-                className="col-sm-12 col-md-6 col-lg-4 col-xxl-3"
-                key={index}
-              >
-                <div className="card custom-card">
-                  <div className="card-header justify-content-between">
-                    <div>
-                      <div className="card-title">
-                        {depense?.user?.fullName}
-                      </div>
-                    </div>
-                    <div className="card-options">
-                      <div className="form-check form-check-md form-switch">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          role="switch"
-                          id={`flexSwitchCheckCheckedp-${index}`}
-                          defaultChecked={depense.status}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <div className="d-flex">
-                      <div className="">
-                        <h6 className="text-muted">Montant Total</h6>
-                        <h3 className="text-dark count mt-0 font-30 mb-0 tw-py-4 tw-font-semibold">
-                          {depense.montant.toLocaleString()} CFA
-                        </h3>
-
-                        <div className="tw-space-x-4 tw-mb-3 tw-flex tw-items-center">
-                          <span className="tag tw-bg-orange-500 tw-text-white tw-font-bold">
-                            {depense?.typeDeDepense?.wording}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ms-auto">
-                        <div className="tw-pl-2">
-                          <span>
-                            {new Date(depense.createdAt).toLocaleString(
-                              "fr-CA",
-                              {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                              }
-                            )}
-                          </span>
-                        </div>
-                        <div className="tw-pl-2 tw-my-2">
-                          <h3
-                            className={`badge badge-sm rounded-pill ${
-                              !depense.rejeter
-                                ? "bg-success-transparent text-success"
-                                : "bg-danger-transparent text-danger"
-                            }`}
-                          >
-                            {!depense.rejeter ? "Dépense Approuvé" : "Rejeté"}
-                          </h3>
-                        </div>
-                        <div className="d-flex justify-content-start align-items-center tw-mt-4">
-                          {/* <a
-                            onClick={() => handleConstaClick(depense.id)}
-                            className="btn btn-icon btn-sm btn-success-transparent rounded-pill tw-ml-2"
-                          >
-                            <ConstaDepense
-                              constaId={constaId}
-                              refreshDepense={refreshDepense}
-                            />
-                            <i className="ri-check-line"></i>
-                          </a> */}
-                          <a
-                            onClick={() => handleEditClick(depense.id)}
-                            className="btn btn-icon btn-sm btn-primary-transparent rounded-pill tw-ml-2"
-                          >
-                            <i className="ri-edit-line"></i>
-                          </a>
-                          <a
-                            onClick={() => handleDeleteClick(depense.id)}
-                            className="btn btn-icon btn-sm btn-danger-transparent rounded-pill tw-ml-2"
-                          >
-                            <i className="ri-delete-bin-line"></i>
-                          </a>
-
-                          {depense?.factureUrl ? (
-                            <a
-                              className="btn btn-icon btn-sm btn-success-transparent rounded-pill tw-ml-2 tw-flex tw-justify-center tw-items-center"
-                              href={`${
-                                import.meta.env.VITE_BACKEND_URL
-                              }/uploads/${depense?.factureUrl}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <i className="bx bx-download tw-text-green-600 tw-text-lg header-link-icon"></i>
-                            </a>
-                          ) : (
-                            <span
-                              className="btn btn-icon btn-sm btn-danger-transparent rounded-pill tw-ml-2 tw-flex tw-justify-center tw-items-center"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <i className="bx bx-x-circle tw-text-red-600 tw-text-lg header-link-icon"></i>
-                            </span>
-                          )}
-
-                          {/* {depense?.factureUrl && (
-                            <a
-                              className="btn btn-icon btn-sm btn-success-transparent rounded-pill tw-ml-2"
-                              href={`${
-                                import.meta.env.VITE_BACKEND_URL
-                              }/uploads/${depense?.factureUrl}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <i className="bx bx-download tw-text-green-600 tw-text-lg header-link-icon"></i>
-                            </a>
-                          )} */}
-                          {currentDeleteDepenseId && (
-                            <DeleteDepense
-                              currentDeleteDepenseId={currentDeleteDepenseId}
-                              refreshDepense={refreshDepense}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <span className="">{depense?.wording}</span>
-                  </div>
-                  <div className="card-footer">
-                    <div className="">
-                      {depense.decharger && (
-                        <span className="tw-ml-3 float-start badge badge-sm rounded-pill bg-success-transparent text-success">
-                          Déchargé
-                        </span>
-                      )}
-
-                      <span
-                        className={`btn tw-absolute tw-bottom-4 -tw-left-1 btn-icon btn-sm btn-transparent rounded-pill tw-ml-2 ${
-                          depense.bloquer ? "text-success" : "text-danger"
-                        }`}
-                      >
-                        <i
-                          className={`fa ${
-                            depense.bloquer ? "fa-lock" : "fa-unlock"
-                          } fa-sm tw-mr-2`}
-                        ></i>
-                      </span>
-                    </div>
-
-                    {depense.status ? (
-                      <span className="float-end">
-                        <i className="fe fe-arrow-up text-success me-1"></i>
-                        {depense.montant.toLocaleString("fr-FR")} Payé
-                      </span>
-                    ) : (
-                      <span className="float-end text-danger px-2 tw-rounded-md">
-                        <i className="fe fe-arrow-down text-danger me-1"></i>
-                        {Math.max(
-                          0,
-                          depense.montant -
-                            (depense.Mouvements?.reduce(
-                              (total, mouvement) => total + mouvement.montant,
-                              0
-                            ) || 0)
-                        ).toLocaleString("fr-FR")}
-                        &nbsp;Impayé
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+          {/* // Votre section de rendu devient : */}
+{!fetchDepense.isLoading &&
+  !fetchDepense.isError &&
+  filteredDepense?.length > 0 && (
+    <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-6">
+      {/* 👇 On enveloppe la liste avec AnimatePresence */}
+      <AnimatePresence>
+        {filteredDepense.map((depense) => (
+          <DepenseCard
+            key={depense.id}
+            depense={depense}
+            onEdit={() => {
+              setCurrentDepense(depense);
+              setShowModal(true);
+            }}
+            onDelete={() => {
+              setCurrentDepense(depense);
+              setShowDeleteModal(true);
+            }}
+          />
+        ))}
+      </AnimatePresence>
+    </div>
+)}
         </div>
 
-        <div className="card-footer">
-          <div className="d-flex align-items-center">
-            <div>
-              Afficher les {perpage} suivant
-              <i className="bi bi-arrow-right ms-2 fw-semibold"></i>
-            </div>
-            <div className="ms-auto">
-              <nav aria-label="Page navigation" className="pagination-style-4">
-                <ul className="pagination mb-0">
-                  <li
-                    className={`page-item ${
-                      meta?.previousPageUrl ? "" : "disabled"
-                    }`}
-                  >
-                    <button
-                      className="page-link"
-                      onClick={() => setPage(meta?.currentPage - 1)}
-                      disabled={!meta?.previousPageUrl}
-                    >
-                      Prev
-                    </button>
-                  </li>
-                  {[...Array(meta?.lastPage).keys()].map((num) => (
-                    <li
-                      key={num + 1}
-                      className={`page-item ${
-                        meta?.currentPage === num + 1 ? "active" : ""
-                      }`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => setPage(num + 1)}
-                      >
-                        {num + 1}
-                      </button>
-                    </li>
-                  ))}
-                  <li
-                    className={`page-item ${
-                      meta?.nextPageUrl ? "" : "disabled"
-                    }`}
-                  >
-                    <button
-                      className="page-link text-primary"
-                      onClick={() => setPage(meta?.currentPage + 1)}
-                      disabled={!meta?.nextPageUrl}
-                    >
-                      Next
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          </div>
+        <div className="card-footer tw-mt-5">
+          <Pagination
+            meta={meta} // L'objet meta de votre API
+            onPageChange={setPage} // La fonction pour mettre à jour l'état de la page
+          />
         </div>
       </div>
     </div>

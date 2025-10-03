@@ -370,6 +370,8 @@ export default class AuthController {
         isAuthorized = !(await bouncer.with('UserPolicy').denies('dashboard'))
       } else if (route === 'editions') {
         isAuthorized = !(await bouncer.with('UserPolicy').denies('dashboard'))
+      } else if (route === 'old-dashboard') {
+        isAuthorized = !(await bouncer.with('UserPolicy').denies('dashboard'))
       }
 
       // Retourne une réponse avec `isAuthorized`

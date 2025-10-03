@@ -24,8 +24,15 @@ export default class TypeDeDepensesController {
 
       const pageNumber = page ? Number.parseInt(page) : 1
       const perPageNumber = perpage ? Number.parseInt(perpage) : 10
+console.log("zzzzzzzzzzzzzzzzzzzzzzz");
 
-      const query = TypeDeDepense.query().where({ companieId }).preload('user')
+      const query = TypeDeDepense.query()
+        .where({ companieId })
+        .preload('user')
+        .preload('Depenses', (depenseQuery) => {
+          depenseQuery.preload('Mouvements')
+        })
+
       const allTypeDepense = await query.orderBy('id', 'desc')
       const typeDepense = await query.orderBy('id', 'desc').paginate(pageNumber, perPageNumber)
 

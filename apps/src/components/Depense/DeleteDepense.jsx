@@ -1,158 +1,98 @@
+// src/components/DeleteDepense.js
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import toast from "react-hot-toast";
+import { Loader2, AlertTriangle, Trash2 } from "lucide-react";
 import axiosInstance from "../../config/axiosConfig";
 import { SocketContext } from "../../context/socket";
+import ConfirmationInput from "../ConfirmationInput";
+import { useHandleError } from "../../hook/useHandleError";
 
-function DeleteDepense({ currentDeleteDepenseId, refreshDepense }) {
-  const prevDepenseIdRef = useRef();
-  const typeDepenseLinkRef = useRef();
-  // eslint-disable-next-line no-unused-vars
-  const [isConnected, setIsConnected] = useState(false);
+function DeleteDepense({ depense, onSuccess }) {
+  const { handleError } = useHandleError();
   const socket = useContext(SocketContext);
   const user = JSON.parse(localStorage.getItem("user"));
-  const deleteDepense = useMutation(
-    (param) =>
+  const [isConfirmed, setIsConfirmed] = useState(false);
+
+  const { mutate: deleteExpense, isLoading: isDeleting } = useMutation({
+    mutationFn: (depenseId) =>
       axiosInstance.delete(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/api/v1/depense?depenseId=${param}&userConnectedId=${user?.id}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/depense?depenseId=${depenseId}&userConnectedId=${user?.id}`
       ),
-    {
-      onSuccess: (response) => {
-        toast.success(response?.data?.message);
-
-        refreshDepense();
-        currentDeleteDepenseId = "";
-        typeDepenseLinkRef.current.click();
-        if (socket && socket.connected) {
-          socket.emit("depense_deleted");
+    onSuccess: (response) => {
+      toast.success(response?.data?.message);
+      onSuccess(); 
+      if (socket?.connected) {
+        if(!user?.company?.id){
+          toast.error("Echec du rafraîchissement de la liste des dépenses.");
+          return;
         }
-      },
+        socket.emit("depense_deleted", user?.company?.id);
+      }
+    },
+    onError: (error) => {
+      handleError(error);
+    },
+  });
 
-      onError: (error) => {
-        console.log(error?.response);
-
-        const validationErrors = error?.response?.data?.error;
-        if (validationErrors && Array.isArray(validationErrors)) {
-          validationErrors.forEach((error) => {
-            toast.error(error.message, { duration: 12000 });
-          });
-        } else {
-          toast.error(
-            error?.response?.data?.error ||
-              error?.response?.data?.message ||
-              error?.response?.data,
-            { duration: 12000 }
-          );
-        }
-      },
-    }
-  );
-
-  const deleteEntrie = () => {
-    // Lancer la mutation pour supprimer le typeDepense
-    if (currentDeleteDepenseId) {
-      deleteDepense.mutate(currentDeleteDepenseId);
-    }
+  const handleDelete = () => {
+    if (!isConfirmed || !depense?.id) return;
+    deleteExpense(depense.id);
   };
 
-  useEffect(() => {
-    if (
-      currentDeleteDepenseId &&
-      currentDeleteDepenseId !== prevDepenseIdRef.current
-    ) {
-      prevDepenseIdRef.current = currentDeleteDepenseId;
-      if (typeDepenseLinkRef.current) {
-        typeDepenseLinkRef.current.click();
-      }
-    }
-  }, [currentDeleteDepenseId]);
-
   return (
-    <div className="row">
-      <a
-        ref={typeDepenseLinkRef}
-        data-bs-effect="effect-rotate-bottom"
-        data-bs-toggle="modal"
-        href="#deleteModal"
-        style={{ cursor: "pointer" }}
-      ></a>
-
-      <div
-        className="modal fade"
-        id="deleteModal"
-        tabIndex="-1"
-        data-bs-backdrop="static"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content tw-rounded-lg tw-border tw-p-2">
-            <div className="modal-header">
-              <h2 className="modal-title tw-text-lg text-danger">
-                ACTION IRREVERSIBLE{" "}
-              </h2>
-              <button
-                aria-label="Close"
-                className="btn-close"
-                data-bs-dismiss="modal"
-              ></button>
-            </div>
-            <div className="modal-body text-start">
-              <div className="">
-                <div className="tw-flex tw-items-center tw-justify-center">
-                  <svg
-                    className="custom-alert-icon svg-danger"
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="3rem"
-                    viewBox="0 0 24 24"
-                    width="3rem"
-                    fill="#000000"
-                  >
-                    <path d="M0 0h24v24H0z" fill="none" />
-                    <path d="M15.73 3H8.27L3 8.27v7.46L8.27 21h7.46L21 15.73V8.27L15.73 3zM12 17.3c-.72 0-1.3-.58-1.3-1.3 0-.72.58-1.3 1.3-1.3.72 0 1.3.58 1.3 1.3 0 .72-.58 1.3-1.3 1.3zm1-4.3h-2V7h2v6z" />
-                  </svg>
-                </div>
-              </div>
-
-              <div className="my-3 max-w-full">
-                <div className="text-center">
-                  <p className="tw-text-lg">
-                    Cette information sera supprimée ainsi que <br /> toutes les
-                    dépendances. Voulez-vous continuer ?
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <div className="">
-                <button
-                  onClick={deleteEntrie}
-                  className="btn btn-sm btn-outline-success m-1"
-                >
-                  Oui
-                </button>
-                <button
-                  data-bs-dismiss="modal"
-                  className="btn btn-sm btn-danger m-1 "
-                >
-                  Annuler
-                </button>
-              </div>
+    <div className="tw-space-y-6">
+      <div className="tw-bg-amber-50 tw-p-4 tw-rounded-lg tw-border-l-4 tw-border-amber-400">
+        <div className="tw-flex">
+          <div className="tw-flex-shrink-0">
+            <AlertTriangle className="tw-h-5 tw-w-5 tw-text-amber-500" />
+          </div>
+          <div className="tw-ml-3">
+            <h3 className="tw-text-sm tw-font-semibold tw-text-amber-800">Action Irréversible</h3>
+            <div className="tw-mt-2 tw-text-sm tw-text-amber-700">
+              <p>
+                Vous êtes sur le point de supprimer définitivement cette dépense et tous ses mouvements associés.
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      <ConfirmationInput 
+        onValidationChange={(isValid) => setIsConfirmed(isValid)} 
+        codeLength={6}
+      />
+
+      <button
+        onClick={handleDelete}
+        disabled={!isConfirmed || isDeleting}
+        className="
+          tw-w-full tw-flex tw-items-center tw-justify-center tw-p-3 tw-font-bold tw-text-white tw-rounded-lg tw-transition-all 
+          tw-bg-red-600 hover:tw-bg-red-700 
+          disabled:tw-bg-gray-400 disabled:tw-cursor-not-allowed disabled:tw-shadow-none
+          focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-red-500
+        "
+      >
+        {isDeleting ? (
+          <>
+            <Loader2 className="tw-mr-2 tw-animate-spin" size={20} />
+            Suppression en cours...
+          </>
+        ) : (
+          <>
+            <Trash2 className="tw-mr-2" size={20} />
+            Confirmer la Suppression
+          </>
+        )}
+      </button>
     </div>
   );
 }
 
 DeleteDepense.propTypes = {
-  currentDeleteDepenseId: PropTypes.number,
-  refreshDepense: PropTypes.func,
+  depense: PropTypes.object.isRequired,
+  onSuccess: PropTypes.func.isRequired,
 };
 
 export default DeleteDepense;

@@ -203,58 +203,48 @@ export default class DepensesController {
   async delete({ auth, bouncer, request, response }: HttpContext) {
     try {
       const userConnected = auth.user
-
       await userConnected?.load('Profil', (profilQuery: any) => {
         profilQuery.preload('Permission')
       })
 
       if (await bouncer.with('DepensePolicy').denies('delete')) {
-        return response.forbidden("Désolé, vous n'êtes pas autorisé à supprimer une dépense.")
+        return response.forbidden("Vous n'êtes pas autorisé à supprimer cette dépense.")
       }
 
-      const { depenseId, userConnectedId } = request.qs()
+      const { depenseId, userConnectedId } = request.qs() // ou request.body()
+      console.log('depenseId:', depenseId, 'userConnectedId:', userConnectedId)
 
-      // Récupérer l'utilisateur connecté
       const user = await User.findOrFail(userConnectedId)
 
-      // Récupérer la dépense avec les mouvements associés
-      const depense = await Depense.query().where({ id: depenseId }).preload('Mouvements').first()
+      const depense = await Depense.query()
+        .where({ id: depenseId })
+        .preload('user')
+        .preload('Mouvements')
+        .first()
 
-      // Vérifier que l'utilisateur est bien celui qui a enregistré la dépense
-      if (user.$attributes.profilId !== depense?.$attributes?.userId) {
-        return response.forbidden(
-          "Désolé, vous n'avez pas enregistré cette dépense, vous ne pouvez pas la supprimer."
-        )
+      if (!depense) {
+        return response.notFound({ status: 404, error: 'Dépense introuvable' })
       }
 
-      // Vérifier si la dépense est bloquée
-      if (depense?.$attributes.bloquer) {
-        return response.forbidden(`Désolé, vous ne pouvez plus supprimer cette dépense.`)
+      if (user.id !== depense.user.id) {
+        return response.forbidden('Vous ne pouvez pas supprimer cette dépense.')
       }
 
-      // Vérifier si la dépense a des mouvements associés
-      if (depense?.Mouvements && depense?.Mouvements.length > 0) {
-        return response.forbidden(
-          'Désolé, le décaissement est déjà engagé, elle ne peut être supprimée.'
-        )
+      if (depense.bloquer) {
+        return response.forbidden('Cette dépense est bloquée et ne peut pas être supprimée.')
       }
 
-      // Supprimer la dépense
-      await depense?.delete()
+      if (depense.Mouvements.length > 0) {
+        return response.forbidden('Le décaissement est déjà engagé, elle ne peut être supprimée.')
+      }
 
-      return response.created({
-        depense,
-        status: 200,
-        message: 'Dépense supprimée avec succès',
-      })
+      await depense.delete()
+
+      return response.ok({ depense, status: 200, message: 'Dépense supprimée avec succès' })
     } catch (error) {
-      let message = ''
-      if (error.code === 'E_ROW_NOT_FOUND') {
-        message = 'Dépense non trouvée.'
-      } else {
-        message = processErrorMessages(error)
-      }
-
+      console.error(error)
+      const message =
+        error.code === 'E_ROW_NOT_FOUND' ? 'Dépense non trouvée.' : processErrorMessages(error)
       return response.badRequest({ status: 400, error: message })
     }
   }

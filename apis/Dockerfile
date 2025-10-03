@@ -1,5 +1,5 @@
 # Utilisation de l'image de base
-FROM node:20.12.2-alpine3.18 AS base
+FROM node:22.17.0-alpine AS base
 
 # Stage de dépendances (installation de toutes les dépendances)
 FROM base AS deps
@@ -30,4 +30,7 @@ COPY --from=production-deps /app/node_modules /app/node_modules
 # Copie uniquement les fichiers compilés (pas les fichiers .ts)
 COPY --from=build /app/build /app
 
+COPY public/. /app/public/
+
 EXPOSE 3333
+CMD ["node", "ace", "serve", "--watch"]

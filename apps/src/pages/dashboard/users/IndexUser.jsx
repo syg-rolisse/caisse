@@ -219,7 +219,7 @@ function IndexUser() {
                                   }/uploads/${
                                     user?.avatarUrl
                                       ? user.avatarUrl
-                                      : "avatars/ri3uadefault.png"
+                                      : "avatars/ri3uadefault.jpg"
                                   }`}
                                   alt="Avatar"
                                   style={{
