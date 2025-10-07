@@ -14,8 +14,10 @@ export function useSoldeCaisse() {
   }, [fetchSoldeCaisse, shouldRefreshUsers]);
 
   useEffect(() => {
+    console.log(data?.solde?.montant);
+    
     if (data) {
-      setSoldeCaisse(data); // data devrait être { solde: number | null }
+      setSoldeCaisse(data?.solde?.montant);
     }
   }, [data]);
 
@@ -26,8 +28,7 @@ export function useSoldeCaisse() {
   }, [isError, error]);
 
   const soldeCaisseStats = useMemo(() => {
-    // ⚠️ Normalisation : si solde est null, on renvoie 0
-    const montant = soldeCaisse?.solde ?? 0;
+    const montant = soldeCaisse ?? 0;
     return { solde: montant };
   }, [soldeCaisse]);
 

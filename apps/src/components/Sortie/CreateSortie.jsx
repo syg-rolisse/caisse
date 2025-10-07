@@ -1,260 +1,138 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
 import { SocketContext } from "../../context/socket";
+import { useHandleError } from "../../hook/useHandleError";
+import { Loader2, CheckCircle, X, PlusCircle } from "lucide-react";
+import InputField from "../InputField";
 
-function CreateSortie({ currentDepenseId, currentSortieId,forceUpdate, refreshSortie }) {
-  const [currentSortie, setCurrentDepense] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [isConnected, setIsConnected] = useState(false);
-  const prevSortieIdRef = useRef();
-  const addSortieLinkRef = useRef();
-  const user = JSON.parse(localStorage.getItem("user"));
+function CreateSortie({ depense, onSuccess, onClose }) {
+  const { handleError } = useHandleError();
   const socket = useContext(SocketContext);
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm();
+  } = useForm({ defaultValues: { montant: "", wording: "" } });
 
-  const handleError = (error) => {
-    const validationErrors = error?.response?.data?.error;
-    if (validationErrors && Array.isArray(validationErrors)) {
-      validationErrors.forEach((err) =>
-        toast.error(err.message, { duration: 12000 })
-      );
-    } else {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.response?.data,
-        {
-          duration: 4000,
-        }
-      );
-    }
-  };
+  const totalDejaPaye = depense?.Mouvements?.reduce((sum, mov) => sum + mov.montant, 0) || 0;
+  const resteAPayer = (depense?.montant || 0) - totalDejaPaye;
 
-  const handleSuccess = (response, action) => {
-    toast.success(response?.data?.message || "Action réussie !");
-    reset({
-      wording: "",
-      purcent: "",
-    });
-    refreshSortie();
-
-    addSortieLinkRef.current.click();
-    socket.emit(`sortie_${action}`, response.data);
-  };
-
-  const createOrUpdateDepense = useMutation(
-    ({ data }) => {
-      const url = currentSortieId
-        ? `${
-            import.meta.env.VITE_BACKEND_URL
-          }/api/v1/sortie?sortieId=${currentSortieId}`
-        : `${import.meta.env.VITE_BACKEND_URL}/api/v1/sortie?companieId=${
-            user?.company?.id
-          }`;
-      const method = currentSortieId ? axiosInstance.put : axiosInstance.post;
-      return method(url, data);
-    },
-    {
-      onSuccess: (response) => {
-        currentSortieId = null;
-
-        handleSuccess(response, currentDepenseId ? "updated" : "created");
-      },
-      onError: handleError,
-    }
-  );
-
-  const fetchSortie = useMutation(
-    (sortieId) =>
-      axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/sortie?sortieId=${sortieId}`
+  // Mutation pour AJOUTER un mouvement
+  const { mutate: createMouvement, isLoading: isCreating } = useMutation({
+    mutationFn: (data) =>
+      axiosInstance.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/sortie`, // Votre endpoint de création de 'sortie' (mouvement)
+        data
       ),
-    {
-      onSuccess: (response) => {
-        setCurrentDepense(response?.data?.depense);
-      },
-      onError: handleError,
-    }
-  );
+    onSuccess: (response) => {
+      toast.success(response?.data?.message);
+      if (socket?.connected) socket.emit("depense_updated", user.company.id);
+      onSuccess();
+    },
+    onError: handleError,
+  });
 
   const onSubmit = (data) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-
-    if (user) {
-      const datas = {
-        ...data,
-        depenseId: currentSortie?.depenseId
-          ? currentSortie?.depenseId
-          : currentDepenseId,
-        userId: user.id,
-      };
-
-      createOrUpdateDepense.mutate({
-        data: datas,
-        currentDepenseId,
-      });
-    } else {
-      toast.error("Utilisateur non trouvé dans le stockage local");
+    if (data.montant > resteAPayer) {
+      toast.error(`Le montant ne peut pas dépasser le reste à payer (${resteAPayer.toLocaleString()} F).`);
+      return;
     }
+    createMouvement({
+      ...data,
+      depenseId: depense.id,
+      userId: user.id,
+      companieId: user.company.id,
+    });
   };
 
   useEffect(() => {
-    if (socket) {
-      socket.on("sortie_created", refreshSortie);
-      socket.on("sortie_updated", refreshSortie);
-      socket.on("sortie_deleted", refreshSortie);
-      return () => {
-        socket.off("sortie_created", refreshSortie);
-        socket.off("sortie_updated", refreshSortie);
-        socket.off("sortie_deleted", refreshSortie);
-      };
-    }
-  }, [socket, refreshSortie]);
-
-  useEffect(() => {
-    if (currentDepenseId) {
-      prevSortieIdRef.current = currentDepenseId;
-      fetchSortie.mutate(currentDepenseId);
-      //}
-
-      addSortieLinkRef.current?.click();
-    }
-  }, [currentDepenseId,forceUpdate]);
-
-  // useEffect(() => {
-  //   if (currentSortieId || currentDepenseId) {
-  //     console.log('rrrrrrrrrrrrrrrrrrrrr');
-
-  //     if (currentSortieId) {
-  //       prevSortieIdRef.current = currentSortieId;
-  //       fetchSortie.mutate(currentSortieId);
-  //     }
-
-  //     addSortieLinkRef.current?.click();
-  //   }
-  // }, [currentSortieId, currentDepenseId]);
-
-  useEffect(() => {
-    if (currentSortie) {
-      reset({
-        wording: currentSortie.wording || "",
-        montant: currentSortie.montant || "",
-      });
-    }
-  }, [currentSortie, reset]);
+    reset({ montant: "", wording: "" });
+  }, [depense, reset]);
 
   return (
-    <div className="row">
-      <a
-        ref={addSortieLinkRef}
-        data-bs-effect="effect-rotate-bottom"
-        data-bs-toggle="modal"
-        data-bs-target="#modaldemo8"
-        style={{ cursor: "pointer" }}
-        className=""
-      >
-        {/* <i className="ri-add-line">Payé</i>  modal-effect btn  btn-sm btn-primary-transparent rounded-pill tw-mr-2*/}
-      </a>
-      <div
-        className="modal fade"
-        id="modaldemo8"
-        tabIndex="-1"
-        data-bs-backdrop="static"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content tw-rounded-lg tw-border tw-p-2">
-            <div className="modal-header">
-              <h6 className="modal-title tw-text-gray-700 tw-text-xl">
-                {currentSortieId ? "Modifier le montant" : "Décaissement"}
-              </h6>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="modal-body text-start">
-              <form onSubmit={handleSubmit(onSubmit)} className="row gy-4">
-                <div className="form-group">
-                  <label htmlFor="montant" className="form-label text-default">
-                    Montant
-                  </label>
-
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    id="montant"
-                    placeholder="Saisir le montant"
-                    {...register("montant", {
-                      required: "Le montant est requis",
-                    })}
-                  />
-                  {errors.montant && (
-                    <span className="tw-text-red-500">
-                      {errors.montant.message}
-                    </span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="wording" className="form-label text-default">
-                    Message spécifique
-                  </label>
-                  <span className="tw-text-red-600">*</span>
-                  <textarea
-                    className="form-control form-control-lg"
-                    id="wording"
-                    placeholder="Saisir le message"
-                    rows="4"
-                    {...register("wording")}
-                  ></textarea>
-                </div>
-
-                <div className="d-flex justify-content-between tw-mt-5">
-                  <button
-                    type="submit"
-                    className="btn tw-bg-green-600 tw-text-white"
-                    disabled={createOrUpdateDepense.isLoading}
-                  >
-                    {createOrUpdateDepense.isLoading
-                      ? "Chargement..."
-                      : "Valider"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    data-bs-dismiss="modal"
-                  >
-                    Fermer
-                  </button>
-                </div>
-              </form>
-            </div>
+    <div className="tw-bg-white tw-p-2">
+      <div className="tw-mb-4">
+        <h3 className="tw-text-lg tw-font-semibold tw-text-gray-900">Gérer les Paiements</h3>
+        <div className="tw-bg-gray-50 tw-p-3 tw-rounded-lg tw-border tw-border-gray-200 tw-mt-2">
+          <p className="tw-text-sm tw-text-gray-600">Dépense : <span className="tw-font-medium tw-text-gray-800">{depense?.wording}</span></p>
+          <div className="tw-flex tw-justify-between tw-items-baseline tw-mt-1">
+            <span className="tw-text-md tw-font-bold tw-text-orange-600">Total : {depense?.montant?.toLocaleString()} F</span>
+            <span className="tw-text-sm tw-font-bold tw-text-green-600">Reste à payer : {resteAPayer.toLocaleString()} F</span>
           </div>
         </div>
       </div>
+
+      <div className="tw-space-y-2 tw-mb-6">
+        <h4 className="tw-text-md tw-font-semibold tw-text-gray-700">Paiements déjà effectués</h4>
+        {depense?.Mouvements?.length > 0 ? (
+          depense.Mouvements.map((mouvement) => (
+            <div key={mouvement.id} className="tw-flex tw-items-center tw-justify-between tw-p-2 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-md">
+              <div>
+                <p className="tw-font-semibold tw-text-green-800">{mouvement.montant.toLocaleString()} F</p>
+                <p className="tw-text-xs tw-text-gray-500">par {mouvement.user?.fullName} le {new Date(mouvement.createdAt).toLocaleDateString('fr-FR')}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="tw-text-sm tw-text-gray-500 tw-italic">Aucun paiement enregistré.</p>
+        )}
+      </div>
+
+      {resteAPayer > 0 ? (
+        <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-4 tw-pt-4 tw-border-t">
+          <h4 className="tw-text-md tw-font-semibold tw-text-gray-700">Ajouter un nouveau paiement</h4>
+          <InputField
+            id="montant"
+            label="Montant à payer"
+            type="number"
+            placeholder={`Max: ${resteAPayer.toLocaleString()}`}
+            {...register("montant", { 
+              required: "Le montant est requis.",
+              valueAsNumber: true,
+              max: { value: resteAPayer, message: `Le montant ne peut pas dépasser ${resteAPayer.toLocaleString()} F.` }
+            })}
+            errors={errors}
+          />
+          <div>
+            <label htmlFor="wording" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700">Note (optionnel)</label>
+            <textarea
+              id="wording"
+              rows={2}
+              className="tw-mt-1 tw-block tw-w-full tw-rounded-md tw-border-gray-300 tw-shadow-sm focus:tw-border-orange-500 focus:tw-ring-orange-500 sm:tw-text-sm"
+              {...register("wording")}
+            />
+          </div>
+          <div className="tw-pt-4 tw-flex tw-justify-between tw-items-center">
+            <button type="button" className="btn btn-light" onClick={onClose}>
+              <X size={16} className="tw-inline tw-mr-1" />
+              Fermer
+            </button>
+            <button type="submit" className="btn btn-success tw-text-white" disabled={isCreating}>
+              {isCreating ? <Loader2 className="tw-animate-spin" /> : <><PlusCircle size={16} className="tw-inline tw-mr-2" /> Ajouter Paiement</>}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="tw-text-center tw-p-4 tw-bg-green-100 tw-rounded-lg">
+          <CheckCircle className="tw-mx-auto tw-text-green-600" size={32} />
+          <p className="tw-mt-2 tw-font-semibold tw-text-green-800">Cette dépense est entièrement payée.</p>
+        </div>
+      )}
     </div>
   );
 }
 
 CreateSortie.propTypes = {
-  currentSortieId: PropTypes.number,
-  currentDepenseId: PropTypes.number,
-  forceUpdate: PropTypes.bool,
-  refreshSortie: PropTypes.func.isRequired,
+  depense: PropTypes.object.isRequired,
+  onSuccess: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default CreateSortie;

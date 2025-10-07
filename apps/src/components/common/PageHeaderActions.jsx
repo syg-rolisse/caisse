@@ -1,15 +1,41 @@
 // src/components/common/PageHeaderActions.js
-import PropTypes from 'prop-types';
-import { PlusCircle, Star } from 'lucide-react';
+import PropTypes from "prop-types";
+import { PlusCircle, Star } from "lucide-react";
+import TopBar from "./TopBar";
 
-const PageHeaderActions = ({ primaryActionLabel, onPrimaryActionClick }) => {
+const PageHeaderActions = ({ indexTitle, primaryActionLabel, onPrimaryActionClick }) => {
   return (
-    <div className="tw-flex tw-items-center tw-justify-end tw-gap-3">
-      
-      {/* Bouton d'icône "Favoris" */}
-      <button
-        onClick={() => { /* Logique à ajouter plus tard */ }}
-        className="
+
+
+<div className="">
+        
+<div className="">
+          <TopBar pageTitle="Type de dépense" />
+        </div>
+  
+    <div className="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+      <div className="">
+        <div className="">
+          <nav>
+            <ol className="breadcrumb mb-1 mb-md-0">
+              <li className="breadcrumb-item">
+                <a href="#">Index</a>
+              </li>
+              <li className="breadcrumb-item active" aria-current="page">
+                {indexTitle}
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+      <div className="ms-auto pageheader-btn">
+        <div className="tw-flex tw-items-center tw-justify-end tw-gap-3">
+          {/* Bouton d'icône "Favoris" */}
+          <button
+            onClick={() => {
+              /* Logique à ajouter plus tard */
+            }}
+            className="
           tw-p-2.5 tw-rounded-lg tw-text-gray-500
           tw-bg-white tw-border tw-border-gray-300 tw-shadow-sm
           hover:tw-bg-gray-100 hover:tw-text-orange-500
@@ -18,15 +44,15 @@ const PageHeaderActions = ({ primaryActionLabel, onPrimaryActionClick }) => {
           {/* 👇 CE QUI A ÉTÉ AJOUTÉ POUR LA DOUCEUR 👇 */}
           tw-transition-colors tw-duration-200 tw-ease-in-out
         "
-        aria-label="Ajouter aux favoris"
-      >
-        <Star size={20} />
-      </button>
+            aria-label="Ajouter aux favoris"
+          >
+            <Star size={20} />
+          </button>
 
-      {/* Bouton Principal */}
-      <button
-        onClick={onPrimaryActionClick}
-        className="
+          {/* Bouton Principal */}
+          <button
+            onClick={onPrimaryActionClick}
+            className="
           tw-inline-flex tw-items-center tw-justify-center tw-gap-2 tw-px-5 tw-py-2.5 
           tw-font-semibold tw-text-white 
           tw-bg-green-600 tw-rounded-lg tw-shadow-sm 
@@ -37,17 +63,21 @@ const PageHeaderActions = ({ primaryActionLabel, onPrimaryActionClick }) => {
           tw-transform hover:tw-scale-105
           tw-transition-all tw-duration-200 tw-ease-in-out
         "
-      >
-        <PlusCircle size={20} />
-        <span>{primaryActionLabel}</span>
-      </button>
+          >
+            <PlusCircle size={20} />
+            <span>{primaryActionLabel}</span>
+          </button>
+        </div>
+      </div>
     </div>
+</div>
   );
 };
 
 PageHeaderActions.propTypes = {
   primaryActionLabel: PropTypes.string.isRequired,
   onPrimaryActionClick: PropTypes.func.isRequired,
+  indexTitle: PropTypes.string.isRequired,
 };
 
 export default PageHeaderActions;

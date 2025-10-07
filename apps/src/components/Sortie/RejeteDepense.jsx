@@ -1,280 +1,148 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
 import { SocketContext } from "../../context/socket";
+import { useHandleError } from "../../hook/useHandleError";
+import { Loader2, CheckCircle, X, AlertCircle } from "lucide-react";
 
-function RejeteDepense({ currentRejeteDepenseId, refreshSortie }) {
-  const [currentRejetDepense, setRejetDepense] = useState();
-  const prevUserIdRef = useRef();
-  const addRejeteLinkRef = useRef();
-  const user = JSON.parse(localStorage.getItem("user"));
-
+function RejeteDepense({ depense, onSuccess, onClose }) {
+  const { handleError } = useHandleError();
   const socket = useContext(SocketContext);
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    watch,
+    formState: { errors }, // 👈 CORRECTION : On récupère l'objet 'errors' ici
   } = useForm();
 
-  // Fonction handleError déplacée ici
-  const handleError = (error) => {
-    const validationErrors = error?.response?.data?.error;
+  const isRejeterChecked = watch("rejeter", depense?.rejeter || false);
 
-    if (validationErrors && Array.isArray(validationErrors)) {
-      validationErrors.forEach((err) => {
-        toast.error(err.message, { duration: 12000 });
-      });
-    } else {
-      toast.error(
-        error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.response?.data,
-        { duration: 12000 }
-      );
-    }
-  };
-
-  const rejetDepense = useMutation(
-    ({ data, currentRejeteDepenseId }) =>
+  const { mutate: updateDepense, isLoading } = useMutation({
+    mutationFn: (data) =>
       axiosInstance.put(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/api/v1/rejetDepense?userConnectedId=${user.id}&rejeter=${
-          data.rejeter
-        }&depenseId=${currentRejeteDepenseId}&rejetMessage=${data.rejetMessage}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/rejetDepense?userConnectedId=${user.id}&depenseId=${depense.id}`,
+        data
       ),
-    {
-      onSuccess: (response) => {
-        socket.emit("depense_updated");
-        toast.success(response?.data?.message);
-        addRejeteLinkRef.current.click();
-        refreshSortie();
-        reset();
-      },
-      onError: handleError,
-    }
-  );
-
-  const getDepense = useMutation(
-    (param) =>
-      axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/depense?depenseId=${
-          param.currentRejeteDepenseId
-        }`
-      ),
-    {
-      onSuccess: (response) => {
-        setRejetDepense(response?.data?.depense);
-      },
-      onError: handleError, // Utilisation après déclaration
-    }
-  );
-
-  // const closeModal = () => {
-  //   const modalElement = document.getElementById("rejetDepenseModal");
-  //   const modalInstance = Modal.getInstance(modalElement);
-  //   if (modalInstance) modalInstance.hide();
-  // };
+    onSuccess: (response) => {
+      toast.success(response?.data?.message);
+      onSuccess();
+      if (socket?.connected && user?.company?.id) {
+        socket.emit("depense_updated", user.company.id);
+      }
+    },
+    onError: handleError,
+  });
 
   const onSubmit = (data) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      rejetDepense.mutate({ data, currentRejeteDepenseId });
-    } else {
-      toast.error("Utilisateur non trouvé dans le stockage local");
-    }
+    updateDepense(data);
   };
 
   useEffect(() => {
-    if (
-      currentRejeteDepenseId &&
-      currentRejeteDepenseId !== prevUserIdRef.current
-    ) {
-      prevUserIdRef.current = currentRejeteDepenseId;
-      getDepense.mutate({ currentRejeteDepenseId });
-      if (addRejeteLinkRef.current) {
-        addRejeteLinkRef.current.click();
-      }
-    }
-  }, [currentRejeteDepenseId]);
-
-  useEffect(() => {
-    if (currentRejetDepense) {
+    if (depense) {
       reset({
-        wording: currentRejetDepense?.wording || "",
-        rejetMessage: currentRejetDepense?.rejetMessage || "",
-        montant: currentRejetDepense?.montant || "",
-        rejeter: currentRejetDepense?.rejeter || "",
+        rejeter: depense.rejeter || false,
+        rejetMessage: depense.rejetMessage || "",
       });
     }
-  }, [currentRejetDepense, reset]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on("depense_updated", refreshSortie);
-      return () => {
-        socket.off("depense_updated", refreshSortie);
-      };
-    }
-  }, [socket, refreshSortie]);
+  }, [depense, reset]);
 
   return (
-    <div className="row">
-      <a
-        ref={addRejeteLinkRef}
-        className="modal-effect"
-        data-bs-effect="effect-rotate-bottom"
-        data-bs-toggle="modal"
-        href="#rejetDepenseModal"
-        style={{ cursor: "pointer", visibility: "hidden" }}
-        disabled
-      ></a>
+    <div className="tw-bg-white tw-p-2">
+      <div className="tw-mb-4">
+        <h3 className="tw-text-lg tw-font-semibold tw-text-gray-900">
+          Rejeter / Approuver la Dépense
+        </h3>
+        <p className="tw-text-sm tw-text-gray-500">
+          Une dépense rejetée ne pourra pas être payée tant qu&apos;elle ne sera pas approuvée.
+        </p>
+      </div>
 
-      <div
-        className="modal fade"
-        id="rejetDepenseModal"
-        tabIndex="-1"
-        data-bs-backdrop="static"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content tw-rounded-lg tw-border tw-p-2">
-            <div className="modal-header">
-              <h6 className="modal-title tw-text-gray-700 tw-text-xl">
-                REJET DE LA DEPENSE
-              </h6>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-                style={{ cursor: "pointer" }}
-              ></button>
-            </div>
-            <div className="modal-body text-start">
-              <div className="tw-text-red-600 tw-mb-3">
-                <h6>
-                  <span className="tw-text-xl">*</span> signifie que
-                  l&apos;information est requise
-                </h6>
-              </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-6">
+        <div className="tw-bg-gray-50 tw-p-4 tw-rounded-lg tw-border tw-border-gray-200">
+          <p className="tw-text-sm tw-font-medium tw-text-gray-600">Dépense concernée :</p>
+          <p className="tw-text-lg tw-font-semibold tw-text-gray-800">{depense?.wording}</p>
+          <p className="tw-text-md tw-font-bold tw-text-orange-600">{depense?.montant?.toLocaleString()} F</p>
+        </div>
 
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="row formCustom"
-              >
-                <div className="form-group">
-                  <label
-                    htmlFor="wording"
-                    className="form-label tw-text-red-500 text-default"
-                  >
-                    Nature de la dépense
-                  </label>
-
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    id="wording"
-                    placeholder="Saisir l'intitulé"
-                    {...register("wording", {
-                      required: "L'intitulé est requis",
-                    })}
-                    disabled
-                  />
-                  {errors.wording && (
-                    <span className="tw-text-red-500">
-                      {errors.wording.message}
-                    </span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="montant" className="form-label text-default">
-                    Montant
-                  </label>
-
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    id="montant"
-                    placeholder="Saisir l'intitulé"
-                    {...register("montant", {
-                      required: "L'intitulé est requis",
-                    })}
-                    disabled
-                  />
-                  {errors.montant && (
-                    <span className="tw-text-red-500">
-                      {errors.montant.message}
-                    </span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label
-                    htmlFor="rejetMessage"
-                    className="form-label text-default"
-                  >
-                    Message spécifique
-                  </label>
-                  <span className="tw-text-red-600">*</span>
-                  <textarea
-                    className="form-control form-control-lg"
-                    id="rejetMessage"
-                    placeholder="Saisir la raison du rejet..."
-                    rows="4"
-                    {...register("rejetMessage")}
-                  ></textarea>
-                </div>
-
-                <div className="form-check tw-mt-3 tw-ml-3 tw-flex tw-justify-start tw-items-center">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="rejeter"
-                    {...register("rejeter")}
-                  />
-                  <label className="form-check-label tw-ml-2 tw-font-bold tw-text-lg" htmlFor="rejeter">
-                    Rejeter
-                  </label>
-                </div>
-
-                <div className="d-flex justify-content-between tw-mt-5">
-                  <button
-                    type="submit"
-                    className="btn tw-bg-green-600 tw-text-white"
-                    disabled={rejetDepense.isLoading}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {rejetDepense.isLoading ? "Chargement..." : "Valider"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    data-bs-dismiss="modal"
-                    style={{ cursor: "pointer" }}
-                  >
-                    Fermer
-                  </button>
-                </div>
-              </form>
-            </div>
+        <div className="tw-relative tw-flex tw-justify-center tw-items-center tw-p-4 tw-border tw-border-gray-200 tw-rounded-lg">
+          <div className="tw-flex tw-h-6 tw-items-center">
+            <input
+              id="rejeter"
+              type="checkbox"
+              className="tw-h-6 tw-w-6 tw-rounded tw-border-gray-300 tw-text-red-600 focus:tw-ring-red-600 tw-cursor-pointer"
+              {...register("rejeter")}
+            />
+          </div>
+          <div className="tw-ml-4 tw-text-sm tw-leading-6">
+            <label htmlFor="rejeter" className="tw-font-medium tw-text-gray-900 tw-text-lg tw-cursor-pointer">
+              {isRejeterChecked ? "Dépense Rejetée" : "Dépense Approuvée"}
+            </label>
+            <p className="tw-text-gray-500">
+              Cochez pour rejeter, décochez pour approuver.
+            </p>
           </div>
         </div>
-      </div>
+        
+        {isRejeterChecked && (
+          <div>
+            <label htmlFor="rejetMessage" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700">
+              Raison du rejet <span className="tw-text-red-500">*</span>
+            </label>
+            <textarea
+              id="rejetMessage"
+              rows={3}
+              className="tw-mt-1 tw-block tw-w-full tw-px-3 tw-py-2 tw-border tw-border-gray-300 tw-rounded-md tw-shadow-sm focus:tw-outline-none focus:tw-ring-red-500 focus:tw-border-red-500 sm:tw-text-sm"
+              placeholder="Expliquez brièvement pourquoi la dépense est rejetée..."
+              {...register("rejetMessage", { required: "La raison du rejet est obligatoire." })}
+            />
+            {errors.rejetMessage && (
+              <p className="tw-mt-1 tw-text-sm tw-text-red-600">
+                <AlertCircle size={14} className="tw-inline tw-mr-1" />
+                {errors.rejetMessage.message}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="tw-pt-5 tw-flex tw-justify-between tw-items-center">
+          <button
+            type="button"
+            className="tw-py-2 tw-px-4 tw-rounded-md tw-border tw-border-gray-300 tw-bg-white tw-text-sm tw-font-medium tw-text-gray-700 hover:tw-bg-gray-50"
+            onClick={onClose}
+          >
+            <X size={16} className="tw-inline tw-mr-1" />
+            Annuler
+          </button>
+          <button
+            type="submit"
+            className="tw-inline-flex tw-justify-center tw-py-2 tw-px-6 tw-border tw-border-transparent tw-rounded-md tw-shadow-sm tw-text-sm tw-font-medium tw-text-white tw-bg-green-600 hover:tw-bg-green-700 disabled:tw-bg-gray-400"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="tw-animate-spin" size={20} />
+            ) : (
+              <>
+                <CheckCircle size={16} className="tw-inline tw-mr-2" />
+                Appliquer le statut
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
 
 RejeteDepense.propTypes = {
-  currentRejeteDepenseId: PropTypes.number,
-  refreshSortie: PropTypes.func,
+  depense: PropTypes.object.isRequired,
+  onSuccess: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default RejeteDepense;

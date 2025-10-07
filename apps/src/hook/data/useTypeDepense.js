@@ -1,6 +1,5 @@
 // src/hooks/data/useTypeDepense.js
 import { useState, useEffect, useMemo } from "react";
-import useSocketEvents from "../../components/UseSocketEvents";
 import { useFetchTypeDepense } from "../api/useFetchTypeDepense";
 
 export function useTypeDepense(page = 1, perpage = 10) {
@@ -8,16 +7,16 @@ export function useTypeDepense(page = 1, perpage = 10) {
   const [rawTypeDepense, setRawTypeDepense] = useState([]);
   const [typeDepenseError, setTypeDepenseError] = useState(null);
 
-  const { shouldRefreshTypeDepense, shouldRefreshDepense } = useSocketEvents();
   const { fetchTypeDepense, isLoading, isError, error, data } = useFetchTypeDepense();
 
   useEffect(() => {
     fetchTypeDepense({ page, perpage });
-  }, [fetchTypeDepense, shouldRefreshTypeDepense, shouldRefreshDepense, page, perpage]);
+  }, [fetchTypeDepense, page, perpage]);
 
   useEffect(() => {
-    if (data?.data) {
-      setRawTypeDepense(data.data);
+    
+    if (data) {      
+      setRawTypeDepense(data.allTypeDepenses);
     }
   }, [data]);
 

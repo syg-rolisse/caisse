@@ -16,6 +16,8 @@ export function useFetchSoldeCaisse() {
           userId: user?.id,
         }
       );
+      console.log("response.data", response.data);
+      
       return response.data;
     },
     {

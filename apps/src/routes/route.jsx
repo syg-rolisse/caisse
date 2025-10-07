@@ -5,7 +5,7 @@ import IndexApprovisionnement from "../pages/dashboard/approvisionnement/IndexAp
 import Dashboard from "../pages/dashboard/Dashboard";
 import OldDashboard from "../pages/dashboard/OldDashboard";
 import IndexDepense from "../pages/dashboard/depense/IndexDepense";
-import IndexSortie from "../pages/dashboard/mouvement-caisse/IndexSortie";
+import IndexSortie from "../pages/dashboard/mouvement-caisse/IndexMouvement";
 import Editions from "../pages/dashboard/Editions";
 import IndexPermission from "../pages/dashboard/permissions/IndexPermission";
 import IndexTypeDepense from "../pages/dashboard/type-depense/IndexTypeDepense";

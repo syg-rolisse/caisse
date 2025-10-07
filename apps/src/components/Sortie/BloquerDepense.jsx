@@ -1,260 +1,130 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
 import { SocketContext } from "../../context/socket";
+import { useHandleError } from "../../hook/useHandleError";
+import { Loader2, CheckCircle, X, Lock, Unlock } from "lucide-react";
 
-function BloquerDepense({ currentBloquerDepenseId, refreshSortie }) {
-  const [currentRejetDepense, setRejetDepense] = useState();
-  const prevUserIdRef = useRef();
-  const addRejeteLinkRef = useRef();
-  const user = JSON.parse(localStorage.getItem("user"));
-
+function BloquerDepense({ depense, onSuccess, onClose }) {
+  const { handleError } = useHandleError();
   const socket = useContext(SocketContext);
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    watch, // Pour observer la valeur du checkbox en temps réel
   } = useForm();
 
-  // Fonction handleError déplacée ici
-  const handleError = (error) => {
-    const validationErrors = error?.response?.data?.error;
-    console.log(error?.response?.data);
+  const isBloquerChecked = watch("bloquer", depense?.bloquer || false);
 
-    if (validationErrors && Array.isArray(validationErrors)) {
-      validationErrors.forEach((err) => {
-        toast.error(err.message, { duration: 12000 });
-      });
-    } else {
-      toast.error(
-        error?.response?.data ||
-          error?.response?.data?.message ||
-          error?.response?.data?.error,
-        { duration: 12000 }
-      );
-    }
-  };
-
-  const updateDepense = useMutation(
-    ({ data, currentBloquerDepenseId }) =>
+  const { mutate: updateDepense, isLoading } = useMutation({
+    mutationFn: (data) =>
       axiosInstance.put(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/api/v1/bloquerDepense?userConnectedId=${user.id}&bloquer=${
-          data.bloquer
-        }&depenseId=${currentBloquerDepenseId}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/bloquerDepense?userConnectedId=${user.id}&depenseId=${depense.id}`,
+        data
       ),
-    {
-      onSuccess: (response) => {
-        socket.emit("depense_updated");
-        toast.success(response?.data?.message);
-        addRejeteLinkRef.current.click();
-        refreshSortie();
-        reset();
-      },
-      onError: handleError,
-    }
-  );
-
-  const getDepense = useMutation(
-    (param) =>
-      axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/depense?depenseId=${
-          param.currentBloquerDepenseId
-        }`
-      ),
-    {
-      onSuccess: (response) => {
-        setRejetDepense(response?.data?.depense);
-      },
-      onError: handleError, // Utilisation après déclaration
-    }
-  );
-
-  // const closeModal = () => {
-  //   const modalElement = document.getElementById("bloquerDepenseModal");
-  //   const modalInstance = Modal.getInstance(modalElement);
-  //   if (modalInstance) modalInstance.hide();
-  // };
+    onSuccess: (response) => {
+      toast.success(response?.data?.message);
+      onSuccess();
+      if (socket?.connected && user?.company?.id) {
+        socket.emit("depense_updated", user.company.id);
+      }
+    },
+    onError: handleError,
+  });
 
   const onSubmit = (data) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      updateDepense.mutate({ data, currentBloquerDepenseId });
-    } else {
-      toast.error("Utilisateur non trouvé dans le stockage local");
-    }
+    updateDepense(data);
   };
 
   useEffect(() => {
-    if (
-      currentBloquerDepenseId &&
-      currentBloquerDepenseId !== prevUserIdRef.current
-    ) {
-      prevUserIdRef.current = currentBloquerDepenseId;
-      getDepense.mutate({ currentBloquerDepenseId });
-      if (addRejeteLinkRef.current) {
-        addRejeteLinkRef.current.click();
-      }
-    }
-  }, [currentBloquerDepenseId]);
-
-  useEffect(() => {
-    if (currentRejetDepense) {
+    if (depense) {
       reset({
-        wording: currentRejetDepense?.wording || "",
-        montant: currentRejetDepense?.montant || "",
-        bloquer: currentRejetDepense?.bloquer || false,
+        bloquer: depense.bloquer || false,
       });
     }
-  }, [currentRejetDepense, reset]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on("depense_updated", refreshSortie);
-      return () => {
-        socket.off("depense_updated", refreshSortie);
-      };
-    }
-  }, [socket, refreshSortie]);
+  }, [depense, reset]);
 
   return (
-    <div className="row">
-      <a
-        ref={addRejeteLinkRef}
-        className="modal-effect"
-        data-bs-effect="effect-rotate-bottom"
-        data-bs-toggle="modal"
-        href="#bloquerDepenseModal"
-        style={{ cursor: "pointer", visibility: "hidden" }}
-        disabled
-      ></a>
-
-      <div
-        className="modal fade"
-        id="bloquerDepenseModal"
-        tabIndex="-1"
-        data-bs-backdrop="static"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content tw-rounded-lg tw-border tw-p-2">
-            <div className="modal-header">
-              <h6 className="modal-title tw-text-gray-700 tw-text-xl">
-                BLOQUER LA DEPENSE
-              </h6>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-                style={{ cursor: "pointer" }}
-              ></button>
-            </div>
-            <div className="modal-body text-start">
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="row formCustom"
-              >
-                <div className="form-group">
-                  <label
-                    htmlFor="wording"
-                    className="form-label tw-text-red-500 text-default"
-                  >
-                    Nature de la dépense
-                  </label>
-
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    id="wording"
-                    placeholder="Saisir l'intitulé"
-                    {...register("wording", {
-                      required: "L'intitulé est requis",
-                    })}
-                    disabled
-                  />
-                  {errors.wording && (
-                    <span className="tw-text-red-500">
-                      {errors.wording.message}
-                    </span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="montant" className="form-label text-default">
-                    Montant
-                  </label>
-
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    id="montant"
-                    placeholder="Saisir l'intitulé"
-                    {...register("montant", {
-                      required: "L'intitulé est requis",
-                    })}
-                    disabled
-                  />
-                  {errors.montant && (
-                    <span className="tw-text-red-500">
-                      {errors.montant.message}
-                    </span>
-                  )}
-                </div>
-
-                <div className="form-check tw-flex tw-justify-start tw-ml-4 tw-mt-3 tw-items-center">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="bloquer"
-                    {...register("bloquer")}
-                  />
-                  <label className="form-check-label tw-ml-2" htmlFor="bloquer">
-                    Bloquer
-                  </label>
-                </div>
-
-                <div className="d-flex justify-content-between tw-mt-5">
-                  <button
-                    type="submit"
-                    className="btn tw-bg-green-600 tw-text-white"
-                    disabled={
-                      updateDepense.isLoading || updateDepense.isLoading
-                    }
-                    style={{ cursor: "pointer" }}
-                  >
-                    {updateDepense.isLoading || updateDepense.isLoading
-                      ? "Chargement..."
-                      : "Valider"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    data-bs-dismiss="modal"
-                    style={{ cursor: "pointer" }}
-                  >
-                    Fermer
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+    <div className="tw-bg-white tw-p-2">
+      <div className="tw-mb-4">
+        <h3 className="tw-text-lg tw-font-semibold tw-text-gray-900">
+          Bloquer / Débloquer la Dépense
+        </h3>
+        <p className="tw-text-sm tw-text-gray-500">
+          Une dépense bloquée ne peut plus être modifiée ni recevoir de paiements.
+        </p>
       </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-6">
+        <div className="tw-bg-gray-50 tw-p-4 tw-rounded-lg tw-border tw-border-gray-200">
+          <p className="tw-text-sm tw-font-medium tw-text-gray-600">Dépense concernée :</p>
+          <p className="tw-text-lg tw-font-semibold tw-text-gray-800">{depense?.wording}</p>
+          <p className="tw-text-md tw-font-bold tw-text-orange-600">{depense?.montant?.toLocaleString()} F</p>
+        </div>
+
+        <div className="tw-relative tw-flex tw-justify-center tw-items-center tw-p-4 tw-border tw-border-gray-200 tw-rounded-lg">
+          <div className="tw-flex tw-h-6 tw-items-center">
+            <input
+              id="bloquer"
+              type="checkbox"
+              className="tw-h-6 tw-w-6 tw-rounded tw-border-gray-300 tw-text-red-600 focus:tw-ring-red-600 tw-cursor-pointer"
+              {...register("bloquer")}
+            />
+          </div>
+          <div className="tw-ml-4 tw-text-sm tw-leading-6">
+            <label htmlFor="bloquer" className="tw-font-medium tw-text-gray-900 tw-text-lg tw-cursor-pointer">
+              {isBloquerChecked ? "Dépense Bloquée" : "Dépense Débloquée"}
+            </label>
+            <p className="tw-text-gray-500">
+              Cochez pour bloquer, décochez pour débloquer.
+            </p>
+          </div>
+          {isBloquerChecked ? (
+            <Lock className="tw-absolute tw-top-2 tw-right-2 tw-text-red-500" />
+          ) : (
+            <Unlock className="tw-absolute tw-top-2 tw-right-2 tw-text-green-500" />
+          )}
+        </div>
+
+        <div className="tw-pt-5 tw-flex tw-justify-between tw-items-center">
+          <button
+            type="button"
+            className="tw-py-2 tw-px-4 tw-rounded-md tw-border tw-border-gray-300 tw-bg-white tw-text-sm tw-font-medium tw-text-gray-700 hover:tw-bg-gray-50"
+            onClick={onClose}
+          >
+            <X size={16} className="tw-inline tw-mr-1" />
+            Annuler
+          </button>
+          <button
+            type="submit"
+            className="tw-inline-flex tw-justify-center tw-py-2 tw-px-6 tw-border tw-border-transparent tw-rounded-md tw-shadow-sm tw-text-sm tw-font-medium tw-text-white tw-bg-green-600 hover:tw-bg-green-700 disabled:tw-bg-gray-400"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="tw-animate-spin" size={20} />
+            ) : (
+              <>
+                <CheckCircle size={16} className="tw-inline tw-mr-2" />
+                Appliquer
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
 
 BloquerDepense.propTypes = {
-  currentBloquerDepenseId: PropTypes.number,
-  refreshSortie: PropTypes.func,
+  depense: PropTypes.object.isRequired,
+  onSuccess: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default BloquerDepense;

@@ -46,7 +46,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare avatar: MultipartFile | undefined
 
   @column()
-  declare avatarUrl: string
+  declare avatarUrl: string | null | undefined
 
   @column()
   declare validEmail: boolean

@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -175,7 +176,7 @@ function Aside() {
                 </button>
               </li>
 
-              {/* {user?.email === "rolissecodeur@gmail.com" && (
+              {user?.email === "rolissecodeur@gmail.com" && (
                 <li className="slide">
                   <Link to={"all_utilisateurs"} className="side-menu__item">
                     <i className="bx bx-user side-menu__icon"></i>
@@ -184,7 +185,7 @@ function Aside() {
                     </span>
                   </Link>
                 </li>
-              )} */}
+              )}
 
               <li className="slide">
                 <button

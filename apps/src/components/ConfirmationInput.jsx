@@ -51,7 +51,7 @@ function ConfirmationInput({ onValidationChange, codeLength = 6 }) {
       
       <input
         type="text"
-        className="tw-w-full tw-p-2 tw-text-center tw-text-lg tw-font-medium tw-tracking-widest tw-rounded-md tw-border tw-border-slate-300 tw-bg-white tw-text-slate-800 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-violet-500 focus:tw-border-violet-500"
+        className="tw-w-full tw-p-2 tw-text-center tw-text-lg tw-font-medium tw-tracking-widest tw-rounded-md tw-border tw-border-slate-300 tw-bg-white tw-text-slate-800 focus:tw-outline-none focus:tw-ring-0.5 focus:tw-ring-orange-500 focus:tw-border-orange-500"
         placeholder="Recopier le code ici"
         value={userInput}
         onChange={(e) => setUserInput(e.target.value.toUpperCase().trim())}

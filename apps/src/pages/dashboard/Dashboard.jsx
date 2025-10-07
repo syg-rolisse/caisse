@@ -1,21 +1,21 @@
-// src/pages/dashboard/Dashboard.js
+import { useEffect } from "react";
+import { useRealtimeSolde } from "../../hook/useRealtimeSolde";
+import { useRealtimeTypeDepense as useTypeDepense } from "../../hook/useRealtimeTypeDepense";
+import { useRealtimeUser } from "../../hook/useRealtimeUser";
 
-import { useUsers } from "../../hook/data/useUsers";
-import { useSoldeCaisse } from "../../hook/data/useSoldeCaisse";
-import { useTypeDepense } from "../../hook/data/useTypeDepense";
 import UserStatsCard from "../../components/dashboard/UserStatsCard";
 import BalanceCard from "../../components/dashboard/BalanceCard";
 import TypeDepenseCard from "../../components/dashboard/TypeDepenseCard";
 import DashboardHeader from "../../components/dashboard/DashboardHeader";
-import ExpenseChart from "../../components/dashboard/ExpenseChart"; // 👈 Importer le nouveau composant
+import ExpenseChart from "../../components/dashboard/ExpenseChart";
 import { Loader2 } from "lucide-react";
 import { useHandleError } from "../../hook/useHandleError";
-import { useEffect } from "react";
 
 const Dashboard = () => {
-  const { usersLoading, usersError, userStats, allUsers } = useUsers();
-  const { soldeCaisseLoading, soldeCaisseError, soldeCaisse } = useSoldeCaisse();
   const { typeDepenseLoading, typeDepenseError, allTypeDepense } = useTypeDepense();
+  const { usersLoading, usersError, userStats } = useRealtimeUser();
+  const { soldeLoading, soldeError, solde } = useRealtimeSolde(); // On utilise le nouveau hook
+  
   const handleError = useHandleError();
 
   useEffect(() => {
@@ -23,14 +23,16 @@ const Dashboard = () => {
   }, [usersError, handleError]);
 
   useEffect(() => {
-    if (soldeCaisseError) handleError(soldeCaisseError);
-  }, [soldeCaisseError, handleError]);
+    console.log("solde", solde);
+    
+    if (soldeError) handleError(soldeError);
+  }, [solde]);
 
   useEffect(() => {
     if (typeDepenseError) handleError(typeDepenseError);
   }, [typeDepenseError, handleError]);
 
-  if (usersLoading || soldeCaisseLoading || typeDepenseLoading) {
+  if (usersLoading || typeDepenseLoading || soldeLoading) {
     return (
       <div className="tw-flex tw-justify-center tw-items-center tw-py-16">
         <Loader2 className="tw-w-12 tw-h-12 tw-animate-spin tw-text-violet-500" />
@@ -43,11 +45,11 @@ const Dashboard = () => {
       <DashboardHeader />
 
       <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-6 tw-mb-8">
-        <UserStatsCard stats={userStats} allUsers={allUsers} />
-        <BalanceCard solde={soldeCaisse?.solde} />
+        <UserStatsCard stats={userStats} />
+        {/* On passe le solde directement à la `BalanceCard` */}
+        <BalanceCard solde={solde} />
       </div>
 
-      {/* 👇 Section pour le graphique, placée ici pour un impact visuel maximal */}
       <div className="tw-mb-8">
         <ExpenseChart data={allTypeDepense} />
       </div>

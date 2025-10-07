@@ -3,14 +3,16 @@ import Companies from '#models/companie'
 import Solde from '#models/solde'
 import User from '#models/user'
 import VerifMailToken from '#models/verif_mail_token'
+import fs from 'node:fs/promises'
 import env from '#start/env'
-import { registerValidator, updateUserValidator } from '#validators/user'
+import { createUserValidator, updateUserValidator, registerValidator } from '#validators/user'
 import { cuid } from '@adonisjs/core/helpers'
 import type { HttpContext } from '@adonisjs/core/http'
 //import app from '@adonisjs/core/services/app'
 import app from '@adonisjs/core/services/app'
 import db from '@adonisjs/lucid/services/db'
 import mail from '@adonisjs/mail/services/main'
+import user_service from '#services/user_service'
 import crypto from 'node:crypto'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
 import { seedProfile } from '../../helpers/seed_profil.js'
@@ -100,38 +102,20 @@ export default class UsersController {
     }
   }
 
-  async allUsers({ request, response }: HttpContext) {
+  async all({ request, response }: HttpContext) {
     try {
-      const { page, perpage, companieId, status } = request.qs()
-
-      // Vérification que companieId est présent et est un nombre valide
-      if (!companieId || Number.isNaN(Number(companieId))) {
-        return response.ok({
-          data: [],
-          message: "Identifiant de l'entreprise non reconnu...",
-          meta: {
-            total: 0,
-            per_page: perpage || 10,
-            current_page: page || 1,
-            last_page: 1,
-          },
-        })
-      }
-      const query = User.query()
-        .where({ companieId })
-        .orderBy('id', 'desc')
-        .preload('Profil')
-        .preload('Companies')
-
-      if (status) {
-        // query.where('status', JSON.parse(status))
-      }
-
-      const users = await query.paginate(page || 1, perpage || 10)
-      return response.json(users.toJSON())
+      const { page, perpage, companieId } = request.qs()
+      const pageNumber = page ? Number.parseInt(page) : 1
+      const perPageNumber = perpage ? Number.parseInt(perpage) : 10
+      const { allUsers, users } = await user_service.fetchAndFormatUsers(
+        companieId,
+        pageNumber,
+        perPageNumber
+      )
+      return response.ok({ users, allUsers })
     } catch (error) {
-      console.error('Error fetching users:', error)
-      return response.status(500).json({ error: 'An error occurred while fetching users.' })
+      console.error('Erreur lors de la récupération des Type De Depense:', error)
+      return response.status(500).send({ error: 'Erreur interne du serveur' })
     }
   }
 
@@ -219,6 +203,7 @@ export default class UsersController {
             .to(user.email)
             .from('rolissecodeur@gmail.com')
             .subject('CAISSE | VALIDATION DE MAIL')
+            .embed('public/logo/logo.png', 'logo')
             .htmlView('emails/verify_email', {
               link: link,
               texto: texto,
@@ -234,6 +219,80 @@ export default class UsersController {
       } else {
         return response.forbidden("Echec de la création de l'entreprise.")
       }
+    } catch (error) {
+      console.log(error.message)
+
+      await trx.rollback()
+      const message = processErrorMessages(error)
+      return response.badRequest({ status: 400, error: message })
+    }
+  }
+
+  async createUser({ request, response }: HttpContext) {
+    const trx = await db.transaction()
+
+    try {
+      const payload = await request.validateUsing(createUserValidator)
+
+      let logoUrl: string | null = null
+
+      const profil = request.file('photo', {
+        extnames: ['jpg', 'jpeg', 'png'],
+        size: '5mb',
+      })
+
+      if (profil && !profil.hasErrors) {
+        // Option 1 : garder le nom d'origine
+        const fileName = `${profil.clientName}` // ou remplacer les espaces si nécessaire
+
+        await profil.move(app.makePath('uploads/photoProfil'), {
+          name: fileName,
+          overwrite: true,
+        })
+
+        logoUrl = `uploads/photoProfil/${fileName}`
+      }
+
+      const password = crypto.randomBytes(3).toString('hex')
+
+      const user = await User.create({
+        ...payload,
+        password,
+        avatarUrl: logoUrl,
+      })
+
+      let tokenGenerated: string
+      let existingToken: any
+
+      do {
+        tokenGenerated = crypto.randomBytes(20).toString('hex')
+        existingToken = await VerifMailToken.query().where('token', tokenGenerated).first()
+      } while (existingToken)
+
+      await VerifMailToken.create({ userId: user?.id, email: user?.email, token: tokenGenerated })
+
+      const link = `${env.get('VITE_FRONT_URL')}/login?token=${tokenGenerated}&render=register&email=${user?.email}&userId=${user?.id}`
+      const texto = `${tokenGenerated + '' + user?.email + '' + user?.id}`
+      await mail.send((message) => {
+        message
+          .to(user.email)
+          .from('rolissecodeur@gmail.com')
+          .subject('CAISSE | VALIDATION DE MAIL')
+          .embed('public/logo/logo.png', 'logo')
+          .htmlView('emails/compte_mail', {
+            link: link,
+            texto: texto,
+            email: user?.email,
+            password: password,
+          })
+      })
+
+      await trx.commit() // Valider la transaction
+
+      return response.created({
+        status: 200,
+        message: 'Nous avons bien reçu vos données. Bien vouloir vérifier votre boite mail.',
+      })
     } catch (error) {
       console.log(error.message)
 
@@ -313,25 +372,31 @@ export default class UsersController {
           })
         }
       }
-      // console.log(payload)
 
-      // Gestion de l'avatar
-      if (payload?.avatar) {
-        const uniqueId = cuid() // Générer un identifiant unique
-        const fileName = `${uniqueId}.${payload.avatar.extname}`
-        // Créer le nom de fichier avec l'extension
-        await payload.avatar.move(app.makePath('uploads/avatars'), {
+      let avatarUrl: any = user.$attributes.avatarUrl
+      const profil = request.file('photo', {
+        extnames: ['jpg', 'jpeg', 'png'],
+        size: '5mb',
+      })
+
+      if (profil && !profil.hasErrors) {
+        if (avatarUrl) {
+          fs.unlink(app.makePath(avatarUrl)).catch(() => {
+            console.warn('Suppression de l’ancienne image échouée (non bloquant).')
+          })
+        }
+        // Option 1 : garder le nom d'origine
+        const fileName = `${profil.clientName}` // ou remplacer les espaces si nécessaire
+
+        await profil.move(app.makePath('uploads/photoProfil'), {
           name: fileName,
           overwrite: true,
         })
-        payload.avatarUrl = `avatars/${fileName}`
-      } else {
-        payload.avatarUrl = user.$attributes.avatarUrl
-      }
-      delete payload.avatar
 
-      // Mise à jour des informations utilisateur , : payload.email
-      user.merge({ ...payload })
+        avatarUrl = `uploads/photoProfil/${fileName}`
+      }
+
+      user.merge({ ...payload, avatarUrl })
       await user.save()
 
       return response.created({
@@ -471,9 +536,9 @@ export default class UsersController {
 
       const user = await User.findOrFail(userId)
 
-      if (user.$attributes.profilId === 1) {
-        return response.forbidden('Désolé, le compte admin ne peut être supprimer.')
-      }
+      // if (user.$attributes.profilId === 1) {
+      //   return response.forbidden('Désolé, le compte admin ne peut être supprimer.')
+      // }
 
       user.delete()
       return response.created({ status: 200, message: 'Utilisateur supprimé avec succès' })

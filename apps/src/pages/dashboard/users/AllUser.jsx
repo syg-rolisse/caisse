@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Spinner from "../../../components/Spinner";
 import DeleteUser from "../../../components/User/DeleteUser";
-import UpdateUser from "../../../components/User/UpdateUser";
+import UpdateUser from "../../../components/User/UserForm";
 import axiosInstance from "../../../config/axiosConfig";
 
 function AllUser() {
@@ -21,10 +21,11 @@ function AllUser() {
       axiosInstance.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/allUserSys?page=${
           params.page
-        }&perpage=${params.perpage}&status=${status}`
+        }&perpage=${params.perpage}`
       ),
     {
       onSuccess: (response) => {
+        console.log(response?.data?.data);
         setUsers(response?.data?.data);
 
         setMeta(response?.data?.meta);

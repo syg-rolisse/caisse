@@ -1,4 +1,4 @@
-// src/components/dashboard/ExpenseChart.js
+import { memo } from 'react'; // 👈 1. Importer `memo`
 import PropTypes from 'prop-types';
 import {
   LineChart,
@@ -12,7 +12,6 @@ import {
 } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 
-
 // Un composant personnalisé pour le Tooltip pour un meilleur design
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -20,7 +19,8 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div className="tw-bg-white/80 tw-backdrop-blur-sm tw-p-3 tw-rounded-lg tw-shadow-lg tw-border tw-border-gray-200">
         <p className="tw-font-semibold tw-text-gray-700">{label}</p>
         <p className="tw-text-green-600">
-          Total : {payload[0].value.toLocaleString()} F
+          {/* S'assure que totalDepense est un nombre avant de l'afficher */}
+          Total : {(payload[0].value || 0).toLocaleString()} F
         </p>
       </div>
     );
@@ -35,6 +35,9 @@ CustomTooltip.propTypes = {
 };
 
 const ExpenseChart = ({ data }) => {
+  // Log pour voir quand le graphique se redessine (utile pour le débuggage)
+  console.log("Rendu du graphique ExpenseChart...");
+
   return (
     <div className="tw-bg-white/50 tw-backdrop-blur-sm tw-p-4 sm:tw-p-6 tw-rounded-2xl tw-shadow-lg tw-border tw-border-gray-100">
       <div className="tw-flex tw-items-center tw-mb-4">
@@ -97,8 +100,10 @@ const ExpenseChart = ({ data }) => {
 ExpenseChart.propTypes = {
   data: PropTypes.arrayOf(PropTypes.shape({
     wording: PropTypes.string,
+    // S'assurer que totalDepense est bien un nombre, même s'il est nul/undefined
     totalDepense: PropTypes.number,
   })).isRequired,
 };
 
-export default ExpenseChart;
+// 👇 2. Exporter la version mémoïsée du composant
+export default memo(ExpenseChart);

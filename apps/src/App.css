@@ -183,3 +183,19 @@ th {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
+
+/* Animation pour les nouvelles cartes du dashboard */
+@keyframes fadeInSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-card {
+  animation: fadeInSlideDown 0.6s ease-out forwards;
+}
