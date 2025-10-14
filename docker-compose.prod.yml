@@ -46,7 +46,7 @@ services:
     image: caisse-prod-apps:latest
     restart: always
     ports:
-      - "80:80" # Nginx sert l'app sur le port 80, mappé sur 5174 en local
+      - "81:80" # Nginx sert l'app sur le port 80, mappé sur 5174 en local
     networks:
       - caisse_network
     depends_on:
