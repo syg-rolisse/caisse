@@ -1,153 +1,104 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useEffect, useRef } from "react";
+import { useContext, useState } from "react";
 import toast from "react-hot-toast";
+import { Loader2, AlertTriangle, Trash2 } from "lucide-react";
 import axiosInstance from "../../config/axiosConfig";
+import { SocketContext } from "../../context/socket";
+import { useHandleError } from "../../hook/useHandleError";
+import ConfirmationInput from "../ConfirmationInput"; // Importez le composant de confirmation
 
-function DeleteUser({ currentDeleteUserId, refreshUserList }) {
-  const prevDomainIdRef = useRef();
-  const addDomainLinkRef = useRef();
+function DeleteUser({ user, onSuccess, onClose }) {
+  const { handleError } = useHandleError();
+  const socket = useContext(SocketContext);
+  const loggedInUser = JSON.parse(localStorage.getItem("user"));
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
-  const createDomain = useMutation(
-    (param) =>
+  const { mutate: deleteUser, isLoading: isDeleting } = useMutation({
+    mutationFn: (userId) =>
       axiosInstance.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/user?userId=${param}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/user?userId=${userId}`
       ),
-    {
-      onSuccess: (response) => {
-        toast.success(response?.data?.message);
-        refreshUserList();
-        currentDeleteUserId = "";
-        const closeButton = document.querySelector("#deleteModal .btn-close");
-        if (closeButton) {
-          closeButton.click();
-        }
-      },
+    onSuccess: (response) => {
+      toast.success(response?.data?.message);
+      onSuccess(); // Appelle la fonction de succès du parent (fermer le modal, etc.)
+      
+      // Émettre l'événement socket pour informer les autres clients
+      if (socket?.connected && loggedInUser?.company?.id) {
+        socket.emit("user_deleted", loggedInUser.company.id);
+      }
+    },
+    onError: (error) => {
+      handleError(error);
+    },
+  });
 
-      onError: (error) => {
-        console.log(error?.response?.data?.error);
-
-        const validationErrors = error?.response?.data?.error;
-
-        if (validationErrors && Array.isArray(validationErrors)) {
-          validationErrors.forEach((error) => {
-            toast.error(error.message, { duration: 12000 });
-          });
-        } else {
-          toast.error(
-            error?.response?.data?.error ||
-              error?.response?.data?.message ||
-              error?.response?.data,
-            { duration: 12000 }
-          );
-        }
-      },
-    }
-  );
-
-  const deleteEntrie = () => {
-    // Lancer la mutation pour supprimer le domaine
-    if (currentDeleteUserId) {
-      createDomain.mutate(currentDeleteUserId);
-    }
+  const handleDelete = () => {
+    if (!isConfirmed || !user?.id) return;
+    deleteUser(user.id);
   };
 
-  useEffect(() => {
-    if (
-      currentDeleteUserId &&
-      currentDeleteUserId !== prevDomainIdRef.current
-    ) {
-      prevDomainIdRef.current = currentDeleteUserId;
-      if (addDomainLinkRef.current) {
-        addDomainLinkRef.current.click();
-      }
-    }
-  }, [currentDeleteUserId]);
-
   return (
-    <div className="row">
-      <a
-        ref={addDomainLinkRef}
-        data-bs-effect="effect-rotate-bottom"
-        data-bs-toggle="modal"
-        href="#deleteModal"
-        style={{ cursor: "pointer" }}
-      ></a>
-
-      <div
-        className="modal fade"
-        id="deleteModal"
-        tabIndex="-1"
-        data-bs-backdrop="static"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content tw-rounded-lg tw-border tw-p-2">
-            <div className="modal-header">
-              <h1 className="modal-title tw-text-lg text-danger">
-                ACTION IRREVERSIBLE{" "}
-              </h1>
-              <button
-                aria-label="Close"
-                className="btn-close"
-                data-bs-dismiss="modal"
-              ></button>
-            </div>
-            <div className="modal-body text-start">
-              <div className="">
-                <div className="tw-flex tw-items-center tw-justify-center">
-                  <svg
-                    className="custom-alert-icon svg-danger"
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="3rem"
-                    viewBox="0 0 24 24"
-                    width="3rem"
-                    fill="#000000"
-                  >
-                    <path d="M0 0h24v24H0z" fill="none" />
-                    <path d="M15.73 3H8.27L3 8.27v7.46L8.27 21h7.46L21 15.73V8.27L15.73 3zM12 17.3c-.72 0-1.3-.58-1.3-1.3 0-.72.58-1.3 1.3-1.3.72 0 1.3.58 1.3 1.3 0 .72-.58 1.3-1.3 1.3zm1-4.3h-2V7h2v6z" />
-                  </svg>
-                  <h5 className="tw-text-2xl text-danger">Danger</h5>
-                </div>
-              </div>
-
-              <div className="my-3 max-w-full">
-                <div className="text-center">
-                  <p className="tw-text-lg">
-                    Cet utilisateur sera supprimée ainsi que <br /> toutes les
-                    dépendances. Voulez-vous continuer ?
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <div className="">
-                <button
-                  onClick={deleteEntrie}
-                  className="btn btn-sm btn-outline-success m-1"
-                >
-                  Oui
-                </button>
-                <button
-                  data-bs-dismiss="modal"
-                  className="btn btn-sm btn-danger m-1 "
-                >
-                  Annuler
-                </button>
-              </div>
+    <div className="tw-space-y-6">
+      <div className="tw-bg-amber-50 tw-p-4 tw-rounded-lg tw-border-l-4 tw-border-amber-400">
+        <div className="tw-flex">
+          <div className="tw-flex-shrink-0">
+            <AlertTriangle className="tw-h-5 tw-w-5 tw-text-amber-500" />
+          </div>
+          <div className="tw-ml-3">
+            <h3 className="tw-text-sm tw-font-semibold tw-text-amber-800">Action Irréversible</h3>
+            <div className="tw-mt-2 tw-text-sm tw-text-amber-700">
+              <p>
+                Vous êtes sur le point de supprimer définitivement l&apos;utilisateur <strong>{user?.fullName}</strong>. Cette action ne peut pas être annulée.
+              </p>
             </div>
           </div>
         </div>
+      </div>
+
+      <ConfirmationInput 
+        onValidationChange={(isValid) => setIsConfirmed(isValid)} 
+        codeLength={4} // Un code à 4 chiffres est suffisant ici
+      />
+
+      <div className="tw-flex tw-justify-between tw-items-center">
+         <button
+            type="button"
+            className="tw-py-2 tw-px-4 tw-rounded-md tw-border tw-border-gray-300 tw-bg-white tw-text-sm tw-font-medium tw-text-gray-700 hover:tw-bg-gray-50"
+            onClick={onClose}
+          >
+            Annuler
+          </button>
+        <button
+          onClick={handleDelete}
+          disabled={!isConfirmed || isDeleting}
+          className="
+            tw-inline-flex tw-items-center tw-justify-center tw-py-2 tw-px-6 tw-font-bold tw-text-white tw-rounded-lg tw-transition-all 
+            tw-bg-red-600 hover:tw-bg-red-700 
+            disabled:tw-bg-gray-400 disabled:tw-cursor-not-allowed
+          "
+        >
+          {isDeleting ? (
+            <>
+              <Loader2 className="tw-mr-2 tw-animate-spin" size={20} />
+              Suppression...
+            </>
+          ) : (
+            <>
+              <Trash2 className="tw-mr-2" size={20} />
+              Confirmer
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
 }
 
 DeleteUser.propTypes = {
-  currentDeleteUserId: PropTypes.number,
-  refreshUserList: PropTypes.func,
+  user: PropTypes.object.isRequired,
+  onSuccess: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default DeleteUser;

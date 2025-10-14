@@ -4,8 +4,8 @@ const ApprovisionnementsController = () => import('#controllers/approvisionnemen
 
 router
   .group(() => {
-    router.get('solde', [ApprovisionnementsController, 'solde'])
-    router.get('all_approvisionnement', [ApprovisionnementsController, 'index'])
+    router.get('caisse/solde', [ApprovisionnementsController, 'solde'])
+    router.get('approvisionnement/all', [ApprovisionnementsController, 'index'])
     router.get('approvisionnement', [ApprovisionnementsController, 'show'])
     router.post('approvisionnement', [ApprovisionnementsController, 'create'])
     router.put('approvisionnement', [ApprovisionnementsController, 'update'])

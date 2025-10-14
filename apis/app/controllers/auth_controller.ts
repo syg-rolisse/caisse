@@ -21,6 +21,7 @@ export default class AuthController {
       seedProfile(1)
       const userConnected = await User.query()
         .where('email', email)
+        .preload('Profil')
         .preload('Companies') // Précharger la relation Company
         .first()
 
@@ -64,17 +65,16 @@ export default class AuthController {
           error: 'Une erreur est survenue lors de la création du token. Veuillez réessayer.',
         })
       }
-      console.log(userConnected?.Companies?.logoUrl)
 
       // Retourner l'utilisateur avec le jeton
       return response.created({
         user: {
           id: userConnected.id,
+          profil: userConnected?.Profil,
           email: userConnected.email,
           fullName: userConnected.fullName,
           validEmail: userConnected.validEmail,
           status: userConnected.status,
-          profilId: userConnected.profilId,
           company: userConnected?.Companies,
           token: token,
         },
@@ -198,8 +198,6 @@ export default class AuthController {
   async verif_email({ request, response }: HttpContext) {
     try {
       const { email } = request.qs()
-
-      console.log(request.qs())
 
       const user = await User.query().where({ email: email }).first()
       if (user) {
@@ -369,6 +367,8 @@ export default class AuthController {
       } else if (route === 'dashboard') {
         isAuthorized = !(await bouncer.with('UserPolicy').denies('dashboard'))
       } else if (route === 'editions') {
+        isAuthorized = !(await bouncer.with('UserPolicy').denies('dashboard'))
+      } else if (route === 'old-dashboard') {
         isAuthorized = !(await bouncer.with('UserPolicy').denies('dashboard'))
       }
 

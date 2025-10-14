@@ -7,8 +7,12 @@ export default class Companie extends BaseModel {
 
   @column()
   declare companyName: string
+
   @column()
   declare status: boolean
+
+  @column()
+  declare showCompanyName: boolean
 
   @column()
   declare address: string

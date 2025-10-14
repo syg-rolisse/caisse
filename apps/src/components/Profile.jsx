@@ -165,7 +165,7 @@ function ProfileComponent({ onClose, user }) {
                   src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${
                     user?.avatarUrl
                       ? user.avatarUrl
-                      : "avatars/ri3uadefault.png"
+                      : "avatars/ri3uadefault.jpg"
                   }`}
                   alt="Avatar"
                   className="tw-w-full tw-h-full tw-object-cover tw-rounded-full"
@@ -218,7 +218,7 @@ function ProfileComponent({ onClose, user }) {
                     : `${import.meta.env.VITE_BACKEND_URL}/uploads/${
                         user?.avatarUrl
                           ? user.avatarUrl
-                          : "avatars/ri3uadefault.png"
+                          : "avatars/ri3uadefault.jpg"
                       }`
                 }
                 alt="Avatar"

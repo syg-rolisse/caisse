@@ -3,9 +3,14 @@ import PropTypes from "prop-types";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import TopBar from "../../components/TopBar";
-import axiosInstance from "../../config/axiosConfig";
+import axiosInstance from "../../config/axiosConfig"; 
+import { useContext } from "react";
+import { SocketContext } from "../../context/socket";
 
 function ForgotPassword({ onSwitch }) {
+    const socket = useContext(SocketContext);
+    const user = JSON.parse(localStorage.getItem("user"));
+  
   const {
     register,
     handleSubmit,
@@ -24,8 +29,12 @@ function ForgotPassword({ onSwitch }) {
       onSuccess: (response) => {
         toast.success(response?.data?.message, { duration: 12000 });
         // Appel de reset ici, supposant qu'il est défini ailleurs dans votre code
+        if (socket && socket.connected) {
+          socket.emit("user_created", user.company.id);
+        }
         reset();
         onSwitch("login");
+        
       },
       onError: (error) => {
         const validationErrors = error?.response?.data?.error;

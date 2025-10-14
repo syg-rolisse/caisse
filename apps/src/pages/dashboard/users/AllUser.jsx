@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Spinner from "../../../components/Spinner";
 import DeleteUser from "../../../components/User/DeleteUser";
-import UpdateUser from "../../../components/User/UpdateUser";
+import UpdateUser from "../../../components/User/UserForm";
 import axiosInstance from "../../../config/axiosConfig";
 
 function AllUser() {
@@ -21,10 +21,11 @@ function AllUser() {
       axiosInstance.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/allUserSys?page=${
           params.page
-        }&perpage=${params.perpage}&status=${status}`
+        }&perpage=${params.perpage}`
       ),
     {
       onSuccess: (response) => {
+        console.log(response?.data?.data);
         setUsers(response?.data?.data);
 
         setMeta(response?.data?.meta);
@@ -215,7 +216,7 @@ function AllUser() {
                                   }/uploads/${
                                     user?.avatarUrl
                                       ? user.avatarUrl
-                                      : "avatars/ri3uadefault.png"
+                                      : "avatars/ri3uadefault.jpg"
                                   }`}
                                   alt="Avatar"
                                   style={{
@@ -238,7 +239,7 @@ function AllUser() {
                                     }/uploads/${
                                       user?.Companies?.logoUrl
                                         ? user?.Companies?.logoUrl
-                                        : "logo/ri3uadefault.png"
+                                        : "logo/ri3uadefault.jpg"
                                     }`}
                                     alt="Avatar"
                                     className="tw-w-9 tw-h-9 tw-object-cover tw-rounded-full"

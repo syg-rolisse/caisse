@@ -68,7 +68,7 @@ function Aside() {
                 src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${
                   user?.company?.logoUrl
                     ? user?.company?.logoUrl
-                    : "logo/ri3uadefault.png"
+                    : "logo/ri3uadefault.jpg"
                 }`}
                 alt="Avatar"
                 style={{

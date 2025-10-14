@@ -1,0 +1,20 @@
+/* Animation pour la nouvelle ligne */
+@keyframes fadeInSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px); /* Commence 20px au-dessus de sa position finale */
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in-row {
+    animation: fadeInSlideDown 0.5s ease-out forwards;
+  }
+  
+  /* Optionnel : pour un effet visuel encore meilleur */
+  tr.fade-in-row td {
+      background-color: #f0fff4; /* Un léger fond vert qui s'estompera avec le re-render */
+  }

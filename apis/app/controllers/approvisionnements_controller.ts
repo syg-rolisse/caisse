@@ -1,5 +1,6 @@
 import Approvisionnement from '#models/approvisionnement'
 import Solde from '#models/solde'
+import solde_service from '#services/solde_service'
 import {
   createApprovisionnementValidator,
   updateApprovisionnementValidator,
@@ -7,53 +8,34 @@ import {
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
+import appro_service from '#services/appro_service'
 export default class ApprovisionnementsController {
   async index({ request, response }: HttpContext) {
     try {
       const { page, perpage, companieId } = request.qs()
+      const pageNumber = page ? Number.parseInt(page) : 1
+      const perPageNumber = perpage ? Number.parseInt(perpage) : 10
 
-      // Vérification que companieId est présent et est un nombre valide
-      if (!companieId || Number.isNaN(Number(companieId))) {
-        return response.ok({
-          data: [],
-          message: "Identifiant de l'entreprise non reconnu...",
-          meta: {
-            total: 0,
-            per_page: perpage || 10,
-            current_page: page || 1,
-            last_page: 1,
-          },
-        })
-      }
-
-      // Construction de la requête pour récupérer les approvisionnements
-      const query = Approvisionnement.query().where({ companieId }).preload('user')
-
-      const approvisionnement = await query.orderBy('id', 'desc').paginate(page || 1, perpage || 10)
-
-      return response.ok(approvisionnement)
+      const { allApprovisionnements, approvisionnements } = await appro_service.fetchAndFormatAppro(
+        companieId,
+        pageNumber,
+        perPageNumber
+      )
+      return response.ok({ approvisionnements, allApprovisionnements })
     } catch (error) {
-      console.error('Erreur lors de la récupération approvisionnements:', error)
+      console.error('Erreur lors de la récupération des approvisionnements:', error)
       return response.status(500).send({ error: 'Erreur interne du serveur' })
     }
   }
 
-  async solde({ response }: HttpContext) {
+  async solde({ request, response }: HttpContext) {
     try {
-      // Tenter de récupérer le solde
-      let solde = await Solde.query().forUpdate().first()
+      const { companieId } = request.qs()
 
-      // Si aucun solde n'est trouvé, retourner 0
-      if (!solde) {
-        return response.status(404).send({ solde: 0 })
-      }
-
-      // Si le solde existe, le retourner
+      const { solde } = await solde_service.fetchAndFormatSolde(companieId)
       return response.ok(solde)
     } catch (error) {
       console.error('Erreur lors de la récupération du solde:', error)
-
-      // Retourner une erreur interne du serveur en cas de problème
       return response.status(500).send({ error: 'Erreur interne du serveur' })
     }
   }

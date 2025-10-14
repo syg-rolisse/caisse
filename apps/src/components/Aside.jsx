@@ -1,7 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import axiosInstance from "../config/axiosConfig";
 function Aside() {
@@ -63,30 +64,32 @@ function Aside() {
       >
         <div className="tw-p-3">
           <div>
-            <a href="#" className="tw-flex tw-justify-center tw-opacity-70">
+            <a href="#" className="tw-absolute tw-opacity-85 tw-ml-4 -tw-top-10">
               <img
                 src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${
                   user?.company?.logoUrl
                     ? user?.company?.logoUrl
-                    : "logo/ri3uadefault.png"
+                    : "logo/ri3uadefault.jpg"
                 }`}
                 alt="Avatar"
                 style={{
-                  width: "125px",
-                  height: "125px",
+                  width: "100%",
+                  height: "100%",
                   objectFit: "cover",
                   borderRadius: "50%",
                 }}
               />
             </a>
 
-            <p className="bariecito-policy tw-text-center tw-mt-3 tw-font-semibold tw-text-xl">
-              {user?.company?.companyName}
-            </p>
+            {user?.company?.showCompanyName && (
+              <p className="bariecito-policy tw-text-center tw-mt-3 tw-font-semibold tw-text-xl">
+                {user?.company?.companyName}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="main-sidebar -tw-mt-2" id="sidebar-scroll">
+        <div className="main-sidebar tw-mt-24" id="sidebar-scroll">
           <nav className="main-menu-container nav nav-pills flex-column sub-open">
             <ul className="main-menu">
               <li className="slide__category">
@@ -99,6 +102,13 @@ function Aside() {
                 >
                   <i className="bx bx-category side-menu__icon"></i>
                   <span className="side-menu__label">Tableau de bord</span>
+                </button>
+                <button
+                  className="side-menu__item"
+                  onClick={() => handleNavigation("old-dashboard")}
+                >
+                  <i className="bx bx-category side-menu__icon"></i>
+                  <span className="side-menu__label">Old Tableau de bord</span>
                 </button>
               </li>
 

@@ -3,33 +3,17 @@ import TypeDeDepense from '#models/type_de_depense'
 import { createTypeDepenseValidator, updateTypeDepenseValidator } from '#validators/type_de_depense'
 import type { HttpContext } from '@adonisjs/core/http'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
+import type_depense_service from '#services/type_depense_service'
 export default class TypeDeDepensesController {
   async index({ request, response }: HttpContext) {
     try {
       const { page, perpage, companieId } = request.qs()
-
-      // Vérification que companieId est présent et est un nombre valide
-      if (!companieId || Number.isNaN(Number(companieId))) {
-        return response.ok({
-          data: [],
-          message: "Identifiant de l'entreprise non reconnu...",
-          meta: {
-            total: 0,
-            per_page: perpage || 10,
-            current_page: page || 1,
-            last_page: 1,
-          },
-        })
-      }
-
       const pageNumber = page ? Number.parseInt(page) : 1
       const perPageNumber = perpage ? Number.parseInt(perpage) : 10
 
-      const query = TypeDeDepense.query().where({ companieId }).preload('user')
-      const allTypeDepense = await query.orderBy('id', 'desc')
-      const typeDepense = await query.orderBy('id', 'desc').paginate(pageNumber, perPageNumber)
-
-      return response.ok({ typeDepense, allTypeDepense })
+      const { allTypeDepenses, typeDepenses } =
+        await type_depense_service.fetchAndFormatTypeDepenses(companieId, pageNumber, perPageNumber)
+      return response.ok({ typeDepenses, allTypeDepenses })
     } catch (error) {
       console.error('Erreur lors de la récupération des Type De Depense:', error)
       return response.status(500).send({ error: 'Erreur interne du serveur' })

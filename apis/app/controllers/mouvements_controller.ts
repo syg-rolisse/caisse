@@ -12,24 +12,22 @@ export default class MouvementsController {
     const trx = await db.transaction() // Utilisation de `db.transaction()`
 
     try {
-      const { page, perpage, companieId } = request.qs()
-      console.log(request.qs())
+      const payload = await request.validateUsing(createMouvementValidator)
 
-      // Vérification que companieId est présent et est un nombre valide
+      const companieId = payload.companieId
+
       if (!companieId || Number.isNaN(Number(companieId))) {
         return response.ok({
           data: [],
           message: "Identifiant de l'entreprise non reconnu...",
           meta: {
             total: 0,
-            per_page: perpage || 10,
-            current_page: page || 1,
+            per_page: 10,
+            current_page: 1,
             last_page: 1,
           },
         })
       }
-
-      const payload = await request.validateUsing(createMouvementValidator)
 
       const depense = await Depense.query()
 
@@ -46,11 +44,11 @@ export default class MouvementsController {
         return response.forbidden('Désolé, cette dépensé a été rejeté.')
       }
 
-      if (!depense?.$attributes.decharger) {
-        return response.forbidden(
-          `Demandez à , ${depense?.user?.fullName} de bien vouloir mettre la décharge.`
-        )
-      }
+      // if (!depense?.$attributes.decharger) {
+      //   return response.forbidden(
+      //     `Demandez à , ${depense?.user?.fullName} de bien vouloir mettre la décharge.`
+      //   )
+      // }
 
       const totalMouvementMontant = depense?.Mouvements.reduce(
         (sum, mouvement) => sum + mouvement.montant,
@@ -69,10 +67,12 @@ export default class MouvementsController {
           )
         }
       }
-
+      // supprimer la companieId de payload
+      // @ts-ignore
+      delete payload.companieId
       const mouvement = await Mouvement.create({ ...payload }, { client: trx })
 
-      let solde = await Solde.query().forUpdate().first()
+      let solde = await Solde.query().where({ companieId }).first()
 
       if (solde) {
         solde.merge({ montant: solde.montant - payload.montant })
@@ -86,6 +86,7 @@ export default class MouvementsController {
         message: 'Paiement effectué avec succès.',
       })
     } catch (error) {
+      console.log(error?.message)
       // Rollback en cas d'erreur
       await trx.rollback()
 

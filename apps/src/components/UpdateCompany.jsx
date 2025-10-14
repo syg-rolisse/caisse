@@ -214,7 +214,7 @@ function UpdateCompanyComponent({ onClose, currentCompanyId }) {
                   src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${
                     company?.logoUrl
                       ? company.logoUrl
-                      : "avatars/ri3uadefault.png"
+                      : "avatars/ri3uadefault.jpg"
                   }`}
                   alt="Avatar"
                   className="tw-w-full tw-h-full tw-object-cover tw-rounded-full"
@@ -267,7 +267,7 @@ function UpdateCompanyComponent({ onClose, currentCompanyId }) {
                     : `${import.meta.env.VITE_BACKEND_URL}/uploads/${
                         company?.logoUrl
                           ? company.logoUrl
-                          : "avatars/ri3uadefault.png"
+                          : "avatars/ri3uadefault.jpg"
                       }`
                 }
                 alt="Avatar"

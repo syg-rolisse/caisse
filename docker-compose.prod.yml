@@ -1,0 +1,60 @@
+services:
+  caisse-prod-db:
+    image: postgres:15
+    container_name: caisse_prod_db
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_caisse_data_prod:/var/lib/postgresql/data
+    env_file:
+      - ./apis/.env.db
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "caisse_prod"]
+      interval: 30s
+      retries: 5
+      start_period: 60s
+      timeout: 30s
+    networks:
+      - caisse_network
+
+  caisse-prod-apis:
+    build:
+      context: ./apis
+      dockerfile: Dockerfile
+    container_name: caisse_prod_apis
+    restart: "no"
+    ports:
+      - "3333:3333"
+    depends_on:
+      caisse-prod-db:
+        condition: service_healthy
+    env_file:
+      - ./apis/.env
+    networks:
+      - caisse_network
+    command: ["sh", "-c", "node ace migration:run --force && node bin/server.js"]
+    volumes:
+      - /var/lib/caisse-prod/uploads:/app/uploads
+
+
+  caisse-prod-apps:
+    build:
+      context: ./apps
+      dockerfile: Dockerfile
+    container_name: caisse_prod_apps
+    image: caisse-prod-apps:latest
+    restart: always
+    ports:
+      - "80:80" # Nginx sert l'app sur le port 80, mappé sur 5174 en local
+    networks:
+      - caisse_network
+    depends_on:
+      - caisse-prod-apis
+
+volumes:
+  pg_caisse_data_prod:
+
+networks:
+  caisse_network:
+    driver: bridge

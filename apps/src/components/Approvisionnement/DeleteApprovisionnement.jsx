@@ -1,161 +1,103 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import toast from "react-hot-toast";
+import { Loader2, AlertTriangle, Trash2, X } from "lucide-react";
 import axiosInstance from "../../config/axiosConfig";
 import { SocketContext } from "../../context/socket";
+import { useHandleError } from "../../hook/useHandleError";
+import ConfirmationInput from "../ConfirmationInput";
 
-function DeleteApprovisionnement({
-  currentDeleteApprovisionnementId,
-  refreshApprovisionnement,
-}) {
-  const prevApprovisionnementIdRef = useRef();
-  const approvisionnementLinkRef = useRef();
-  // eslint-disable-next-line no-unused-vars
-  const [isConnected, setIsConnected] = useState(false);
+function DeleteApprovisionnement({ approvisionnement, onSuccess, onClose }) {
+  const { handleError } = useHandleError();
   const socket = useContext(SocketContext);
+  const user = JSON.parse(localStorage.getItem("user"));
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
-  const deleteApprovisionnement = useMutation(
-    (param) =>
+  const { mutate: deleteMutation, isLoading: isDeleting } = useMutation({
+    mutationFn: (approvisionnementId) =>
       axiosInstance.delete(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/api/v1/approvisionnement?approvisionnementId=${param}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/approvisionnement?approvisionnementId=${approvisionnementId}`
       ),
-    {
-      onSuccess: (response) => {
-        toast.success(response?.data?.message);
+    onSuccess: (response) => {
+      toast.success(response?.data?.message);
+      onSuccess(); // Appelle la fonction de succès du parent (pour fermer le modal, etc.)
+      
+      // Émettre l'événement socket pour informer les autres clients
+      if (socket?.connected && user?.company?.id) {
+        socket.emit("approvisionnement_deleted", user.company.id);
+      }
+    },
+    onError: handleError,
+  });
 
-        refreshApprovisionnement();
-        currentDeleteApprovisionnementId = "";
-        approvisionnementLinkRef.current.click();
-        if (socket && socket.connected) {
-          socket.emit("approvisionnement_deleted");
-        }
-      },
-
-      onError: (error) => {
-        console.log(error?.response);
-
-        const validationErrors = error?.response?.data?.error;
-        if (validationErrors && Array.isArray(validationErrors)) {
-          validationErrors.forEach((error) => {
-            toast.error(error.message, { duration: 12000 });
-          });
-        } else {
-          toast.error(
-            error?.response?.data?.error ||
-            error?.response?.data?.message ||
-            error?.response?.data,
-            { duration: 12000 }
-          );
-        }
-      },
-    }
-  );
-
-  const deleteEntrie = () => {
-    // Lancer la mutation pour supprimer le approvisionnement
-    if (currentDeleteApprovisionnementId) {
-      deleteApprovisionnement.mutate(currentDeleteApprovisionnementId);
-    }
+  const handleDelete = () => {
+    if (!isConfirmed || !approvisionnement?.id) return;
+    deleteMutation(approvisionnement.id);
   };
 
-  useEffect(() => {
-    if (
-      currentDeleteApprovisionnementId &&
-      currentDeleteApprovisionnementId !== prevApprovisionnementIdRef.current
-    ) {
-      prevApprovisionnementIdRef.current = currentDeleteApprovisionnementId;
-      if (approvisionnementLinkRef.current) {
-        approvisionnementLinkRef.current.click();
-      }
-    }
-  }, [currentDeleteApprovisionnementId]);
-
   return (
-    <div className="row">
-      <a
-        ref={approvisionnementLinkRef}
-        data-bs-effect="effect-rotate-bottom"
-        data-bs-toggle="modal"
-        href="#deleteModal"
-        style={{ cursor: "pointer" }}
-      ></a>
-
-      <div
-        className="modal fade"
-        id="deleteModal"
-        tabIndex="-1"
-        data-bs-backdrop="static"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content tw-rounded-lg tw-border tw-p-2">
-            <div className="modal-header">
-              <h2 className="modal-title tw-text-lg text-danger">
-                ACTION IRREVERSIBLE{" "}
-              </h2>
-              <button
-                aria-label="Close"
-                className="btn-close"
-                data-bs-dismiss="modal"
-              ></button>
-            </div>
-            <div className="modal-body text-start">
-              <div className="">
-                <div className="tw-flex tw-items-center tw-justify-center">
-                  <svg
-                    className="custom-alert-icon svg-danger"
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="3rem"
-                    viewBox="0 0 24 24"
-                    width="3rem"
-                    fill="#000000"
-                  >
-                    <path d="M0 0h24v24H0z" fill="none" />
-                    <path d="M15.73 3H8.27L3 8.27v7.46L8.27 21h7.46L21 15.73V8.27L15.73 3zM12 17.3c-.72 0-1.3-.58-1.3-1.3 0-.72.58-1.3 1.3-1.3.72 0 1.3.58 1.3 1.3 0 .72-.58 1.3-1.3 1.3zm1-4.3h-2V7h2v6z" />
-                  </svg>
-                </div>
-              </div>
-
-              <div className="my-3 max-w-full">
-                <div className="text-center">
-                  <p className="tw-text-lg">
-                    Cette information sera supprimée ainsi que <br /> toutes les
-                    dépendances. Voulez-vous continuer ?
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <div className="">
-                <button
-                  onClick={deleteEntrie}
-                  className="btn btn-sm btn-outline-success m-1"
-                >
-                  Oui
-                </button>
-                <button
-                  data-bs-dismiss="modal"
-                  className="btn btn-sm btn-danger m-1 "
-                >
-                  Annuler
-                </button>
-              </div>
+    <div className="tw-space-y-6">
+      <div className="tw-bg-amber-50 tw-p-4 tw-rounded-lg tw-border-l-4 tw-border-amber-400">
+        <div className="tw-flex">
+          <div className="tw-flex-shrink-0">
+            <AlertTriangle className="tw-h-5 tw-w-5 tw-text-amber-500" />
+          </div>
+          <div className="tw-ml-3">
+            <h3 className="tw-text-sm tw-font-semibold tw-text-amber-800">Action Irréversible</h3>
+            <div className="tw-mt-2 tw-text-sm tw-text-amber-700">
+              <p>
+                Vous êtes sur le point de supprimer définitivement cet approvisionnement de <strong>{approvisionnement?.montant?.toLocaleString()} F</strong>. Cette action ne peut pas être annulée.
+              </p>
             </div>
           </div>
         </div>
+      </div>
+
+      <ConfirmationInput 
+        onValidationChange={(isValid) => setIsConfirmed(isValid)} 
+        codeLength={4} // Un code à 4 chiffres est suffisant
+      />
+
+      <div className="tw-pt-5 tw-flex tw-justify-between tw-items-center">
+        <button
+          type="button"
+          className="tw-py-2 tw-px-4 tw-rounded-md tw-border tw-border-gray-300 tw-bg-white tw-text-sm tw-font-medium tw-text-gray-700 hover:tw-bg-gray-50"
+          onClick={onClose}
+        >
+          <X size={16} className="tw-inline tw-mr-1" />
+          Annuler
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={!isConfirmed || isDeleting}
+          className="
+            tw-inline-flex tw-items-center tw-justify-center tw-py-2 tw-px-6 tw-font-bold tw-text-white tw-rounded-lg tw-transition-all 
+            tw-bg-red-600 hover:tw-bg-red-700 
+            disabled:tw-bg-gray-400 disabled:tw-cursor-not-allowed
+          "
+        >
+          {isDeleting ? (
+            <>
+              <Loader2 className="tw-mr-2 tw-animate-spin" size={20} />
+              Suppression...
+            </>
+          ) : (
+            <>
+              <Trash2 className="tw-mr-2" size={20} />
+              Confirmer
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
 }
 
 DeleteApprovisionnement.propTypes = {
-  currentDeleteApprovisionnementId: PropTypes.number,
-  refreshApprovisionnement: PropTypes.func,
+  approvisionnement: PropTypes.object.isRequired,
+  onSuccess: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default DeleteApprovisionnement;

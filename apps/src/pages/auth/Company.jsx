@@ -132,7 +132,7 @@ function Company({ onSwitch }) {
                       src={
                         selectedImage
                           ? selectedImage
-                          : "avatars/ri3uadefault.png"
+                          : "avatars/ri3uadefault.jpg"
                       }
                       alt="Avatar"
                       style={{

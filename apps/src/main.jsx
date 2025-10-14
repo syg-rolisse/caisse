@@ -21,7 +21,11 @@ const router = createBrowserRouter(routes, {
 
 createRoot(document.getElementById("root")).render(
   <>
-    <Toaster />
+    <Toaster 
+  position="top-right" 
+  gutter={8}
+  containerStyle={{ zIndex: 99999 }}
+/>
     <QueryClientProvider client={queryClient}>
       <RouterProvider future={{ v7_startTransition: true }} router={router} />
     </QueryClientProvider>
