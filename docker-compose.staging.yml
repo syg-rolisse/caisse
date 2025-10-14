@@ -33,8 +33,7 @@ services:
       - ./apis/.env
     networks:
       - caisse_network
-    command: ["node", "./bin/server.js"]
-    #command: ["sh", "-c", "node ace migration:run && node ace serve --watch"]
+    command: ["sh", "-c", "node ace migration:run --force && node bin/server.js"]
     volumes:
       - /var/lib/caisse-staging/uploads:/app/uploads
 
