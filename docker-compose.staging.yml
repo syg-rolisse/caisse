@@ -1,16 +1,16 @@
 services:
-  caisse-db:
+  caisse-staging-db:
     image: postgres:15
-    container_name: caisse_db
+    container_name: caisse_staging_db
     restart: always
     ports:
       - "5433:5432"
     volumes:
-      - pg_data_caisse:/var/lib/postgresql/data
+      - pg_caisse_data_staging:/var/lib/postgresql/data
     env_file:
       - ./apis/.env.db
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "ora_caisse"]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "caisse_staging"]
       interval: 30s
       retries: 5
       start_period: 60s
@@ -18,16 +18,16 @@ services:
     networks:
       - caisse_network
 
-  caisse-apis:
+  caisse-staging-apis:
     build:
       context: ./apis
       dockerfile: Dockerfile
-    container_name: caisse_apis
+    container_name: caisse_staging_apis
     restart: "no"
     ports:
       - "3344:3333"
     depends_on:
-      caisse-db:
+      caisse-staging-db:
         condition: service_healthy
     env_file:
       - ./apis/.env
@@ -36,25 +36,25 @@ services:
     command: ["node", "./bin/server.js"]
     #command: ["sh", "-c", "node ace migration:run && node ace serve --watch"]
     volumes:
-      - /var/lib/olufona/uploads:/app/uploads
+      - /var/lib/caisse-staging/uploads:/app/uploads
 
 
-  caisse-apps:
+  caisse-staging-apps:
     build:
       context: ./apps
       dockerfile: Dockerfile
-    container_name: caisse_apps
-    image: caisse-apps:latest
+    container_name: caisse_staging_apps
+    image: caisse-staging-apps:latest
     restart: always
     ports:
-      - "5174:80" # Nginx sert l'app sur le port 80, mappé sur 5174 en local
+      - "81:80" # Nginx sert l'app sur le port 80, mappé sur 5174 en local
     networks:
       - caisse_network
     depends_on:
-      - caisse-apis
+      - caisse-staging-apis
 
 volumes:
-  pg_data:
+  pg_caisse_data_staging:
 
 networks:
   caisse_network:

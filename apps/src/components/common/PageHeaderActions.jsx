@@ -76,7 +76,7 @@ const PageHeaderActions = ({ indexTitle, primaryActionLabel, onPrimaryActionClic
 
 PageHeaderActions.propTypes = {
   primaryActionLabel: PropTypes.string.isRequired,
-  onPrimaryActionClick: PropTypes.func.isRequired,
+  onPrimaryActionClick: PropTypes.func,
   indexTitle: PropTypes.string.isRequired,
 };
 

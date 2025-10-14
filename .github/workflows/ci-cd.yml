@@ -1,172 +1,148 @@
-# Nom du pipeline CI/CD
+# ===================================================================
+#                PIPELINE CI/CD POUR LE PROJET CAISSE
+# ===================================================================
+# Workflow :
+# 1. Push sur 'develop' -> Teste puis déploie sur Staging.
+# 2. Merge de PR vers 'main' -> Teste puis déploie sur Production.
+# ===================================================================
+
 name: Caisse CI/CD Pipeline
 
-# Déclencheurs du workflow
 on:
   push:
     branches:
       - develop
   pull_request:
+    types: [closed]
     branches:
-      - develop
+      - main
 
 jobs:
   # ===================================================================
-  #  JOB 1: Tester la construction et le lancement des conteneurs
-  # ===================================================================
-  # Ce job s'exécute sur chaque push et pull request vers 'develop'.
-  # Son but est de s'assurer que l'application est fonctionnelle
-  # AVANT de penser au déploiement.
+  #  JOB 1: Tester la configuration de Staging
   # ===================================================================
   test-and-build:
-    name: 🧪 Tester l'application avec Docker
-    runs-on: ubuntu-latest # L'environnement d'exécution de GitHub
-
+    name: 🧪 Tester l'application (avec la config de Staging)
+    runs-on: ubuntu-latest
     steps:
-      # 1. Récupérer le code source du dépôt
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      # 2. Créer les fichiers .env nécessaires pour les tests
-      - name: Créer les fichiers .env pour l'environnement de test
+      - name: Créer les fichiers .env pour les tests
         run: |
-          # Fichier .env pour le backend (apis)
-          cat <<EOF > ./apis/.env
-          ${{ secrets.APIS_ENV_TZ }}
-          ${{ secrets.APIS_ENV_PORT }}
-          ${{ secrets.APIS_ENV_HOST }}
-          ${{ secrets.APIS_ENV_LOG_LEVEL }}
-          ${{ secrets.APIS_ENV_APP_KEY }}
-          ${{ secrets.APIS_ENV_NODE_ENV }}
-          ${{ secrets.APIS_ENV_DB_HOST }}
-          ${{ secrets.APIS_ENV_DB_PORT }}
-          ${{ secrets.APIS_ENV_DB_USER }}
-          ${{ secrets.APIS_ENV_DB_PASSWORD }}
-          ${{ secrets.APIS_ENV_DB_DATABASE }}
-          ${{ secrets.APIS_ENV_SMTP_HOST }}
-          ${{ secrets.APIS_ENV_SMTP_PORT }}
-          ${{ secrets.APIS_ENV_SMTP_USERNAME }}
-          ${{ secrets.APIS_ENV_SMTP_PASSWORD }}
-          ${{ secrets.APIS_ENV_CACHE_VIEWS }}
-          ${{ secrets.APIS_ENV_VITE_FRONT_URL }}
-          EOF
-
-          # Fichier .env.db pour la base de données
-          cat <<EOF > ./apis/.env.db
-          ${{ secrets.POSTGRES_USER }}
-          ${{ secrets.POSTGRES_PASSWORD }}
-          ${{ secrets.POSTGRES_DB }}
-          EOF
-
-          # Fichier .env pour le frontend (apps)
-          cat <<EOF > ./apps/.env
-          ${{ secrets.APP_ENV }}
-          EOF
+          echo "Création des .env pour le backend et la BDD..."
+          echo "${{ secrets.STAGING_ENV_APIS }}" > ./apis/.env
+          echo "${{ secrets.STAGING_ENV_DB }}" > ./apis/.env.db
           
-          echo "Fichiers .env pour le test créés avec succès."
+          # AJOUT : Création du .env pour le frontend (apps)
+          echo "Création du .env pour le frontend..."
+          echo "${{ secrets.STAGING_ENV_APPS }}" > ./apps/.env
 
-      # 3. Lancer les conteneurs avec Docker Compose
-      # Pas besoin d'installer Docker, il est déjà disponible sur le runner.
-      - name: Lancer Docker Compose
-        run: docker compose up --build -d
+      - name: Lancer Docker Compose pour les tests
+        run: docker compose -f docker-compose.staging.yml up --build -d
 
-      # 4. Vérifier que tous les conteneurs sont bien démarrés
       - name: Vérifier l'état des conteneurs
         run: |
-          echo "Attente de 15 secondes pour la stabilisation des conteneurs..."
-          sleep 15
-          echo "Vérification des conteneurs en cours :"
-          docker compose ps
-          # Cette commande échouera si un conteneur n'est pas 'Up' ou 'running'
-          if [ $(docker compose ps | grep -c "Up") -lt $(docker compose ps -q | wc -l) ]; then
-            echo "Erreur : Un ou plusieurs conteneurs ne sont pas démarrés correctement."
+          echo "Attente de 20s pour la stabilisation des services..."
+          sleep 20
+          docker compose -f docker-compose.staging.yml ps
+          if [ $(docker compose -f docker-compose.staging.yml ps | grep -E "Up|running" | wc -l) -lt $(docker compose -f docker-compose.staging.yml ps -q | wc -l) ]; then
+            echo "::error::Un ou plusieurs conteneurs n'ont pas démarré correctement."
+            docker compose -f docker-compose.staging.yml logs
             exit 1
           fi
-          echo "Tous les conteneurs sont démarrés avec succès."
+          echo "Tests d'intégration réussis."
 
   # ===================================================================
-  #  JOB 2: Déployer l'application sur le serveur de production
+  #  JOB 2: Déployer l'application sur Staging
   # ===================================================================
-  # Ce job dépend du succès du job 'test-and-build'.
-  # Il ne s'exécute QUE sur un push vers la branche 'develop'.
-  # ===================================================================
-  deploy:
-    name: 🚀 Déployer sur le serveur
-    needs: test-and-build # Dépend du job de test
+  deploy-staging:
+    name: 🚀 Déployer sur Staging
+    needs: test-and-build
     runs-on: ubuntu-latest
-    # Condition : ne s'exécute que lors d'un push sur la branche 'develop'
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-
+    environment: staging
     steps:
-      # 1. Récupérer le code source du dépôt
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      # 2. Copier tous les fichiers du projet sur le serveur en une seule fois
-      - name: Copier les fichiers du projet sur le VPS
+      - name: Copier les fichiers sur le VPS de Staging
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-          source: "." # Copie tout le répertoire courant
-          target: "/opt/caisse"
-          rm: true # Supprime le contenu de /opt/caisse avant la copie
+          port: ${{ secrets.VPS_PORT }}
+          source: "."
+          target: "/opt/caisse-staging"
+          rm: true
 
-      # 3. Se connecter au VPS pour créer les .env et lancer Docker Compose
-      - name: Créer les .env et redémarrer les services
+      - name: Déployer l'application sur Staging
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
-            # Se placer dans le répertoire du projet sur le serveur
-            cd /opt/caisse
-
-            echo "Création du fichier .env pour le backend..."
-            cat <<EOF > ./apis/.env
-            ${{ secrets.APIS_ENV_TZ }}
-            ${{ secrets.APIS_ENV_PORT }}
-            ${{ secrets.APIS_ENV_HOST }}
-            ${{ secrets.APIS_ENV_LOG_LEVEL }}
-            ${{ secrets.APIS_ENV_APP_KEY }}
-            ${{ secrets.APIS_ENV_NODE_ENV }}
-            ${{ secrets.APIS_ENV_DB_HOST }}
-            ${{ secrets.APIS_ENV_DB_PORT }}
-            ${{ secrets.APIS_ENV_DB_USER }}
-            ${{ secrets.APIS_ENV_DB_PASSWORD }}
-            ${{ secrets.APIS_ENV_DB_DATABASE }}
-            ${{ secrets.APIS_ENV_SMTP_HOST }}
-            ${{ secrets.APIS_ENV_SMTP_PORT }}
-            ${{ secrets.APIS_ENV_SMTP_USERNAME }}
-            ${{ secrets.APIS_ENV_SMTP_PASSWORD }}
-            ${{ secrets.APIS_ENV_CACHE_VIEWS }}
-            ${{ secrets.APIS_ENV_VITE_FRONT_URL }}
-            EOF
-
-            echo "Création du fichier .env.db..."
-            cat <<EOF > ./apis/.env.db
-            ${{ secrets.POSTGRES_USER }}
-            ${{ secrets.POSTGRES_PASSWORD }}
-            ${{ secrets.POSTGRES_DB }}
-            EOF
-
-            echo "Création du fichier .env pour le frontend..."
-            cat <<EOF > ./apps/.env
-            ${{ secrets.APP_ENV }}
-            EOF
+            cd /opt/caisse-staging
             
-            echo "Arrêt des anciens conteneurs..."
-            docker compose down || true
+            echo "Création des fichiers .env pour l'environnement de staging..."
+            echo "${{ secrets.STAGING_ENV_APIS }}" > ./apis/.env
+            echo "${{ secrets.STAGING_ENV_DB }}" > ./apis/.env.db
+            # AJOUT : Création du .env pour le frontend (apps)
+            echo "${{ secrets.STAGING_ENV_APPS }}" > ./apps/.env
             
-            echo "Lancement des nouveaux conteneurs..."
-            docker compose up --build -d
+            echo "Redémarrage des services de staging..."
+            docker compose -f docker-compose.staging.yml -p caisse_staging down || true
+            docker compose -f docker-compose.staging.yml -p caisse_staging up --build -d
             
             echo "Nettoyage des anciennes images Docker..."
             docker image prune -f
+
+  # ===================================================================
+  #  JOB 3: Déployer l'application sur Production
+  # ===================================================================
+  deploy-production:
+    name: 🚀 Déployer sur Production
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Copier les fichiers sur le VPS de Production
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "."
+          target: "/opt/caisse-prod"
+          rm: true
+
+      - name: Déployer l'application sur Production
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd /opt/caisse-prod
             
-            echo "Déploiement terminé. Conteneurs en cours d'exécution :"
-            docker ps
+            echo "Création des fichiers .env pour l'environnement de production..."
+            echo "${{ secrets.PRODUCTION_ENV_APIS }}" > ./apis/.env
+            echo "${{ secrets.PRODUCTION_ENV_DB }}" > ./apis/.env.db
+            # AJOUT : Création du .env pour le frontend (apps)
+            echo "${{ secrets.PRODUCTION_ENV_APPS }}" > ./apps/.env
+            
+            echo "Redémarrage des services de production..."
+            docker compose -f docker-compose.prod.yml -p caisse_prod down || true
+            docker compose -f docker-compose.prod.yml -p caisse_prod up --build -d
+            
+            echo "Nettoyage des anciennes images Docker..."
+            docker image prune -f
