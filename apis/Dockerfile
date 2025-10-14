@@ -1,48 +1,45 @@
-# FICHIER: ./apis/Dockerfile (Version unique et optimisée pour la production)
+# FICHIER: ./apis/Dockerfile (Version Définitive)
 
 # ===================================================================
-#  ÉTAPE 1 : Base commune
+#  ÉTAPE 1, 2, 3 : Build de l'application (ne changent pas)
 # ===================================================================
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# ===================================================================
-#  ÉTAPE 2 : Installation des dépendances (y compris dev) pour le build
-# ===================================================================
 FROM base AS deps
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# ===================================================================
-#  ÉTAPE 3 : Build de l'application
-# ===================================================================
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# S'assure que le build est fait en mode production pour les optimisations
 RUN npm run build --production
 
 # ===================================================================
-#  ÉTAPE 4 : Image finale de production (légère et sécurisée)
+#  ÉTAPE 4 : Image finale (adaptée à votre structure de build)
 # ===================================================================
 FROM base
 ENV NODE_ENV=production
+WORKDIR /app
 
-# Installation des dépendances de production UNIQUEMENT
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Copie du code compilé depuis l'étape de build
-# CORRECTION IMPORTANTE : On copie le dossier build dans un dossier build
-COPY --from=build /app/build ./build
+# === MODIFICATION CLÉ ===
+# On copie le CONTENU de /app/build directement à la racine /app
+# Le point "." signifie "dans le répertoire de travail actuel" (/app)
+COPY --from=build /app/build .
 
-# Copie des assets publics
+# On copie les assets publics
 COPY --from=build /app/public ./public
+
+# On intègre le script d'entrypoint
+COPY entrypoint.sh .
+ENTRYPOINT ["./entrypoint.sh"]
 
 EXPOSE 3333
 
-# --- COMMANDE FINALE CORRIGÉE POUR LA PRODUCTION ---
-# Lance le serveur de production via le script compilé
+# La CMD pointe vers le serveur à la racine, car il n'y a pas de dossier 'build'
 CMD ["node", "bin/server.js"]
 
 # # Utilisation de l'image de base
