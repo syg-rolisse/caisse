@@ -67,10 +67,7 @@ function Login({ onSwitch }) {
 
   return (
     <div className="tw-relative tw-h-screen tw-w-screen">
-      {/* <div className="tw-absolute tw-top-0" style={{ zIndex: 10000 }}>
-        <TopBar />
-      </div> */}
-
+     
       <img
         src="assets/images/media/caisse.jpg"
         className="tw-absolute tw-inset-0 tw-w-full tw-h-full tw-object-cover"

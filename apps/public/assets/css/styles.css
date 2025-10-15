@@ -9648,9 +9648,9 @@ pre .tag {
     transition: all 0.05s ease;
   }
 }
-.main-content {
+/* .main-content {
   padding: 0 0.9rem;
-}
+} */
 
 /* End::basic */
 /* Start::App Content */
@@ -18663,10 +18663,10 @@ ul.timeline > li:before {
     padding: 0.5rem 0 0px;
   }
 
-  .main-content {
+  /* .main-content {
     -webkit-padding-before: 3.75rem;
             padding-block-start: 3.75rem;
-  }
+  } */
 
   .main-sidebar-header {
     display: none !important;
