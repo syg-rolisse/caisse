@@ -1,4 +1,4 @@
-import TopBar from "../components/TopBar";
+// import TopBar from "../components/TopBar";
 
 const Header = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -106,7 +106,7 @@ const Header = () => {
               </a>
             </div>
 
-            <div className="-tw-mt-3">{user?.id && <TopBar />}</div>
+            {/* <div className="-tw-mt-3">{user?.id && <TopBar />}</div> */}
           </div>
         </div>
       </header>

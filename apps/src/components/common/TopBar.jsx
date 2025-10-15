@@ -1,4 +1,3 @@
-// src/components/layout/TopBar.jsx
 
 import PropTypes from "prop-types"; // 2. Ajout de l'import pour les PropTypes
 
@@ -17,7 +16,7 @@ function TopBar({ pageTitle }) {
   const userRole = user?.profil?.wording;
 
   return (
-    <div className="tw-bg-slate-700 tw-w-[100%] px-3 tw-py-4 tw-border-b tw-border-slate-200 tw-flex tw-items-center tw-justify-between">
+    <div className="tw-bg-slate-700 tw-w-[100%] px-4 tw-py-4 tw-rounded-md tw-border-b tw-border-slate-200 tw-flex tw-items-center tw-justify-between">
       
       {/* --- Côté Gauche : Contexte de la page --- */}
       <div className="tw-flex tw-items-center tw-gap-4">
@@ -26,8 +25,8 @@ function TopBar({ pageTitle }) {
           <div className="tw-p-2 tw-bg-orange-500 tw-rounded-lg">
             <Landmark size={20} className="tw-text-white" />
           </div>
-          <span className="tw-font-bold tw-text-slate-800 tw-hidden md:tw-block">
-            CaissePratique
+          <span className="tw-font-bold tw-text-slate-100 tw-hidden md:tw-block">
+            Caisse Pratique
           </span>
         </div>
         
@@ -58,18 +57,23 @@ function TopBar({ pageTitle }) {
         <div className="tw-w-px tw-h-6 tw-bg-slate-200"></div>
 
         {/* Menu Utilisateur */}
-        <button className="tw-flex tw-items-center tw-gap-3 hover:tw-bg-slate-100 tw-p-2 tw-rounded-lg">
-          <img 
-            src={`https://ui-avatars.com/api/?name=${userName.replace(' ', '+')}&background=random`} 
-            alt="Avatar de l'utilisateur"
-            className="tw-w-8 tw-h-8 tw-rounded-full"
-          />
-          <div className="tw-text-left tw-hidden md:tw-block">
-            <p className="tw-font-semibold tw-text-sm tw-text-slate-800">{userName}</p>
-            <p className="tw-text-xs tw-text-slate-500">{userRole}</p>
-          </div>
-          <ChevronDown size={16} className="tw-text-slate-400 tw-hidden md:tw-block" />
-        </button>
+       <button className="tw-flex tw-items-center tw-gap-3 tw-p-2 tw-rounded-lg tw-transition-colors tw-duration-200 group hover:tw-bg-slate-100">
+  <img 
+    src={`https://ui-avatars.com/api/?name=${userName?.replace(' ', '+')}&background=random`} 
+    alt="Avatar de l'utilisateur"
+    className="tw-w-8 tw-h-8 tw-rounded-full"
+  />
+  <div className="tw-text-left tw-hidden md:tw-block">
+    <p className="tw-font-semibold tw-text-sm tw-text-slate-100 tw-transition-colors tw-duration-200 hover:tw-text-slate-800">
+      {userName}
+    </p>
+    <p className="tw-text-xs tw-text-slate-500 tw-transition-colors tw-duration-200">
+      {userRole}
+    </p>
+  </div>
+  <ChevronDown size={16} className="tw-text-slate-400 tw-hidden md:tw-block" />
+</button>
+
       </div>
     </div>
   );

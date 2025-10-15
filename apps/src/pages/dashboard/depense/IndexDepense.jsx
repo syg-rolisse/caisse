@@ -136,8 +136,9 @@ const IndexDepense = () => {
           onClose={() => setShowDeleteModal(false)}
         />
       </WelcomeModal>
-
-      <div className="container-fluid">
+      
+      {/* container-fluid */}
+      <div className="">
         <PageHeaderActions
           indexTitle="Dépenses"
           primaryActionLabel="Ajouter une dépense"
