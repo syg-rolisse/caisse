@@ -89,7 +89,7 @@ function DeleteUser({ user, onSuccess, onClose }) {
 }
 
 DeleteUser.propTypes = {
-  user: PropTypes.object.isRequired,
+  user: PropTypes.object,
   onSuccess: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };

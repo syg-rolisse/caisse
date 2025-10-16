@@ -35,7 +35,7 @@ const Header = () => {
           <div className="header-content-right">
            
 
-            <div className="header-element header-theme-mode">
+            {/* <div className="header-element header-theme-mode">
               <a href="#" className="header-link layout-setting">
                 <span className="light-layout">
                   <i className="bx bx-moon fe-moon header-link-icon"></i>
@@ -80,10 +80,10 @@ const Header = () => {
                   5
                 </span>
               </a>
-            </div>
+            </div> */}
 
           
-
+{/* 
             <div className="header-element d-none d-sm-block">
               <a
                 href="#"
@@ -104,7 +104,7 @@ const Header = () => {
               >
                 <i className="bx bx-cog header-link-icon"></i>
               </a>
-            </div>
+            </div> */}
 
             {/* <div className="-tw-mt-3">{user?.id && <TopBar />}</div> */}
           </div>

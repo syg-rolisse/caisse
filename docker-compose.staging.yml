@@ -36,6 +36,7 @@ services:
     #command: ["sh", "-c", "node ace migration:run --force && node bin/server.js"]
     volumes:
       - /var/lib/caisse-staging/uploads:/app/uploads
+      - /var/lib/caisse-staging/public:/app/public
 
 
   caisse-staging-apps:

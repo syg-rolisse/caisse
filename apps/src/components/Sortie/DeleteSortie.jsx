@@ -88,7 +88,7 @@ function DeleteSortie({ sortie, onSuccess, onClose }) {
 }
 
 DeleteSortie.propTypes = {
-  sortie: PropTypes.object.isRequired, // 'sortie' est un mouvement (paiement)
+  sortie: PropTypes.object, // 'sortie' est un mouvement (paiement)
   onSuccess: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };
