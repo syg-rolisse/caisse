@@ -19,4 +19,6 @@ export const policies = {
   PermissionPolicy: () => import('#policies/permission_policy'),
   TypeDeDepensePolicy: () => import('#policies/type_de_depense_policy'),
   ApproPolicy: () => import('#policies/appro_policy'),
+  AbonnementPolicy: () => import('#policies/abonnement_policy'),
+  PackPolicy: () => import('#policies/pack_policy'),
 }

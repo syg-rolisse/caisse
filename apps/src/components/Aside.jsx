@@ -62,34 +62,33 @@ function Aside() {
         className={`app-sidebar sticky ${isOverlay ? "-tw-z-40" : ""}`}
         id="sidebar"
       >
-        <div className="tw-p-3">
-          <div>
-            <a href="#" className="tw-absolute tw-opacity-85 -tw-left-1 -tw-top-10">
-              <img
-                src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${
-                  user?.company?.logoUrl
-                    ? user?.company?.logoUrl
-                    : "logo/ri3uadefault.jpg"
-                }`}
-                alt="Avatar"
-                style={{
-                  width: "90%",
-                  height: "90%",
-                  objectFit: "cover",
-                  borderRadius: "50%",
-                }}
-              />
-            </a>
+        <div className="tw-flex tw-flex-col tw-items-center tw-justify-center tw-space-y-4">
+  {/* Conteneur avec un arrière-plan en dégradé pour simuler une bordure colorée */}
+  <a
+    href="#"
+    className="
+    
+    "
+  >
+    {/* Div intérieur pour créer l'effet de bordure */}
+    <div className="tw-bg-white tw-p-1 tw-rounded-full">
+      <img
+        src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${user?.company?.logoUrl || `uploads/avatars/${(user?.id % 5) + 1}.png`}`}
+        alt="Logo de l’entreprise"
+        className="tw-w-44 tw-h-44 tw-object-cover tw-rounded-full"
+      />
+    </div>
+  </a>
 
-            {user?.company?.showCompanyName && (
-              <p className="bariecito-policy tw-text-center tw-mt-3 tw-font-semibold tw-text-xl">
-                {user?.company?.companyName}
-              </p>
-            )}
-          </div>
-        </div>
+  {/* Affichage conditionnel du nom de l'entreprise */}
+  {user?.company?.showCompanyName && (
+    <p className="bariecito-policy tw-text-center tw-font-semibold tw-text-2xl tw-text-slate-700 tw-tracking-wide">
+      {user?.company?.companyName}
+    </p>
+  )}
+</div>
 
-        <div className="main-sidebar tw-mt-24" id="sidebar-scroll">
+        <div className="main-sidebar -tw-mt-12" id="sidebar-scroll">
           <nav className="main-menu-container nav nav-pills flex-column sub-open">
             <ul className="main-menu">
               <li className="slide__category">
@@ -173,6 +172,26 @@ function Aside() {
                 >
                   <i className="bx bx-user side-menu__icon"></i>
                   <span className="side-menu__label">Utilisateurs</span>
+                </button>
+              </li>
+
+              <li className="slide">
+                <button
+                  className="side-menu__item"
+                  onClick={() => handleNavigation("packs")}
+                >
+                  <i className="bx bx-user side-menu__icon"></i>
+                  <span className="side-menu__label">Packs</span>
+                </button>
+              </li>
+
+              <li className="slide">
+                <button
+                  className="side-menu__item"
+                  onClick={() => handleNavigation("abonnements")}
+                >
+                  <i className="bx bx-user side-menu__icon"></i>
+                  <span className="side-menu__label">Mes abonnements</span>
                 </button>
               </li>
 

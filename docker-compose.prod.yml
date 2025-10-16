@@ -38,7 +38,6 @@ services:
       - /var/lib/caisse-prod/uploads:/app/uploads
       - /var/lib/caisse-prod/public:/app/public
 
-
   caisse-prod-apps:
     build:
       context: ./apps
@@ -47,11 +46,27 @@ services:
     image: caisse-prod-apps:latest
     restart: always
     ports:
-      - "81:80" # Nginx sert l'app sur le port 80, mappé sur 5174 en local
+      - "81:80"
     networks:
       - caisse_network
     depends_on:
       - caisse-prod-apis
+
+  caisse-prod-backoffice:
+    build:
+      context: ./backoffice
+      dockerfile: Dockerfile
+    container_name: caisse_prod_backoffice
+    image: caisse-prod-backoffice:latest
+    restart: always
+    ports:
+      - "83:80"
+    networks:
+      - caisse_network
+    depends_on:
+      - caisse-prod-apis
+
+
 
 volumes:
   pg_caisse_data_prod:

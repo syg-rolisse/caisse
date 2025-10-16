@@ -1,0 +1,201 @@
+@import url("https://fonts.googleapis.com/css2?family=Handjet:wght@100..900&family=Quicksand:wght@300..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Barriecito&display=swap");
+* {
+  font-family: "Quicksand", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+.gradient-border {
+  position: relative;
+  background: linear-gradient(90deg, #38bdf8, #22c55e, #10b981);
+  border-radius: 0.5rem; /* Doit correspondre à la classe Tailwind */
+  padding: 2px; /* Ajustez selon l'épaisseur souhaitée */
+}
+
+.gradient-border > .bg-white {
+  background-color: #fff;
+  border-radius: inherit;
+}
+
+.student-name {
+  font-family: "Barriecito", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.bariecito-policy {
+  font-family: "Barriecito", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+th {
+  color: #808080 !important;
+  font-family: "Quicksand", sans-serif;
+}
+
+.badrop {
+  background: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px) !important;
+}
+
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgb(10, 10, 10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.table-responsive {
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch; /* Pour le défilement doux sur les appareils mobiles */
+  width: 100%; /* Assurez-vous que la table prend toute la largeur disponible */
+  max-width: 100%; /* Empêche la table de dépasser la largeur du conteneur parent */
+  margin-bottom: 1rem; /* Ajoute un espace en bas de la table */
+}
+
+.answer-column {
+  width: 90vh !important;
+}
+.pay-column {
+  width: 40vh !important;
+}
+
+.loader-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #f57803;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+.modal-overlay-progressbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content-progressbar {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  width: 300px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.progress-bar-container {
+  background: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 20px;
+  margin-top: 20px;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f38014, #f36304);
+}
+
+.progress-percentage {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.transition-opacity {
+  transition: opacity 700ms ease-in-out;
+}
+.duration-700 {
+  transition-duration: 700ms;
+}
+.ease-in-out {
+  transition-timing-function: ease-in-out;
+}
+
+.customTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 1px;
+  overflow: hidden;
+}
+
+.customTable th,
+.customTable td {
+  border-radius: 4px !important;
+  padding: 4px;
+  height: 20px;
+  background-color: transparent !important;
+  line-height: 3;
+  border: 1px solid #6a727e3d;
+  vertical-align: middle !important;
+  font-size: 11px !important;
+}
+
+.card-border {
+  border: 1px solid #6a727e3d;
+}
+
+/* .formCustom .form-group input {
+  background-color: #e0e0e054;
+}*/
+
+.customModal .modal-content {
+  background-color: transparent !important;
+}
+
+.modal-backdrop.show {
+  opacity: 0.5;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.customModal .modal-content {
+  opacity: 0.7;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Animation pour les nouvelles cartes du dashboard */
+@keyframes fadeInSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-card {
+  animation: fadeInSlideDown 0.6s ease-out forwards;
+}

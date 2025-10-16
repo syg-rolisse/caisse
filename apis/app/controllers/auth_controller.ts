@@ -362,6 +362,10 @@ export default class AuthController {
         isAuthorized = !(await bouncer.with('TypeDeDepensePolicy').denies('view'))
       } else if (route === 'depenses') {
         isAuthorized = !(await bouncer.with('DepensePolicy').denies('view'))
+      } else if (route === 'packs') {
+        isAuthorized = !(await bouncer.with('PackPolicy').denies('view'))
+      } else if (route === 'abonnements') {
+        isAuthorized = !(await bouncer.with('AbonnementPolicy').denies('view'))
       } else if (route === 'permissions') {
         isAuthorized = !(await bouncer.with('PermissionPolicy').denies('view'))
       } else if (route === 'sorties') {

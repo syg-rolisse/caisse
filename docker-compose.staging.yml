@@ -47,7 +47,21 @@ services:
     image: caisse-staging-apps:latest
     restart: always
     ports:
-      - "82:80" # Nginx sert l'app sur le port 80, mappé sur 5174 en local
+      - "82:80"
+    networks:
+      - caisse_network
+    depends_on:
+      - caisse-staging-apis
+      
+  caisse-staging-backoffice:
+    build:
+      context: ./backoffice
+      dockerfile: Dockerfile
+    container_name: caisse_staging_backoffice
+    image: caisse-staging-backoffice:latest
+    restart: always
+    ports:
+      - "84:80"
     networks:
       - caisse_network
     depends_on:
