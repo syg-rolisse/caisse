@@ -10,14 +10,7 @@ import {
   Briefcase,
 } from "lucide-react";
 
-/**
- * Un composant interne et réutilisable pour animer un nombre de manière fluide.
- * Framer Motion va automatiquement interpoler la valeur lorsque la prop `value` change,
- * créant un effet de comptage.
- */
 const AnimatedStat = ({ value }) => {
-  // Le composant motion.span recevra une nouvelle valeur et l'animera.
-  // Math.round est utilisé car Framer Motion peut passer des nombres à virgule pendant l'animation.
   return <motion.span>{Math.round(value)}</motion.span>;
 };
 
@@ -85,7 +78,7 @@ const UserStatsCard = ({ stats }) => {
         </span>
         <span className="tw-inline-flex tw-items-center tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-medium tw-bg-amber-100 tw-text-amber-800">
           <Briefcase size={14} className="tw-mr-1" /> Sécrétaire : {"  "}
-          <AnimatedStat value={"  " + Sécrétaire} />
+          <AnimatedStat value={Sécrétaire} />
         </span>
       </div>
     </div>

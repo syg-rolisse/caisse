@@ -9,6 +9,30 @@ import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
 import appro_service from '#services/appro_service'
+import Ws from '#services/ws'
+
+async function emitApproUpdate(companyId: number, eventName: string) {
+  if (!companyId) return
+
+  try {
+    const { allApprovisionnements, approvisionnements } = await appro_service.fetchAndFormatAppro(
+      companyId,
+      1,
+      10
+    )
+    const roomName = `company_${companyId}`
+    const payload = {
+      approvisionnements,
+      allApprovisionnements,
+      companyId,
+    }
+    Ws.io?.to(roomName).emit(eventName, payload)
+    console.log(`Événement '${eventName}' émis dans le salon '${roomName}'`)
+  } catch (error) {
+    console.error(`Erreur lors de l'émission du socket '${eventName}':`, error)
+  }
+}
+
 export default class ApprovisionnementsController {
   async index({ request, response }: HttpContext) {
     try {
@@ -31,7 +55,6 @@ export default class ApprovisionnementsController {
   async solde({ request, response }: HttpContext) {
     try {
       const { companieId } = request.qs()
-
       const { solde } = await solde_service.fetchAndFormatSolde(companieId)
       return response.ok(solde)
     } catch (error) {
@@ -41,48 +64,47 @@ export default class ApprovisionnementsController {
   }
 
   public async create({ auth, bouncer, request, response }: HttpContext) {
-    const trx = await db.transaction() // Utilisation de `db.transaction()`
-
+    const trx = await db.transaction()
     try {
       const user = auth.user
-      // Préchargez le profil et les permissions de l'utilisateur
       await user?.load('Profil', (profilQuery: any) => {
         profilQuery.preload('Permission')
       })
 
-      // Vérifie si l'utilisateur a l'autorisation  d'approvisionner la caisse
       if (await bouncer.with('ApproPolicy').denies('create')) {
+        await trx.rollback()
         return response.forbidden("Désolé, vous n'êtes pas autorisé à approvisionner la caisse.")
       }
 
       const payload = await request.validateUsing(createApprovisionnementValidator)
+      const appro = await Approvisionnement.create({ ...payload }, { client: trx })
 
-      // Créer l'approvisionnement avec la transaction
-      const appro = await Approvisionnement.create({ ...payload })
-
-      // Récupérer ou créer le solde dans la même transaction
-      let solde = await Solde.query().where({ companieId: payload.companieId }).forUpdate().first()
+      let solde = await Solde.query({ client: trx })
+        .where({ companieId: payload.companieId })
+        .forUpdate()
+        .first()
 
       if (solde) {
-        // Si le solde existe, mettre à jour son montant
         solde.merge({ montant: solde.montant + payload.montant })
         await solde.save()
       } else {
-        // Si aucun solde n'existe, le créer
-        solde = await Solde.create({ companieId: payload.companieId, montant: payload.montant })
+        solde = await Solde.create(
+          { companieId: payload.companieId, montant: payload.montant },
+          { client: trx }
+        )
       }
 
-      // Commit de la transaction
       await trx.commit()
+
+      await emitApproUpdate(payload.companieId, 'appro_created')
 
       return response.created({
         appro,
         message: 'Approvisionnement enregistré avec succès.',
       })
     } catch (error) {
-      // Rollback en cas d'erreur
+      console.error("Erreur lors de la création de l'approvisionnement:", error?.message)
       await trx.rollback()
-
       const message = processErrorMessages(error)
       return response.badRequest({ status: 400, error: message })
     }
@@ -91,16 +113,13 @@ export default class ApprovisionnementsController {
   async show({ request, response }: HttpContext) {
     try {
       const { approvisionnementId } = request.qs()
-
       if (!approvisionnementId) {
         return response.badRequest({
           status: 400,
           error: "L'identifiant de l'approvisionnement est requis.",
         })
       }
-
       const approvisionnement = await Approvisionnement.findOrFail(approvisionnementId)
-
       response.created({ status: 200, approvisionnement })
     } catch (error) {
       const message = processErrorMessages(error)
@@ -110,116 +129,114 @@ export default class ApprovisionnementsController {
 
   async update({ auth, bouncer, request, response }: HttpContext) {
     const trx = await db.transaction()
-
     try {
       const user = auth.user
-      // Préchargez le profil et les permissions de l'utilisateur
       await user?.load('Profil', (profilQuery: any) => {
         profilQuery.preload('Permission')
       })
 
-      // Vérifie si l'utilisateur a l'autorisation  de modifier un approvisionnement
       if (await bouncer.with('ApproPolicy').denies('update')) {
+        await trx.rollback()
         return response.forbidden(
           "Désolé, vous n'êtes pas autorisé à modifier un approvisionnement."
         )
       }
 
       const { approvisionnementId } = request.qs()
-      const approvisionnement = await Approvisionnement.findOrFail(approvisionnementId)
-
-      // Validation des données
+      const approvisionnement = await Approvisionnement.findOrFail(approvisionnementId, {
+        client: trx,
+      })
       const payload = await request.validateUsing(updateApprovisionnementValidator)
 
-      // Récupérer le solde unique
-      const solde = await Solde.query().forUpdate().firstOrFail()
+      const solde = await Solde.query({ client: trx })
+        .where({ companieId: approvisionnement.companieId })
+        .forUpdate()
+        .firstOrFail()
 
-      if (solde.montant - payload.montant < 0) {
-        return response.forbidden({
-          status: 403,
-          message: "Désolé, le solde de la caisse ne permet pas d'annuler cet approvisionnement",
-        })
-      }
-
-      // Mettre à jour le solde
       solde.merge({
-        montant: solde.montant - approvisionnement.$attributes.montant + payload.montant,
+        montant: solde.montant - approvisionnement.montant + payload.montant,
       })
       await solde.save()
 
-      // Mettre à jour l'approvisionnement
       approvisionnement.merge(payload)
       await approvisionnement.save()
 
-      // Commit de la transaction
       await trx.commit()
+
+      if (approvisionnement.companieId) {
+        await emitApproUpdate(approvisionnement.companieId, 'appro_updated')
+      }
 
       return response.ok({
         status: 200,
         message: 'Approvisionnement modifié avec succès',
       })
     } catch (error) {
-      // Rollback en cas d'erreur
       await trx.rollback()
-      console.log(error.message)
-
       const message = processErrorMessages(error)
-      return response.badRequest({
-        status: 500,
-        error: message,
-      })
+      return response.badRequest({ status: 500, error: message })
     }
   }
 
   async delete({ auth, bouncer, request, response }: HttpContext) {
+    const trx = await db.transaction()
     const { approvisionnementId } = request.qs()
+
     try {
       const user = auth.user
-      // Préchargez le profil et les permissions de l'utilisateur
       await user?.load('Profil', (profilQuery: any) => {
         profilQuery.preload('Permission')
       })
 
-      // Vérifie si l'utilisateur a l'autorisation  de modifier un approvisionnement
       if (await bouncer.with('ApproPolicy').denies('delete')) {
+        await trx.rollback()
         return response.forbidden(
-          "Désolé, vous n'êtes pas autorisé à modifier un approvisionnement."
+          "Désolé, vous n'êtes pas autorisé à supprimer un approvisionnement."
         )
       }
 
-      const approvisionnement = await Approvisionnement.findOrFail(approvisionnementId)
+      const approvisionnement = await Approvisionnement.findOrFail(approvisionnementId, {
+        client: trx,
+      })
+      const companyId = approvisionnement.companieId
 
-      const solde = await Solde.query().forUpdate().firstOrFail()
+      const solde = await Solde.query({ client: trx })
+        .where({ companieId: companyId })
+        .forUpdate()
+        .firstOrFail()
 
       if (solde.montant - approvisionnement.montant < 0) {
+        await trx.rollback()
         return response.forbidden({
           status: 403,
           message: 'Désolé, le solde de la caisse ne permet pas de supprimer cet approvisionnement',
         })
       }
 
-      // Mettre à jour le solde
       solde.merge({ montant: solde.montant - approvisionnement.montant })
       await solde.save()
 
       await approvisionnement.delete()
-      return response.created({
-        approvisionnement,
+      await trx.commit()
+
+      if (companyId) {
+        await emitApproUpdate(companyId, 'appro_deleted')
+      }
+
+      return response.ok({
         status: 200,
         message: 'Approvisionnement supprimé avec succès',
       })
     } catch (error) {
+      await trx.rollback()
       let message = ''
-      console.log(error)
-
       if (error.code === 'E_ROW_NOT_FOUND') {
         message = approvisionnementId
-          ? 'Ligne de solde non retrouvée'
-          : 'Approvisionnement non retrouvé.'
+          ? 'Approvisionnement non retrouvé.'
+          : 'Ligne de solde non retrouvée'
       } else {
         message = processErrorMessages(error)
       }
-
       return response.badRequest({ status: 400, error: message })
     }
   }

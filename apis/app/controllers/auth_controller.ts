@@ -21,7 +21,9 @@ export default class AuthController {
       seedProfile(1)
       const userConnected = await User.query()
         .where('email', email)
-        .preload('Profil')
+        .preload('Profil', (query) => {
+          query.preload('Permission')
+        })
         .preload('Companies') // Précharger la relation Company
         .first()
 

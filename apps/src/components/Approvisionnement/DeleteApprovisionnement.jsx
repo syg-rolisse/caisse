@@ -1,17 +1,14 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { Loader2, AlertTriangle, Trash2, X } from "lucide-react";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 import { useHandleError } from "../../hook/useHandleError";
 import ConfirmationInput from "../ConfirmationInput";
 
 function DeleteApprovisionnement({ approvisionnement, onSuccess, onClose }) {
   const { handleError } = useHandleError();
-  const socket = useContext(SocketContext);
-  const user = JSON.parse(localStorage.getItem("user"));
   const [isConfirmed, setIsConfirmed] = useState(false);
 
   const { mutate: deleteMutation, isLoading: isDeleting } = useMutation({
@@ -23,10 +20,6 @@ function DeleteApprovisionnement({ approvisionnement, onSuccess, onClose }) {
       toast.success(response?.data?.message);
       onSuccess(); // Appelle la fonction de succès du parent (pour fermer le modal, etc.)
       
-      // Émettre l'événement socket pour informer les autres clients
-      if (socket?.connected && user?.company?.id) {
-        socket.emit("approvisionnement_deleted", user.company.id);
-      }
     },
     onError: handleError,
   });
@@ -95,7 +88,7 @@ function DeleteApprovisionnement({ approvisionnement, onSuccess, onClose }) {
 }
 
 DeleteApprovisionnement.propTypes = {
-  approvisionnement: PropTypes.object.isRequired,
+  approvisionnement: PropTypes.object,
   onSuccess: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };

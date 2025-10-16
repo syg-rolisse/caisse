@@ -1,18 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types"; // Importer PropTypes
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { RiEyeLine, RiEyeOffLine } from "react-icons/ri";
 import "react-phone-input-2/lib/style.css";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 
 function Register({ onSwitch }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const socket = useContext(SocketContext);
 
   const {
     register,
@@ -37,7 +34,6 @@ function Register({ onSwitch }) {
       ),
     {
       onSuccess: (response) => {
-        socket.emit("user_created");
         toast.success(response?.data?.message, { duration: 12000 });
         reset();
         onSwitch("login");

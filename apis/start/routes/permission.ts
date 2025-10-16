@@ -4,7 +4,7 @@ const PermissionsController = () => import('#controllers/permissions_controller'
 
 router
   .group(() => {
-    router.get('allPermission', [PermissionsController, 'allPermission'])
+    router.get('permission/all', [PermissionsController, 'allPermission'])
     router.get('permission', [PermissionsController, 'show'])
     router.put('permission', [PermissionsController, 'update'])
   })

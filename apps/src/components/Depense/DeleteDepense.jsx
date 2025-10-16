@@ -1,17 +1,15 @@
 // src/components/DeleteDepense.js
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { Loader2, AlertTriangle, Trash2 } from "lucide-react";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 import ConfirmationInput from "../ConfirmationInput";
 import { useHandleError } from "../../hook/useHandleError";
 
 function DeleteDepense({ depense, onSuccess }) {
   const { handleError } = useHandleError();
-  const socket = useContext(SocketContext);
   const user = JSON.parse(localStorage.getItem("user"));
   const [isConfirmed, setIsConfirmed] = useState(false);
 
@@ -23,13 +21,12 @@ function DeleteDepense({ depense, onSuccess }) {
     onSuccess: (response) => {
       toast.success(response?.data?.message);
       onSuccess(); 
-      if (socket?.connected) {
+     
         if(!user?.company?.id){
           toast.error("Echec du rafraîchissement de la liste des dépenses.");
           return;
         }
-        socket.emit("depense_deleted", user?.company?.id);
-      }
+       
     },
     onError: (error) => {
       handleError(error);
@@ -91,7 +88,7 @@ function DeleteDepense({ depense, onSuccess }) {
 }
 
 DeleteDepense.propTypes = {
-  depense: PropTypes.object.isRequired,
+  depense: PropTypes.object,
   onSuccess: PropTypes.func.isRequired,
 };
 

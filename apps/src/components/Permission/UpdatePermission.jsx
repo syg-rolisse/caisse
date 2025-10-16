@@ -1,608 +1,173 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
+import { useHandleError } from "../../hook/useHandleError";
+import { Loader2 } from "lucide-react";
 
-function UpdatePermission({ currentPermissionId, refreshPermissionList }) {
-  const [currentPermission, setCurrentPermission] = useState();
-  const prevPermissionIdRef = useRef();
-  const addPermissionLinkRef = useRef();
+const PermissionCheckbox = ({ id, label, register }) => (
+  <div className="form-check tw-flex tw-items-center">
+    <input type="checkbox" className="form-check-input" id={id} {...register(id)} />
+    <label className="form-check-label tw-ml-2" htmlFor={id}>
+      {label}
+    </label>
+  </div>
+);
+
+PermissionCheckbox.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  register: PropTypes.func.isRequired,
+};
+
+export default function UpdatePermission({ permission, onSuccess, onClose }) {
   const user = JSON.parse(localStorage.getItem("user"));
-
-  const socket = useContext(SocketContext);
-
+  const { handleError } = useHandleError();
+  
   const { register, handleSubmit, reset } = useForm();
 
-  const handleError = (error) => {
-    const validationErrors = error?.response?.data?.error;
-    if (validationErrors && Array.isArray(validationErrors)) {
-      validationErrors.forEach((err) => {
-        toast.error(err.message, { duration: 12000 });
-      });
-    } else {
-      addPermissionLinkRef.current.click();
-      toast.error(
-        error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.response?.data,
-        { duration: 12000 }
-      );
-    }
-  };
-
-  const updatePermission = useMutation(
-    ({ data, currentPermissionId }) =>
+  const { mutate: updatePermission, isLoading } = useMutation({
+    mutationFn: (data) =>
       axiosInstance.put(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/api/v1/permission?userConnectedId=${
-          user.id
-        }&permissionId=${currentPermissionId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/permission?permissionId=${permission.id}&userConnectedId=${user.id}`,
         data
       ),
-    {
-      onSuccess: (response) => {
-        socket.emit("user_updated");
-        toast.success(response?.data?.message);
-        refreshPermissionList();
-        reset();
-        addPermissionLinkRef.current.click();
-      },
-      onError: handleError,
-    }
-  );
-
-  const getPermission = useMutation(
-    (param) =>
-      axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/permission?permissionId=${
-          param.currentPermissionId
-        }`
-      ),
-    {
-      onSuccess: (response) => {
-        setCurrentPermission(response?.data?.permission);
-      },
-      onError: handleError,
-    }
-  );
+    onSuccess: (response) => {
+      toast.success(response?.data?.message);
+      onSuccess();
+    },
+    onError: handleError,
+  });
 
   const onSubmit = (data) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      console.log(data);
-
-      if (currentPermissionId) {
-        updatePermission.mutate({ data, currentPermissionId });
-      }
-    } else {
-      toast.error("Utilisateur non trouvé dans le stockage local");
+    if (permission) {
+      updatePermission(data);
     }
   };
 
   useEffect(() => {
-    if (
-      currentPermissionId &&
-      currentPermissionId !== prevPermissionIdRef.current
-    ) {
-      prevPermissionIdRef.current = currentPermissionId;
-      getPermission.mutate({ currentPermissionId });
-      if (addPermissionLinkRef.current) {
-        addPermissionLinkRef.current.click();
-      }
-    }
-  }, [currentPermissionId]);
-
-  useEffect(() => {
-    if (currentPermission) {
+    if (permission) {
       reset({
-        profilId: currentPermission?.Profil?.id,
-        readUser: currentPermission?.readUser || false,
-        createUser: currentPermission?.createUser || false,
-        updateUser: currentPermission?.updateUser || false,
-        deleteUser: currentPermission?.deleteUser || false,
-        readAppro: currentPermission?.readAppro || false,
-        createAppro: currentPermission?.createAppro || false,
-        updateAppro: currentPermission?.updateAppro || false,
-        deleteAppro: currentPermission?.deleteAppro || false,
-        readDepense: currentPermission?.readDepense || false,
-        createDepense: currentPermission?.createDepense || false,
-        updateDepense: currentPermission?.updateDepense || false,
-        deleteDepense: currentPermission?.deleteDepense || false,
-        readSortie: currentPermission?.readSortie || false,
-
-        readTypeDeDepense: currentPermission?.readTypeDeDepense || false,
-        createTypeDeDepense: currentPermission?.createTypeDeDepense || false,
-        updateTypeDeDepense: currentPermission?.updateTypeDeDepense || false,
-        deleteTypeDeDepense: currentPermission?.deleteTypeDeDepense || false,
-
-        bloqueDepense: currentPermission?.bloqueDepense || false,
-        dechargeDepense: currentPermission?.dechargeDepense || false,
-        rejectDepense: currentPermission?.rejectDepense || false,
-        payeDepense: currentPermission?.payeDepense || false,
-
-        updatePermission: currentPermission?.updatePermission || false,
-
-        readDashboard: currentPermission?.readDashboard || false,
-
-        readPermission: currentPermission?.readPermission || false,
+        profilId: permission.Profil?.id,
+        readUser: permission.readUser,
+        createUser: permission.createUser,
+        updateUser: permission.updateUser,
+        deleteUser: permission.deleteUser,
+        readAppro: permission.readAppro,
+        createAppro: permission.createAppro,
+        updateAppro: permission.updateAppro,
+        deleteAppro: permission.deleteAppro,
+        readDepense: permission.readDepense,
+        createDepense: permission.createDepense,
+        updateDepense: permission.updateDepense,
+        deleteDepense: permission.deleteDepense,
+        readSortie: permission.readSortie,
+        readTypeDeDepense: permission.readTypeDeDepense,
+        createTypeDeDepense: permission.createTypeDeDepense,
+        updateTypeDeDepense: permission.updateTypeDeDepense,
+        deleteTypeDeDepense: permission.deleteTypeDeDepense,
+        bloqueDepense: permission.bloqueDepense,
+        dechargeDepense: permission.dechargeDepense,
+        rejectDepense: permission.rejectDepense,
+        payeDepense: permission.payeDepense,
+        updatePermission: permission.updatePermission,
+        readDashboard: permission.readDashboard,
+        readPermission: permission.readPermission,
       });
     }
-  }, [currentPermission, reset]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on("user_updated", refreshPermissionList);
-      return () => {
-        socket.off("user_updated", refreshPermissionList);
-      };
-    }
-  }, [socket, refreshPermissionList]);
+  }, [permission, reset]);
 
   return (
-    <div className="row">
-      <a
-        ref={addPermissionLinkRef}
-        className="modal-effect btn btn-primary d-grid mb-3"
-        data-bs-effect="effect-rotate-bottom"
-        data-bs-toggle="modal"
-        href="#modaldemo8"
-        style={{ cursor: "pointer", visibility: "hidden" }}
-        disabled
-      >
-        Modification de la permission
-      </a>
+    // On utilise flexbox en colonne pour séparer l'en-tête, le contenu et le pied de page
+    <div className="tw-flex tw-flex-col tw-h-full">
+      <div className="tw-flex-shrink-0 tw-mb-4">
+        <h3 className="tw-text-lg tw-font-semibold tw-text-gray-900">
+          Modifier les permissions de &quot;{permission?.Profil?.wording || '...'}&quot;
+        </h3>
+        <p className="tw-text-sm tw-text-gray-500">
+          Cochez les droits à accorder à ce profil.
+        </p>
+      </div>
 
-      <div
-        className="modal fade"
-        id="modaldemo8"
-        tabIndex="-1"
-        data-bs-backdrop="static"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content tw-rounded-lg tw-border tw-p-2">
-            <div className="modal-header">
-              <h6 className="modal-title tw-text-gray-700 tw-text-xl">
-                Modification
-              </h6>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-                style={{ cursor: "pointer" }}
-              ></button>
+      <form onSubmit={handleSubmit(onSubmit)} className="tw-flex tw-flex-col tw-flex-grow tw-overflow-hidden">
+        {/* Cette div permet le défilement vertical du contenu du formulaire */}
+        <div className="tw-flex-grow tw-overflow-y-auto tw-pr-4">
+          <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
+            <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
+              <h4 className="tw-font-semibold">Administration</h4>
+              <PermissionCheckbox id="readDashboard" label="Voir le TdB" register={register} />
+              <PermissionCheckbox id="readPermission" label="Lire les permissions" register={register} />
+              <PermissionCheckbox id="updatePermission" label="Modifier les permissions" register={register} />
             </div>
-            <div className="modal-body text-start">
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="row gy-4 formCustom"
-              >
-                {/* Utilisateurs accès */}
-                <div className="tw-border tw-p-4 tw-rounded-lg">
-                  <h6 className="text-xl font-semibold mb-3">
-                    Permissions sur les accès
-                  </h6>
 
-                  <input
-                    type="number"
-                    className="form-control tw-absolute tw-top-0 tw-hidden"
-                    id="profilId"
-                    {...register("profilId")}
-                  />
+            <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
+              <h4 className="tw-font-semibold">Utilisateurs</h4>
+              <PermissionCheckbox id="readUser" label="Lire" register={register} />
+              <PermissionCheckbox id="createUser" label="Créer" register={register} />
+              <PermissionCheckbox id="updateUser" label="Modifier" register={register} />
+              <PermissionCheckbox id="deleteUser" label="Supprimer" register={register} />
+            </div>
 
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="readPermission"
-                      {...register("readPermission")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="readPermission"
-                    >
-                      Lire les permissions
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="updatePermission"
-                      {...register("updatePermission")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="updatePermission"
-                    >
-                      Modifier une permission
-                    </label>
-                  </div>
-                </div>
+            <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
+              <h4 className="tw-font-semibold">Approvisionnements</h4>
+              <PermissionCheckbox id="readAppro" label="Lire" register={register} />
+              <PermissionCheckbox id="createAppro" label="Créer" register={register} />
+              <PermissionCheckbox id="updateAppro" label="Modifier" register={register} />
+              <PermissionCheckbox id="deleteAppro" label="Supprimer" register={register} />
+            </div>
 
-                <div className="tw-border tw-p-4 tw-rounded-lg">
-                  <h6 className="text-xl font-semibold mb-3">
-                    Tableau de board
-                  </h6>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="readDashboard"
-                      {...register("readDashboard")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="readDashboard"
-                    >
-                      Voir le tableau de board
-                    </label>
-                  </div>
-                </div>
+            <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
+              <h4 className="tw-font-semibold">Dépenses</h4>
+              <PermissionCheckbox id="readDepense" label="Lire" register={register} />
+              <PermissionCheckbox id="createDepense" label="Créer" register={register} />
+              <PermissionCheckbox id="updateDepense" label="Modifier" register={register} />
+              <PermissionCheckbox id="deleteDepense" label="Supprimer" register={register} />
+            </div>
 
-                <div className="tw-border tw-p-4 tw-rounded-lg">
-                  <h6 className="text-xl font-semibold mb-3">
-                    Permissions Utilisateurs
-                  </h6>
+            <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
+              <h4 className="tw-font-semibold">Types de Dépenses</h4>
+              <PermissionCheckbox id="readTypeDeDepense" label="Lire" register={register} />
+              <PermissionCheckbox id="createTypeDeDepense" label="Créer" register={register} />
+              <PermissionCheckbox id="updateTypeDeDepense" label="Modifier" register={register} />
+              <PermissionCheckbox id="deleteTypeDeDepense" label="Supprimer" register={register} />
+            </div>
 
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="readUser"
-                      {...register("readUser")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="readUser"
-                    >
-                      Lire Utilisateur
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="createUser"
-                      {...register("createUser")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="createUser"
-                    >
-                      Créer Utilisateur
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="updateUser"
-                      {...register("updateUser")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="updateUser"
-                    >
-                      Modifier Utilisateur
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="deleteUser"
-                      {...register("deleteUser")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="deleteUser"
-                    >
-                      Supprimer Utilisateur
-                    </label>
-                  </div>
-                </div>
-
-                {/* Appro Permissions */}
-
-                <div className="tw-border tw-p-4 tw-rounded-lg">
-                  <h6 className="text-xl font-semibold mb-3">Sortie</h6>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="bloqueDepense"
-                      {...register("bloqueDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="bloqueDepense"
-                    >
-                      Bloquer une dépense
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="dechargeDepense"
-                      {...register("dechargeDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="dechargeDepense"
-                    >
-                      Mettre unde décharge
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="payeDepense"
-                      {...register("payeDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="payeDepense"
-                    >
-                      Décaissé
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="rejectDepense"
-                      {...register("rejectDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="rejectDepense"
-                    >
-                      Rejeter une dépense
-                    </label>
-                  </div>
-                </div>
-
-                <div className="tw-border tw-p-4 tw-rounded-lg">
-                  <h6 className="text-xl font-semibold mb-3">
-                    Approvisionnement
-                  </h6>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="readAppro"
-                      {...register("readAppro")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="readAppro"
-                    >
-                      Lire
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="createAppro"
-                      {...register("createAppro")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="createAppro"
-                    >
-                      Créer
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="updateAppro"
-                      {...register("updateAppro")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="updateAppro"
-                    >
-                      Modifier
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="deleteAppro"
-                      {...register("deleteAppro")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="deleteAppro"
-                    >
-                      Supprimer
-                    </label>
-                  </div>
-                </div>
-
-                {/* Depense Permissions */}
-                <div className="tw-border tw-p-4 tw-rounded-lg">
-                  <h6 className="text-xl font-semibold mb-3">
-                    Permissions Depense
-                  </h6>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="readDepense"
-                      {...register("readDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="readDepense"
-                    >
-                      Lire Depense
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="createDepense"
-                      {...register("createDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="createDepense"
-                    >
-                      Créer Depense
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="updateDepense"
-                      {...register("updateDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="updateDepense"
-                    >
-                      Modifier Depense
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="deleteDepense"
-                      {...register("deleteDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="deleteDepense"
-                    >
-                      Supprimer Depense
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="readSortie"
-                      {...register("readSortie")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="readSortie"
-                    >
-                      Voir les sorties
-                    </label>
-                  </div>
-                </div>
-
-                {/* TypeDeDepense Permissions */}
-                <div className="tw-border tw-p-4 tw-rounded-lg">
-                  <h6 className="text-xl font-semibold mb-3">
-                    Permissions TypeDeDepense
-                  </h6>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="readTypeDeDepense"
-                      {...register("readTypeDeDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="readTypeDeDepense"
-                    >
-                      Lire
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="createTypeDeDepense"
-                      {...register("createTypeDeDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="createTypeDeDepense"
-                    >
-                      Créer
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="updateTypeDeDepense"
-                      {...register("updateTypeDeDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="updateTypeDeDepense"
-                    >
-                      Modifier
-                    </label>
-                  </div>
-                  <div className="form-check tw-flex tw-justify-start">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="deleteTypeDeDepense"
-                      {...register("deleteTypeDeDepense")}
-                    />
-                    <label
-                      className="form-check-label tw-ml-2"
-                      htmlFor="deleteTypeDeDepense"
-                    >
-                      Supprimer
-                    </label>
-                  </div>
-                </div>
-
-                <div className="modal-footer">
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={updatePermission.isLoading}
-                  >
-                    {updatePermission.isLoading
-                      ? "Mise à jour en cours..."
-                      : "Mettre à jour"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    data-bs-dismiss="modal"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </form>
+            <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
+              <h4 className="tw-font-semibold">Actions Sorties</h4>
+              <PermissionCheckbox id="readSortie" label="Voir les sorties" register={register} />
+              <PermissionCheckbox id="payeDepense" label="Payer (Décaisser)" register={register} />
+              <PermissionCheckbox id="rejectDepense" label="Rejeter" register={register} />
+              <PermissionCheckbox id="bloqueDepense" label="Bloquer" register={register} />
+              <PermissionCheckbox id="dechargeDepense" label="Décharger" register={register} />
             </div>
           </div>
         </div>
-      </div>
+        
+        {/* Le pied de page est séparé et reste fixe en bas */}
+        <div className="tw-flex-shrink-0 tw-pt-5 tw-flex tw-justify-end tw-items-center tw-gap-3">
+          <button type="button" className="btn btn-light" onClick={onClose}>
+            Annuler
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="tw-animate-spin tw-inline tw-mr-2" size={16} />
+                Mise à jour...
+              </>
+            ) : (
+              "Mettre à jour"
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
 
 UpdatePermission.propTypes = {
-  currentPermissionId: PropTypes.string,
-  refreshPermissionList: PropTypes.func.isRequired,
+  permission: PropTypes.object,
+  onSuccess: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
-
-export default UpdatePermission;

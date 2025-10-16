@@ -1,27 +1,33 @@
-import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchTypeDepense() {
-  const user = JSON.parse(localStorage.getItem("user"));
+export function useFetchTypeDepense({ page, perpage, companyId }) {
   const handleError = useHandleError();
 
-  const { mutate: fetchTypeDepense, isLoading, isError, error, data } = useMutation(
-    async () => {
+  return useQuery({
+    queryKey: ["typeDepenses", companyId, page, perpage],
+    
+    queryFn: async () => {
       const response = await axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/type_depense/all?companieId=${user?.company?.id}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/type_depense/all`,
+        {
+          params: {
+            companieId: companyId,
+            page: page,
+            perpage: perpage,
+          },
+        }
       );
 
-      // On retourne les deux structures envoyées par le backend
       return {
-        typeDepenses: response.data?.typeDepenses,
-        allTypeDepenses: response.data?.allTypeDepenses,
+        typeDepenses: response.data?.typeDepenses,      
+        allTypeDepenses: response.data?.allTypeDepenses, 
       };
     },
-    {
-      onError: (err) => handleError(err),
-    }
-  );
+    
+    enabled: !!companyId,
 
-  return { fetchTypeDepense, isLoading, isError, error, data };
+    onError: handleError,
+  });
 }

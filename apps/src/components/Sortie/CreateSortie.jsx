@@ -1,17 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 import { useHandleError } from "../../hook/useHandleError";
 import { Loader2, CheckCircle, X, PlusCircle } from "lucide-react";
 import InputField from "../InputField";
 
 function CreateSortie({ depense, onSuccess, onClose }) {
   const { handleError } = useHandleError();
-  const socket = useContext(SocketContext);
   const user = JSON.parse(localStorage.getItem("user"));
 
   const {
@@ -33,7 +31,6 @@ function CreateSortie({ depense, onSuccess, onClose }) {
       ),
     onSuccess: (response) => {
       toast.success(response?.data?.message);
-      if (socket?.connected) socket.emit("depense_updated", user.company.id);
       onSuccess();
     },
     onError: handleError,

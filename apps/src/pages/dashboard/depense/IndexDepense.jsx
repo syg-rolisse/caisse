@@ -1,205 +1,155 @@
-import { useEffect, useState, useContext } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import PageHeaderActions from "../../../components/common/PageHeaderActions";
 import DeleteDepense from "../../../components/Depense/DeleteDepense";
 import Spinner from "../../../components/Spinner";
-import { useFetchDepense } from "../../../hook/api/useFetchDepense";
 import WelcomeModal from "../../../components/WelcomeModal";
 import DepenseForm from "../../../components/Depense/DepenseForm";
 import Pagination from "../../../components/Pagination";
 import DepenseCard from "../../../components/Depense/DepenseCard";
-import { SocketContext } from "../../../context/socket";
-import "../../../fade.css";
+import { useFetchDepenses } from "../../../hook/api/useFetchDepense";
+import { useSocket } from "../../../context/socket.jsx";
+import { usePermissions } from "../../../hook/usePermissions";
+import { ServerCrash } from "lucide-react";
 
-const IndexDepense = () => {
+export default function IndexDepense() {
   const [page, setPage] = useState(1);
+  const [perpage, setPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [perpage, setPerPage] = useState(10);
-  const [meta, setMeta] = useState(null);
-  const [depenses, setDepenses] = useState([]);
-  const [currentDepense, setCurrentDepense] = useState();
-  const [allDepense, setAllDepense] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const socket = useContext(SocketContext);
+  const [currentDepense, setCurrentDepense] = useState(null);
+
+  const socket = useSocket();
+  const { can } = usePermissions();
+  const queryClient = useQueryClient();
   const user = JSON.parse(localStorage.getItem("user"));
+  const companyId = user?.company?.id;
 
-  const { fetchDepense, isLoading, isError, error, data } = useFetchDepense();
+  const { data, isLoading, isError, error } = useFetchDepenses({
+    page,
+    perpage,
+    companyId,
+  });
 
-  useEffect(() => {
-    fetchDepense({ page, perpage });
-  }, [fetchDepense, page, perpage]);
+  const depenses = data?.depenses?.data || [];
+  const allDepense = data?.allDepenses || [];
+  const meta = data?.depenses?.meta || { total: 0, currentPage: 1, lastPage: 1 };
 
-  useEffect(() => {
-    if (data) {
-      setDepenses(data.depenses.data);
-      setAllDepense(data.allDepenses);
-      setMeta(data.depenses.meta);
+  const filteredDepense = useMemo(() => {
+    if (searchTerm.trim() === "") {
+      return depenses;
     }
-  }, [data]);
-
-  const handleSuccess = () => {
-    setShowModal(false);
-    setShowDeleteModal(false);
-    setCurrentDepense(null);
-  };
-
-  useEffect(() => {
-    if (!socket || !user?.company?.id) return;
-
-    socket.emit("join_company_room", user.company.id);
-
-    const handleDataUpdate = (socketData, action) => {
-      
-      if (socketData.companyId !== user.company.id) return;
-
-      const newDepensesPaginated = socketData.depenses;
-      const newAllDepense = socketData.allDepenses;
-
-      if (!newDepensesPaginated?.data) {
-        console.error(`[ERREUR] Données '${action}' invalides.`);
-        return;
-      }
-
-      if (action !== "deleted" && newDepensesPaginated.data[0]) {
-        newDepensesPaginated.data[0].isNew = true;
-      }
-
-      setDepenses(newDepensesPaginated.data);
-      setAllDepense(newAllDepense);
-      setMeta(newDepensesPaginated.meta);
-
-      if (action !== "deleted") {
-        setTimeout(() => {
-          setDepenses((currentList) =>
-            currentList.map((item, index) =>
-              index === 0 ? { ...item, isNew: false } : item
-            )
-          );
-        }, 700);
-      }
-    };
-
-    socket.on("depense_created", (socketData) => handleDataUpdate(socketData, "created"));
-    socket.on("depense_updated", (socketData) => handleDataUpdate(socketData, "updated"));
-    socket.on("depense_deleted", (socketData) => handleDataUpdate(socketData, "deleted"));
-
-    return () => {
-      socket.off("depense_created");
-      socket.off("depense_updated");
-      socket.off("depense_deleted");
-    };
-  }, [socket, user?.company.id, perpage, page]);
-
+    return allDepense.filter((depense) => {
+      const searchTermLower = searchTerm.toLowerCase();
+      return (
+        depense.wording?.toLowerCase().includes(searchTermLower) ||
+        depense.typeDeDepense?.wording?.toLowerCase().includes(searchTermLower) ||
+        depense.user?.fullName?.toLowerCase().includes(searchTermLower) ||
+        new Date(depense.createdAt).toLocaleDateString("fr-CA").includes(searchTerm)
+      );
+    });
+  }, [depenses, allDepense, searchTerm]);
 
   const handlePerPageChange = (e) => {
     setPerPage(Number(e.target.value));
     setPage(1);
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleSuccess = useCallback(() => {
+    setShowModal(false);
+    setShowDeleteModal(false);
+    setCurrentDepense(null);
+    queryClient.invalidateQueries(["depenses"]);
+  }, [queryClient]);
 
-  const filteredDepense =
-    searchTerm.trim() === ""
-      ? depenses
-      : allDepense.filter((depense) => {
-          const searchTermLower = searchTerm.toLowerCase();
-          return (
-            depense.wording?.toLowerCase().includes(searchTermLower) ||
-            depense.typeDeDepense?.wording?.toLowerCase().includes(searchTermLower) ||
-            depense.user?.fullName?.toLowerCase().includes(searchTermLower) ||
-            new Date(depense.createdAt)
-              .toLocaleDateString("fr-CA")
-              .includes(searchTerm)
-          );
-        });
+  useEffect(() => {
+    if (!socket || !companyId) return;
+
+    socket.emit("join_company_room", companyId);
+
+    const handleDataUpdate = () => {
+      queryClient.invalidateQueries(["depenses"]);
+    };
+
+    socket.on("depense_created", handleDataUpdate);
+    socket.on("depense_updated", handleDataUpdate);
+    socket.on("depense_deleted", handleDataUpdate);
+
+    return () => {
+      socket.off("depense_created", handleDataUpdate);
+      socket.off("depense_updated", handleDataUpdate);
+      socket.off("depense_deleted", handleDataUpdate);
+    };
+  }, [socket, companyId, queryClient]);
 
   return (
-    <div className="">
-      <WelcomeModal
-        isActive={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setCurrentDepense(null);
-        }}
-      >
+    <div>
+      <WelcomeModal isActive={showModal} onClose={() => setShowModal(false)}>
         <DepenseForm depense={currentDepense} onSuccess={handleSuccess} />
       </WelcomeModal>
-      <WelcomeModal
-        isActive={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-      >
-        <DeleteDepense
-          depense={currentDepense}
-          onSuccess={handleSuccess}
-          onClose={() => setShowDeleteModal(false)}
-        />
+
+      <WelcomeModal isActive={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+        <DeleteDepense depense={currentDepense} onSuccess={handleSuccess} onClose={() => setShowDeleteModal(false)} />
       </WelcomeModal>
-      
-      {/* container-fluid */}
-      <div className="">
+
+      <div className=" tw-pb-16">
         <PageHeaderActions
           indexTitle="Dépenses"
           primaryActionLabel="Ajouter une dépense"
-          onPrimaryActionClick={() => setShowModal(true)}
+          onPrimaryActionClick={() => {
+            setCurrentDepense(null);
+            setShowModal(true);
+          }}
+          showPrimaryAction={can('createDepense')}
         />
 
         <div className="tw-flex tw-items-center tw-gap-4 tw-my-4 tw-w-full">
           <div className="tw-flex tw-items-center tw-gap-2">
             <span>Afficher</span>
-            <select
-              className="form-select form-select-sm tw-h-10 tw-w-20"
-              aria-label="Entries Select"
-              onChange={handlePerPageChange}
-              value={perpage}
-            >
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
+            <select className="form-select form-select-sm tw-h-10 tw-w-20" onChange={handlePerPageChange} value={perpage}>
+              <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
             </select>
           </div>
-
           <div className="tw-flex-1">
             <input
               className="form-control form-control-xl"
               type="text"
               placeholder="Faites une recherche ici..."
               value={searchTerm}
-              onChange={handleSearchChange}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
         <div className="row">
-          {isLoading && (
-            <div className="col-12 text-center py-5">
-              <Spinner />
-            </div>
-          )}
+          {isLoading && (<div className="col-12 text-center py-5"><Spinner /></div>)}
           {isError && (
-            <div className="col-12 text-center">
-              <span className="tw-text-red-500 tw-bg-white tw-font-semibold tw-p-2 tw-rounded-md">
-                Erreur : {error?.message || "Une erreur est survenue"}
-              </span>
+            <div className="col-12 text-center py-5">
+              <div className="flex flex-col items-center gap-2 text-red-500">
+                <ServerCrash className="w-8 h-8" />
+                <span>{error?.message || "Impossible de charger les dépenses."}</span>
+              </div>
             </div>
           )}
-          {!isLoading && !isError && filteredDepense?.length === 0 && (
+          {!isLoading && !isError && filteredDepense.length === 0 && (
             <div className="col-12 text-center">
-              <span className="tw-bg-red-500 tw-text-white tw-p-3 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
-                <i className="fe fe-alert-circle me-2 tw-text-white"></i>
-                Aucune donnée disponible
+              <span className="tw-bg-gray-100 tw-text-gray-600 tw-p-3 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
+                <i className="fe fe-info me-2"></i>
+                Aucune dépense trouvée.
               </span>
             </div>
           )}
           
-          {!isLoading && !isError && filteredDepense?.length > 0 && (
+          {!isLoading && !isError && filteredDepense.length > 0 && (
             <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-6">
               {filteredDepense.map((depense) => (
                 <DepenseCard
                   key={depense.id}
                   depense={depense}
+                  canEdit={can('updateDepense')}
+                  canDelete={can('deleteDepense')}
                   onEdit={() => {
                     setCurrentDepense(depense);
                     setShowModal(true);
@@ -222,6 +172,4 @@ const IndexDepense = () => {
       </div>
     </div>
   );
-};
-
-export default IndexDepense;
+}

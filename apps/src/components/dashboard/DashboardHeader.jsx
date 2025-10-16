@@ -1,6 +1,6 @@
 // src/components/dashboard/DashboardHeader.js
 
-import { PlusCircle, FileDown, CalendarDays } from 'lucide-react';
+import { FileDown, CalendarDays } from 'lucide-react';
 
 const DashboardHeader = () => {
   return (
@@ -28,10 +28,10 @@ const DashboardHeader = () => {
             <span>Exporter</span>
           </button>
 
-          <button className="tw-flex tw-items-center tw-justify-center tw-gap-2 tw-px-4 tw-py-2 tw-text-sm tw-font-semibold tw-text-white tw-bg-violet-600 tw-rounded-lg tw-shadow-sm hover:tw-bg-violet-700 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-violet-500 tw-transition-colors">
+          {/* <button className="tw-flex tw-items-center tw-justify-center tw-gap-2 tw-px-4 tw-py-2 tw-text-sm tw-font-semibold tw-text-white tw-bg-violet-600 tw-rounded-lg tw-shadow-sm hover:tw-bg-violet-700 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-violet-500 tw-transition-colors">
             <PlusCircle size={16} />
             <span>Nouvelle Opération</span>
-          </button>
+          </button> */}
         </div>
       </div>
     </header>
