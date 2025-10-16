@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import PropTypes from "prop-types";
-import { useTypeDepense } from "../../hook/data/useTypeDepense";
+import { useFetchTypeDepense } from "../../hook/api/useFetchTypeDepense"; // 👈 1. Importer le bon hook
 import { ChevronDown, Loader2, AlertCircle, Tag } from "lucide-react";
 
 export default function SelectTypeDeDepense({
@@ -11,19 +11,28 @@ export default function SelectTypeDeDepense({
   validationRules,
   watch,
 }) {
-  const { allTypeDepense, typeDepenseLoading, typeDepenseError } = useTypeDepense();
+  // 2. Récupérer l'ID de l'entreprise
+  const user = JSON.parse(localStorage.getItem("user"));
+  const companyId = user?.company?.id;
 
-  // On observe la valeur actuelle du champ directement depuis react-hook-form
+  // 3. Appeler directement le hook useQuery pour récupérer les données.
+  // On passe bien un objet en paramètre.
+  const { data, isLoading: typeDepenseLoading, isError: typeDepenseError } = useFetchTypeDepense({
+    companyId,
+    page: 1,
+    perpage: 9999, // On récupère tout
+  });
+
+  // 4. Extraire la liste des données. Votre logique existante fonctionne parfaitement avec ça.
+  const allTypeDepense = data?.allTypeDepenses || [];
+
   const currentValue = watch(name);
 
-  // On trouve l'objet de l'option sélectionnée pour afficher son libellé
   const selectedOption = useMemo(() => {
-    // Si les options ne sont pas encore chargées, il n'y a rien à trouver
     if (!allTypeDepense || allTypeDepense.length === 0) return null;
     return allTypeDepense.find(opt => String(opt.id) === String(currentValue));
   }, [allTypeDepense, currentValue]);
 
-  // Détermination de ce qu'il faut afficher dans la boîte
   let displayLabel = "Choisir le type de dépense";
   if (typeDepenseLoading) displayLabel = "Chargement...";
   if (typeDepenseError) displayLabel = "Erreur de chargement";
@@ -60,8 +69,10 @@ export default function SelectTypeDeDepense({
           id={name}
           className="tw-absolute tw-inset-0 tw-w-full tw-h-full tw-opacity-0 tw-cursor-pointer"
           {...register(name, validationRules)}
+          disabled={typeDepenseLoading || typeDepenseError} // Important: désactiver si pas de données
         >
-          {/* L'option vide est gérée par le `defaultValue` du `reset` dans le parent */}
+          {/* On ajoute une option vide pour la sélection initiale */}
+          <option value="">-- Sélectionnez --</option>
           {allTypeDepense.map((type) => (
             <option key={type.id} value={type.id}>
               {type.wording}

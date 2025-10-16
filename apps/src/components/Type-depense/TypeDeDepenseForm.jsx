@@ -1,10 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 import InputField from "../InputField";
 import { useHandleError } from "../../hook/useHandleError";
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -16,7 +15,6 @@ const defaultFormValues = {
 function TypeDeDepenseForm({ typeDepense, onSuccess }) {
   const user = JSON.parse(localStorage.getItem("user"));
   const { handleError } = useHandleError();
-  const socket = useContext(SocketContext);
 
   const {
     register,
@@ -37,11 +35,7 @@ function TypeDeDepenseForm({ typeDepense, onSuccess }) {
       const method = typeDepenseId ? axiosInstance.put : axiosInstance.post;
       return method(url, data);
     },
-    onSuccess: (response, { typeDepenseId }) => {
-      socket.emit(
-        `type_depense_${typeDepenseId ? "updated" : "created"}`,
-        user?.company?.id
-      );
+    onSuccess: (response) => {
       toast.success(response?.data?.message);
       onSuccess();
     },

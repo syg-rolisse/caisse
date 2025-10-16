@@ -1,10 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 import InputField from "../InputField"; // Notre composant réutilisable
 import { useHandleError } from "../../hook/useHandleError";
 import { CheckCircle, Loader2, X } from "lucide-react";
@@ -19,7 +18,6 @@ const defaultFormValues = {
 function UserForm({ user: userToEdit, onSuccess, onClose }) {
   const loggedInUser = JSON.parse(localStorage.getItem("user"));
   const { handleError } = useHandleError();
-  const socket = useContext(SocketContext);
 
   const {
     register,
@@ -37,9 +35,7 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
       const method = userId ? axiosInstance.put : axiosInstance.post;
       return method(url, data);
     },
-    onSuccess: (response, { userId }) => {
-      // Émettre un événement socket pour informer les autres clients
-      socket.emit(`user_${userId ? "updated" : "created"}`, loggedInUser?.company?.id);
+    onSuccess: (response) => {
       toast.success(response?.data?.message);
       onSuccess(); // Appelle la fonction de succès du parent (fermer le modal, etc.)
     },

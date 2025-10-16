@@ -1,10 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 const FilterCard = ({ users, onTypeDeDepenseChange }) => {
   const currentYear = new Date().getFullYear();
   const defaultDateDu = `${currentYear}-01-01`;
@@ -17,7 +16,6 @@ const FilterCard = ({ users, onTypeDeDepenseChange }) => {
       userId: "", // Default empty userId
     },
   });
-  const socket = useContext(SocketContext);
   // Mutation pour récupérer les données de typeDeDepense
   const fetchTypeDepenses = useMutation(
     ({ du, au, userId }) =>
@@ -52,32 +50,6 @@ const FilterCard = ({ users, onTypeDeDepenseChange }) => {
     });
   }, []);
 
-  useEffect(() => {
-    if (socket) {
-      // Écoute des événements pour rafraîchir les données
-      const handleSocketEvent = () => {
-        fetchTypeDepenses.mutate(); // Rafraîchir les données
-      };
-
-      socket.on("sortie_created", handleSocketEvent);
-      socket.on("sortie_deleted", handleSocketEvent);
-      socket.on("sortie_updated", handleSocketEvent);
-
-      socket.on("depense_created", handleSocketEvent);
-      socket.on("depense_deleted", handleSocketEvent);
-      socket.on("depense_updated", handleSocketEvent);
-
-      return () => {
-        socket.off("depense_created", handleSocketEvent);
-        socket.off("depense_updated", handleSocketEvent);
-        socket.off("depense_deleted", handleSocketEvent);
-
-        socket.off("sortie_created", handleSocketEvent);
-        socket.off("sortie_updated", handleSocketEvent);
-        socket.off("sortie_deleted", handleSocketEvent);
-      };
-    }
-  }, [socket, fetchTypeDepenses]);
 
   const onSubmit = (data) => {
     // Fetch data based on current form values

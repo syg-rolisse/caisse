@@ -1,17 +1,14 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { Loader2, AlertTriangle, Trash2 } from "lucide-react";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 import { useHandleError } from "../../hook/useHandleError";
 import ConfirmationInput from "../ConfirmationInput"; // Importez le composant de confirmation
 
 function DeleteUser({ user, onSuccess, onClose }) {
   const { handleError } = useHandleError();
-  const socket = useContext(SocketContext);
-  const loggedInUser = JSON.parse(localStorage.getItem("user"));
   const [isConfirmed, setIsConfirmed] = useState(false);
 
   const { mutate: deleteUser, isLoading: isDeleting } = useMutation({
@@ -23,10 +20,6 @@ function DeleteUser({ user, onSuccess, onClose }) {
       toast.success(response?.data?.message);
       onSuccess(); // Appelle la fonction de succès du parent (fermer le modal, etc.)
       
-      // Émettre l'événement socket pour informer les autres clients
-      if (socket?.connected && loggedInUser?.company?.id) {
-        socket.emit("user_deleted", loggedInUser.company.id);
-      }
     },
     onError: (error) => {
       handleError(error);

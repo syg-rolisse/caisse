@@ -1,10 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 
 function ConstaDepense({ constaId, refreshDepense }) {
   const [consta, setCurrentDepense] = useState(null);
@@ -16,8 +15,6 @@ function ConstaDepense({ constaId, refreshDepense }) {
   const prevDepenseIdRef = useRef();
   const addDepenseLinkRef = useRef();
   const user = JSON.parse(localStorage.getItem("user"));
-
-  const socket = useContext(SocketContext);
 
   const fetchDepenses = useMutation(
     (params) =>
@@ -65,7 +62,7 @@ function ConstaDepense({ constaId, refreshDepense }) {
     }
   };
 
-  const handleSuccess = (response, action) => {
+  const handleSuccess = (response) => {
     toast.success(response?.data?.message || "Action réussie !");
     reset({
       wording: "",
@@ -74,7 +71,6 @@ function ConstaDepense({ constaId, refreshDepense }) {
     refreshDepense();
 
     addDepenseLinkRef.current.click();
-    socket.emit(`depense_${action}`, response.data);
   };
 
   const createOrUpdateDepense = useMutation(
@@ -129,18 +125,6 @@ function ConstaDepense({ constaId, refreshDepense }) {
     }
   };
 
-  useEffect(() => {
-    if (socket) {
-      socket.on("type_depense_created", refreshDepense);
-      socket.on("type_depense_updated", refreshDepense);
-      socket.on("type_depense_deleted", refreshDepense);
-      return () => {
-        socket.off("type_depense_created", refreshDepense);
-        socket.off("type_depense_updated", refreshDepense);
-        socket.off("type_depense_deleted", refreshDepense);
-      };
-    }
-  }, [socket, refreshDepense]);
 
   useEffect(() => {
     if (constaId && constaId !== prevDepenseIdRef.current) {

@@ -1,27 +1,29 @@
-import { useMutation } from "@tanstack/react-query";
+// Fichier: src/hook/api/useFetchSolde.js
+
+import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchSolde() {
-  const user = JSON.parse(localStorage.getItem("user"));
+export function useFetchSolde({ companyId }) {
   const handleError = useHandleError();
 
-  const { mutate: fetchSolde, isLoading, isError, error, data } = useMutation(
-    async () => {
+  return useQuery({
+    queryKey: ["solde", companyId],
+    
+    queryFn: async () => {
       const response = await axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/caisse/solde?companieId=${user?.company?.id}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/caisse/solde`,
+        {
+          params: { companieId: companyId },
+        }
       );
-
-      console.log(response.data?.solde);
-
       return {
-        solde: response.data?.solde, 
+        solde: response.data?.montant,
       };
     },
-    {
-      onError: (err) => handleError(err),
-    }
-  );
+    
+    enabled: !!companyId,
 
-  return { fetchSolde, isLoading, isError, error, data };
+    onError: handleError,
+  });
 }

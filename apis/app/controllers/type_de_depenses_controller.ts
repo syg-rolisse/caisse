@@ -4,6 +4,32 @@ import { createTypeDepenseValidator, updateTypeDepenseValidator } from '#validat
 import type { HttpContext } from '@adonisjs/core/http'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
 import type_depense_service from '#services/type_depense_service'
+import Ws from '#services/ws'
+
+async function emitTypeDepenseUpdate(companyId: number, eventName: string) {
+  if (!companyId) return
+
+  try {
+    const { allTypeDepenses, typeDepenses } = await type_depense_service.fetchAndFormatTypeDepenses(
+      companyId,
+      1,
+      10
+    )
+
+    const roomName = `company_${companyId}`
+    const payload = {
+      typeDepenses,
+      allTypeDepenses,
+      companyId,
+    }
+
+    Ws.io?.to(roomName).emit(eventName, payload)
+    console.log(`Événement '${eventName}' émis dans le salon '${roomName}'`)
+  } catch (error) {
+    console.error(`Erreur lors de l'émission du socket '${eventName}':`, error)
+  }
+}
+
 export default class TypeDeDepensesController {
   async index({ request, response }: HttpContext) {
     try {
@@ -23,9 +49,6 @@ export default class TypeDeDepensesController {
   async totalTypeDepense({ request, response }: HttpContext) {
     try {
       const { du, au, userId } = request.qs()
-
-      console.log(request.qs())
-
       const typesDeDepense = await TypeDeDepense.query()
         .preload('Depenses', (query) => {
           query
@@ -43,7 +66,6 @@ export default class TypeDeDepensesController {
             sum + depense.Mouvements.reduce((paySum, mouvement) => paySum + mouvement.montant, 0),
           0
         )
-
         return {
           typeDeDepenseId: type.id,
           wording: type.wording,
@@ -58,16 +80,12 @@ export default class TypeDeDepensesController {
       return response.status(500).send({ error: 'Erreur interne du serveur' })
     }
   }
+
   async editions({ request, response }: HttpContext) {
     try {
       const { du, au, userId, companieId } = request.qs()
-
-      // Vérification que companieId est présent et est un nombre valide
       if (!companieId || Number.isNaN(Number(companieId))) {
-        return response.ok({
-          data: [],
-          message: "Identifiant de l'entreprise non reconnu...",
-        })
+        return response.ok({ data: [], message: "Identifiant de l'entreprise non reconnu..." })
       }
       const depenses = await Depense.query()
         .where({ companieId })
@@ -78,7 +96,6 @@ export default class TypeDeDepensesController {
         .preload('Mouvements')
         .preload('user')
         .select('id', 'montant', 'facture_url', 'wording', 'createdAt', 'userId', 'typeDeDepenseId')
-
       return response.ok(depenses)
     } catch (error) {
       console.error('Erreur lors de la récupération des dépenses:', error)
@@ -89,12 +106,15 @@ export default class TypeDeDepensesController {
   public async create({ request, response }: HttpContext) {
     try {
       const payload = await request.validateUsing(createTypeDepenseValidator)
+      const typeDepense = await TypeDeDepense.create({ ...payload })
 
-      const depense = await TypeDeDepense.create({ ...payload })
+      if (payload.companieId) {
+        await emitTypeDepenseUpdate(payload.companieId, 'type_depense_created')
+      }
 
       return response.created({
-        depense,
-        message: 'Type de depense enregistré avec succès.',
+        typeDepense,
+        message: 'Type de dépense enregistré avec succès.',
       })
     } catch (error) {
       const message = processErrorMessages(error)
@@ -105,17 +125,14 @@ export default class TypeDeDepensesController {
   async show({ request, response }: HttpContext) {
     try {
       const { typeDepenseId } = request.qs()
-
       if (!typeDepenseId) {
         return response.badRequest({
           status: 400,
-          error: "L'identifiant du type de depense est requis.",
+          error: "L'identifiant du type de dépense est requis.",
         })
       }
-
       const typededepense = await TypeDeDepense.findOrFail(typeDepenseId)
-
-      response.created({ status: 200, typededepense })
+      response.ok({ status: 200, typededepense })
     } catch (error) {
       const message = processErrorMessages(error)
       return response.badRequest({ status: 400, error: message })
@@ -125,15 +142,17 @@ export default class TypeDeDepensesController {
   async update({ request, response }: HttpContext) {
     try {
       const { typeDepenseId } = request.qs()
-
       const typededepense = await TypeDeDepense.findOrFail(typeDepenseId)
-
       const payload = await request.validateUsing(updateTypeDepenseValidator)
 
       typededepense.merge(payload)
       await typededepense.save()
 
-      return response.created({ status: 200, message: 'Type de depense modifié avec succès' })
+      if (typededepense.companieId) {
+        await emitTypeDepenseUpdate(typededepense.companieId, 'type_depense_updated')
+      }
+
+      return response.ok({ status: 200, message: 'Type de dépense modifié avec succès' })
     } catch (error) {
       const message = processErrorMessages(error)
       return response.badRequest({ status: 500, error: message })
@@ -143,23 +162,26 @@ export default class TypeDeDepensesController {
   async delete({ request, response }: HttpContext) {
     try {
       const { typeDepenseId } = request.qs()
-
       const typededepense = await TypeDeDepense.findOrFail(typeDepenseId)
+      const companyId = typededepense.companieId
 
       await typededepense.delete()
-      return response.created({
-        typededepense,
+
+      if (companyId) {
+        await emitTypeDepenseUpdate(companyId, 'type_depense_deleted')
+      }
+
+      return response.ok({
         status: 200,
-        message: 'Type de depense supprimée avec succès',
+        message: 'Type de dépense supprimé avec succès',
       })
     } catch (error) {
       let message = ''
       if (error.code === 'E_ROW_NOT_FOUND') {
-        message = 'Type de depense non retrouvé.'
+        message = 'Type de dépense non retrouvé.'
       } else {
         message = processErrorMessages(error)
       }
-
       return response.badRequest({ status: 400, error: message })
     }
   }

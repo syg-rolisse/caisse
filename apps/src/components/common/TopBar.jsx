@@ -1,17 +1,8 @@
+import PropTypes from "prop-types";
+import { Landmark, ChevronRight, ChevronDown } from "lucide-react";
 
-import PropTypes from "prop-types"; // 2. Ajout de l'import pour les PropTypes
-
-// 1. Imports nettoyés : seules les icônes réellement utilisées sont importées.
-import { Landmark, ChevronRight, ChevronDown } from 'lucide-react';
-
-const user = JSON.parse(localStorage.getItem("user"));
-
-/**
- * TopBar est la barre de navigation supérieure de l'application.
- * Elle affiche le contexte de la page et les informations de l'utilisateur.
- */
-function TopBar({ pageTitle }) {
-  // Vous pouvez récupérer le vrai nom de l'utilisateur depuis votre contexte ou vos props
+function TopBar({ pageTitle = "Tableau de bord" }) {
+  const user = JSON.parse(localStorage.getItem("user"));
   const userName = user?.fullName;
   const userRole = user?.profil?.wording;
 
@@ -29,14 +20,13 @@ function TopBar({ pageTitle }) {
             Caisse Pratique
           </span>
         </div>
-        
+
         {/* Séparateur et Fil d'Ariane (Breadcrumb) */}
         <div className="tw-w-px tw-h-6 tw-bg-slate-200 tw-hidden sm:tw-block"></div>
         <nav className="tw-hidden sm:tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-slate-500">
           <span>Paramètres</span>
           <ChevronRight size={16} />
-          {/* Utilisation de la prop pageTitle */}
-          <span className="tw-font-semibold tw-text-slate-700">{pageTitle}</span>
+          <span className="tw-font-semibold tw-text-slate-100">{pageTitle}</span>
         </nav>
       </div>
 
@@ -52,42 +42,34 @@ function TopBar({ pageTitle }) {
             Activité Récente
           </span>
         </div>
-        
+
         {/* Séparateur */}
         <div className="tw-w-px tw-h-6 tw-bg-slate-200"></div>
 
         {/* Menu Utilisateur */}
-       <button className="tw-flex tw-items-center tw-gap-3 tw-p-2 tw-rounded-lg tw-transition-colors tw-duration-200 group hover:tw-bg-slate-100">
-  <img 
-    src={`https://ui-avatars.com/api/?name=${userName?.replace(' ', '+')}&background=random`} 
-    alt="Avatar de l'utilisateur"
-    className="tw-w-8 tw-h-8 tw-rounded-full"
-  />
-  <div className="tw-text-left tw-hidden md:tw-block">
-    <p className="tw-font-semibold tw-text-sm tw-text-slate-100 tw-transition-colors tw-duration-200 hover:tw-text-slate-800">
-      {userName}
-    </p>
-    <p className="tw-text-xs tw-text-slate-500 tw-transition-colors tw-duration-200">
-      {userRole}
-    </p>
-  </div>
-  <ChevronDown size={16} className="tw-text-slate-400 tw-hidden md:tw-block" />
-</button>
-
+        <button className="tw-flex tw-items-center tw-gap-3 tw-p-2 tw-rounded-lg tw-transition-colors tw-duration-200 group hover:tw-bg-slate-100">
+          <img
+            src={`https://ui-avatars.com/api/?name=${userName?.replace(" ", "+")}&background=random`}
+            alt="Avatar de l'utilisateur"
+            className="tw-w-8 tw-h-8 tw-rounded-full"
+          />
+          <div className="tw-text-left tw-hidden md:tw-block">
+            <p className="tw-font-semibold tw-text-sm tw-text-slate-100 tw-transition-colors tw-duration-200 hover:tw-text-slate-800">
+              {userName}
+            </p>
+            <p className="tw-text-xs tw-text-slate-500 tw-transition-colors tw-duration-200">
+              {userRole}
+            </p>
+          </div>
+          <ChevronDown size={16} className="tw-text-slate-400 tw-hidden md:tw-block" />
+        </button>
       </div>
     </div>
   );
 }
 
-// 2. Ajout des PropTypes pour définir le type des props attendues.
-// C'est une excellente pratique pour la robustesse du code.
 TopBar.propTypes = {
   pageTitle: PropTypes.string,
-};
-
-// On peut aussi définir une valeur par défaut ici si on préfère
-TopBar.defaultProps = {
-  pageTitle: 'Tableau de bord',
 };
 
 export default TopBar;

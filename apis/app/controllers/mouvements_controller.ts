@@ -6,74 +6,81 @@ import { createMouvementValidator, updateMouvementValidator } from '#validators/
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
+import Ws from '#services/ws'
+import depense_service from '#services/depense_service'
+
+async function emitDepenseUpdate(companyId: number, eventName: string) {
+  if (!companyId) return
+
+  try {
+    const { allDepenses, depenses } = await depense_service.fetchAndFormatDepenses(companyId, 1, 10)
+
+    const roomName = `company_${companyId}`
+    const payload = {
+      depenses,
+      allDepenses,
+      companyId,
+    }
+
+    Ws.io?.to(roomName).emit(eventName, payload)
+    console.log(`Événement '${eventName}' émis dans le salon '${roomName}'`)
+  } catch (error) {
+    console.error(`Erreur lors de l'émission du socket '${eventName}':`, error)
+  }
+}
 
 export default class MouvementsController {
   public async create({ request, response }: HttpContext) {
-    const trx = await db.transaction() // Utilisation de `db.transaction()`
+    const trx = await db.transaction()
 
     try {
       const payload = await request.validateUsing(createMouvementValidator)
-
       const companieId = payload.companieId
 
       if (!companieId || Number.isNaN(Number(companieId))) {
-        return response.ok({
-          data: [],
-          message: "Identifiant de l'entreprise non reconnu...",
-          meta: {
-            total: 0,
-            per_page: 10,
-            current_page: 1,
-            last_page: 1,
-          },
-        })
+        return response.badRequest({ error: "Identifiant de l'entreprise non reconnu." })
       }
 
       const depense = await Depense.query()
-
+        .useTransaction(trx)
         .where({ id: payload.depenseId })
         .preload('user')
         .preload('Mouvements')
         .first()
 
       if (!depense) {
+        await trx.rollback()
         return response.notFound({ error: 'Dépense introuvable.' })
       }
 
-      if (depense?.$attributes.rejeter) {
-        return response.forbidden('Désolé, cette dépensé a été rejeté.')
+      if (depense.rejeter) {
+        await trx.rollback()
+        return response.forbidden('Désolé, cette dépense a été rejetée.')
       }
 
-      // if (!depense?.$attributes.decharger) {
-      //   return response.forbidden(
-      //     `Demandez à , ${depense?.user?.fullName} de bien vouloir mettre la décharge.`
-      //   )
-      // }
-
-      const totalMouvementMontant = depense?.Mouvements.reduce(
+      const totalMouvementMontant = depense.Mouvements.reduce(
         (sum, mouvement) => sum + mouvement.montant,
         0
       )
-
       const montantTotalApresAjout = totalMouvementMontant + payload.montant
+
+      if (montantTotalApresAjout > depense.montant) {
+        await trx.rollback()
+        return response.forbidden(
+          'Désolé, vous ne pouvez pas décaisser plus que le montant de la dépense.'
+        )
+      }
 
       if (montantTotalApresAjout === depense.montant) {
         depense.merge({ status: true })
         await depense.save()
-      } else {
-        if (montantTotalApresAjout > depense.montant) {
-          return response.forbidden(
-            'Désolé, vous ne pouvez pas décaissé plus que le montant de la dépense.'
-          )
-        }
       }
-      // supprimer la companieId de payload
+
       // @ts-ignore
       delete payload.companieId
       const mouvement = await Mouvement.create({ ...payload }, { client: trx })
 
-      let solde = await Solde.query().where({ companieId }).first()
-
+      let solde = await Solde.query().useTransaction(trx).where({ companieId }).first()
       if (solde) {
         solde.merge({ montant: solde.montant - payload.montant })
         await solde.save()
@@ -81,92 +88,81 @@ export default class MouvementsController {
 
       await trx.commit()
 
+      await emitDepenseUpdate(companieId, 'depense_updated')
+
       return response.created({
         mouvement,
         message: 'Paiement effectué avec succès.',
       })
     } catch (error) {
-      console.log(error?.message)
-      // Rollback en cas d'erreur
       await trx.rollback()
-
       const message = processErrorMessages(error)
       return response.badRequest({ status: 400, error: message })
     }
   }
 
   public async update({ request, response }: HttpContext) {
-    const trx = await db.transaction() // Démarrer la transaction
+    const trx = await db.transaction()
 
     try {
       const { sortieId } = request.qs()
-
-      // Trouver le mouvement à modifier
       const currentMouvement = await Mouvement.findOrFail(sortieId)
-
-      // Valider les données entrantes
       const payload = await request.validateUsing(updateMouvementValidator)
 
-      // Charger la dépense associée
       const depense = await Depense.query()
+        .useTransaction(trx)
         .where({ id: payload.depenseId })
         .preload('Mouvements')
         .first()
 
-      if (depense?.$attributes.rejeter) {
-        return response.forbidden('Désolé, cette dépensé a été rejeté.')
-      }
-
       if (!depense) {
+        await trx.rollback()
         return response.notFound({ error: 'Dépense introuvable.' })
       }
 
-      // Calcul du montant total après modification
+      if (depense.rejeter) {
+        await trx.rollback()
+        return response.forbidden('Désolé, cette dépense a été rejetée.')
+      }
+
       const totalMouvementMontant = depense.Mouvements.reduce(
         (sum, mouvement) => sum + mouvement.montant,
         0
       )
-
       const montantTotalApresAjout =
-        totalMouvementMontant - currentMouvement.$attributes.montant + payload.montant
+        totalMouvementMontant - currentMouvement.montant + payload.montant
 
-      if (montantTotalApresAjout === depense.montant) {
-        depense.useTransaction(trx) // Associer la transaction
-        depense.merge({ status: true })
-        await depense.save()
-      } else if (montantTotalApresAjout > depense.montant) {
+      if (montantTotalApresAjout > depense.montant) {
+        await trx.rollback()
         return response.forbidden({
-          error: 'Désolé, vous ne pouvez pas décaissé plus que le montant de la dépense.',
+          error: 'Désolé, vous ne pouvez pas décaisser plus que le montant de la dépense.',
         })
-      } else {
-        depense.useTransaction(trx) // Associer la transaction
-        depense.merge({ status: false })
-        await depense.save()
       }
 
-      let solde = await Solde.query().forUpdate().first()
+      depense.merge({ status: montantTotalApresAjout === depense.montant })
+      await depense.save()
 
+      let solde = await Solde.query().useTransaction(trx).forUpdate().first()
       if (solde) {
-        solde.merge({
-          montant: solde.montant + currentMouvement.$attributes.montant - payload.montant,
-        })
+        solde.merge({ montant: solde.montant + currentMouvement.montant - payload.montant })
         await solde.save()
       }
 
-      // Mettre à jour le mouvement
-      currentMouvement.useTransaction(trx) // Associer la transaction
+      currentMouvement.useTransaction(trx)
       currentMouvement.merge(payload)
       await currentMouvement.save()
 
-      // Commit de la transaction
       await trx.commit()
+
+      if (depense.companieId) {
+        await emitDepenseUpdate(depense.companieId, 'depense_updated')
+      }
 
       return response.ok({
         status: 200,
         message: 'Paiement modifié avec succès.',
       })
     } catch (error) {
-      // Rollback en cas d'erreur
       await trx.rollback()
       const message = processErrorMessages(error)
       return response.badRequest({ status: 500, error: message })
@@ -176,19 +172,13 @@ export default class MouvementsController {
   async show({ request, response }: HttpContext) {
     try {
       const { sortieId } = request.qs()
-
-      console.log(request.qs())
-
       if (!sortieId || Number.isNaN(Number(sortieId))) {
         return response.badRequest({
           status: 400,
           error: "L'identifiant du paiement est requis",
         })
       }
-      console.log(sortieId)
-
       const depense = await Depense.findOrFail(sortieId)
-
       response.created({ status: 200, depense })
     } catch (error) {
       const message = processErrorMessages(error)
@@ -197,70 +187,57 @@ export default class MouvementsController {
   }
 
   async delete({ request, response }: HttpContext) {
-    const trx = await db.transaction() // Démarrer la transaction
+    const trx = await db.transaction()
 
     try {
       const { sortieId, userConnectedId } = request.qs()
-
-      // Trouver l'utilisateur connecté
       const user = await User.findOrFail(userConnectedId)
 
-      // Vérifier les permissions
-      if (user.$attributes.profilId !== 1) {
+      if (user.profilId !== 1) {
+        await trx.rollback()
         return response.forbidden('Désolé, seule la caisse peut supprimer cet élément.')
       }
 
-      // Trouver le mouvement à supprimer
       const mouvement = await Mouvement.findOrFail(sortieId)
+      const depense = await Depense.findOrFail(mouvement.depenseId)
 
-      // Trouver la dépense associée
-      const depense = await Depense.findOrFail(mouvement.$attributes.depenseId)
-
-      if (!depense) {
-        return response.notFound({ error: 'Dépense introuvable.' })
-      }
-
-      if (depense.$attributes.bloquer) {
+      if (depense.bloquer) {
+        await trx.rollback()
         return response.forbidden("Désolé, Veuillez d'abord débloquer cette dépense.")
       }
 
-      // Mettre à jour le statut de la dépense
-      depense.useTransaction(trx) // Associer la transaction
+      depense.useTransaction(trx)
       depense.merge({ status: false })
       await depense.save()
 
-      // Supprimer le mouvement
-      mouvement.useTransaction(trx) // Associer la transaction
+      mouvement.useTransaction(trx)
       await mouvement.delete()
 
-      let solde = await Solde.query().forUpdate().first()
-
+      let solde = await Solde.query().useTransaction(trx).forUpdate().first()
       if (solde) {
-        solde.merge({ montant: solde.montant + mouvement?.montant })
+        solde.merge({ montant: solde.montant + mouvement.montant })
         await solde.save()
       }
 
       await trx.commit()
 
-      // Commit de la transaction
-      await trx.commit()
+      if (depense.companieId) {
+        await emitDepenseUpdate(depense.companieId, 'depense_updated')
+      }
 
-      return response.created({
+      return response.ok({
         mouvement,
         status: 200,
         message: 'Paiement supprimé avec succès',
       })
     } catch (error) {
-      // Rollback en cas d'erreur
       await trx.rollback()
-
       let message = ''
       if (error.code === 'E_ROW_NOT_FOUND') {
         message = 'Paiement non retrouvé.'
       } else {
         message = processErrorMessages(error)
       }
-
       return response.badRequest({ status: 400, error: message })
     }
   }

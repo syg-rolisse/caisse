@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { PlusCircle, Star } from "lucide-react";
 import TopBar from "./TopBar";
 
-const PageHeaderActions = ({ indexTitle, primaryActionLabel, onPrimaryActionClick }) => {
+const PageHeaderActions = ({ indexTitle, onPrimaryActionClick }) => {
   return (
 
 
@@ -65,7 +65,6 @@ const PageHeaderActions = ({ indexTitle, primaryActionLabel, onPrimaryActionClic
         "
           >
             <PlusCircle size={20} />
-            <span>{primaryActionLabel}</span>
           </button>
         </div>
       </div>
@@ -75,7 +74,6 @@ const PageHeaderActions = ({ indexTitle, primaryActionLabel, onPrimaryActionClic
 };
 
 PageHeaderActions.propTypes = {
-  primaryActionLabel: PropTypes.string.isRequired,
   onPrimaryActionClick: PropTypes.func,
   indexTitle: PropTypes.string.isRequired,
 };

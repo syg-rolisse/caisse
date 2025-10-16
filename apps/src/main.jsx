@@ -6,28 +6,38 @@ import "./App.css";
 import "./index.css";
 import routes from "./routes/route.jsx";
 
+import { SocketProvider } from "./context/socket.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
+
 const queryClient = new QueryClient();
 
+// 👇 CORRECTION : Définir TOUS les drapeaux ici, une seule fois.
 const router = createBrowserRouter(routes, {
   future: {
     v7_startTransition: true,
-    v7_relativeSplatPath: true, // Enables relative paths in nested routes
-    v7_fetcherPersist: true, // Retains fetcher state during navigation
-    v7_normalizeFormMethod: true, // Normalizes form methods (e.g., POST or GET)
-    v7_partialHydration: true, // Supports partial hydration for server-side rendering
-    v7_skipActionErrorRevalidation: true, // Prevents revalidation when action errors occur
+    v7_relativeSplatPath: true,
+    v7_fetcherPersist: true,
+    v7_normalizeFormMethod: true,
+    v7_partialHydration: true,
+    v7_skipActionErrorRevalidation: true,
   },
 });
 
 createRoot(document.getElementById("root")).render(
   <>
     <Toaster 
-  position="top-right" 
-  gutter={8}
-  containerStyle={{ zIndex: 99999 }}
-/>
+      position="top-right" 
+      gutter={8}
+      containerStyle={{ zIndex: 99999 }}
+    />
+    
     <QueryClientProvider client={queryClient}>
-      <RouterProvider future={{ v7_startTransition: true }} router={router} />
+      <SocketProvider>
+        <AuthProvider>
+          {/* 👇 CORRECTION : Ne plus passer de prop 'future' ici. */}
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </SocketProvider>
     </QueryClientProvider>
   </>
 );

@@ -2,30 +2,27 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchUsers({ page, perpage, companyId }) {
+export function useFetchEditions({ companyId, du, au, userId }) {
   const handleError = useHandleError();
 
   return useQuery({
-    queryKey: ["users", companyId, page, perpage],
-    
+    queryKey: ["editions", companyId, du, au, userId],
+
     queryFn: async () => {
       const response = await axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/all`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/editions`,
         {
           params: {
             companieId: companyId,
-            page: page,
-            perpage: perpage,
+            du,
+            au,
+            userId: userId || "",
           },
         }
       );
-
-      return {
-        users: response.data?.users,      
-        allUsers: response.data?.allUsers, 
-      };
+      return response.data;
     },
-    
+
     enabled: !!companyId,
 
     onError: handleError,

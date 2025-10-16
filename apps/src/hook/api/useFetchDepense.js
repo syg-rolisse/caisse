@@ -1,15 +1,25 @@
-import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchDepense(page, perpage) {
-  const user = JSON.parse(localStorage.getItem("user"));
+export function useFetchDepenses({ page, perpage, companyId }) {
   const handleError = useHandleError();
 
-  const { mutate: fetchDepense, isLoading, isError, error, data } = useMutation(
-    async () => {
+  return useQuery({
+    // La clé de query inclut toutes les dépendances pour une mise en cache correcte
+    queryKey: ["depenses", companyId, page, perpage],
+    
+    queryFn: async () => {
       const response = await axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/depense/all?companieId=${user?.company?.id}&page=${page}&perpage=${perpage}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/depense/all`,
+        {
+          // Utiliser l'objet `params` d'Axios est plus propre
+          params: {
+            companieId: companyId,
+            page: page,
+            perpage: perpage,
+          },
+        }
       );
 
       return {
@@ -17,10 +27,10 @@ export function useFetchDepense(page, perpage) {
         allDepenses: response.data?.allDepenses, // liste brute
       };
     },
-    {
-      onError: (err) => handleError(err),
-    }
-  );
+    
+    // La requête ne s'exécutera que si companyId est fourni
+    enabled: !!companyId,
 
-  return { fetchDepense, isLoading, isError, error, data };
+    onError: handleError,
+  });
 }

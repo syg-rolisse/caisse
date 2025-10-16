@@ -1,21 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import { SocketContext } from "../../context/socket";
 import SelectTypeDeDepense from "./SelectTypeDeDepense";
 import InputField from "../../components/InputField";
 import { useHandleError } from "../../hook/useHandleError";
-import {
-  CheckCircle,
-  Loader2,
-  X,
-  FileText,
-  Download,
-  Paperclip,
-} from "lucide-react";
+import { CheckCircle, Loader2, X, FileText, Download, Paperclip } from "lucide-react";
 
 const defaultFormValues = {
   wording: "",
@@ -28,7 +20,6 @@ const defaultFormValues = {
 function DepenseForm({ depense, onSuccess, onClose }) {
   const user = JSON.parse(localStorage.getItem("user"));
   const { handleError } = useHandleError();
-  const socket = useContext(SocketContext);
 
   const {
     register,
@@ -49,11 +40,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
       const method = depenseId ? axiosInstance.put : axiosInstance.post;
       return method(url, data);
     },
-    onSuccess: (response, { depenseId }) => {
-      socket.emit(
-        `depense_${depenseId ? "updated" : "created"}`,
-        user?.company?.id
-      );
+    onSuccess: (response) => {
       toast.success(response?.data?.message);
       onSuccess();
     },
@@ -98,8 +85,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
     <div className="tw-bg-white tw-p-2">
       <div className="tw-mb-4">
         <p className="tw-text-sm tw-text-gray-500">
-          Les champs marqués d&apos;un{" "}
-          <span className="tw-text-red-500">*</span> sont obligatoires.
+          Les champs marqués d&apos;un <span className="tw-text-red-500">*</span> sont obligatoires.
         </p>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-6">
@@ -111,17 +97,15 @@ function DepenseForm({ depense, onSuccess, onClose }) {
           errors={errors}
         />
         <SelectTypeDeDepense
-  name="typeDeDepenseId"
-  label="Type de dépense"
-  register={register}
-  watch={watch} // ← important
-  errors={errors}
-  setValue={setValue}
-  defaultValue={depense?.typeDeDepenseId}
-  validationRules={{ required: "Le type de dépense est obligatoire" }}
-/>
-
-
+          name="typeDeDepenseId"
+          label="Type de dépense"
+          register={register}
+          watch={watch}
+          errors={errors}
+          setValue={setValue}
+          defaultValue={depense?.typeDeDepenseId}
+          validationRules={{ required: "Le type de dépense est obligatoire" }}
+        />
         <InputField
           id="montant"
           label="Montant"
@@ -134,10 +118,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
           errors={errors}
         />
         <div>
-          <label
-            htmlFor="facture"
-            className="tw-block tw-text-sm tw-font-medium tw-text-gray-700"
-          >
+          <label htmlFor="facture" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700">
             Facture (PDF optionnel)
           </label>
           {depense?.factureUrl && (
@@ -149,9 +130,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
                 </span>
               </div>
               <a
-                href={`${import.meta.env.VITE_BACKEND_URL}/uploads/${
-                  depense.factureUrl
-                }`}
+                href={`${import.meta.env.VITE_BACKEND_URL}/uploads/${depense.factureUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="tw-inline-flex tw-items-center tw-px-2.5 tw-py-1.5 tw-border tw-border-transparent tw-text-xs tw-font-medium tw-rounded tw-text-green-700 tw-bg-green-100 hover:tw-bg-green-200"
@@ -170,9 +149,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
                   className="tw-relative tw-cursor-pointer tw-rounded-md tw-bg-white tw-font-medium tw-text-orange-600 hover:tw-text-orange-500 focus-within:tw-outline-none"
                 >
                   <span>
-                    {depense?.factureUrl
-                      ? "Remplacer la facture"
-                      : "Joindre une facture"}
+                    {depense?.factureUrl ? "Remplacer la facture" : "Joindre une facture"}
                   </span>
                   <input
                     id="facture"
@@ -200,10 +177,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
               />
             </div>
             <div className="tw-ml-3 tw-text-sm tw-leading-6">
-              <label
-                htmlFor="decharger"
-                className="tw-font-medium tw-text-gray-900"
-              >
+              <label htmlFor="decharger" className="tw-font-medium tw-text-gray-900">
                 Marquer comme déchargé
               </label>
             </div>
@@ -241,7 +215,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
 DepenseForm.propTypes = {
   depense: PropTypes.object,
   onSuccess: PropTypes.func.isRequired,
-  onClose: PropTypes.func.isRequired,
+  onClose: PropTypes.func,
 };
 
 export default DepenseForm;
