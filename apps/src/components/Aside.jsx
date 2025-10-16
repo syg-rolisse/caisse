@@ -64,7 +64,7 @@ function Aside() {
       >
         <div className="tw-p-3">
           <div>
-            <a href="#" className="tw-absolute tw-opacity-85 tw-ml-4 -tw-top-10">
+            <a href="#" className="tw-absolute tw-opacity-85 -tw-left-1 -tw-top-10">
               <img
                 src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${
                   user?.company?.logoUrl
@@ -73,8 +73,8 @@ function Aside() {
                 }`}
                 alt="Avatar"
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  width: "90%",
+                  height: "90%",
                   objectFit: "cover",
                   borderRadius: "50%",
                 }}
