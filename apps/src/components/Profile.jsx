@@ -15,6 +15,9 @@ function ProfileComponent({ onClose, user }) {
     avatar: null, // Nouvelle variable pour le fichier image
   });
 
+  console.log(user);
+  
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -100,10 +103,10 @@ function ProfileComponent({ onClose, user }) {
 
     const formDataToSend = new FormData();
     formDataToSend.append("fullName", formData.fullName);
-    formDataToSend.append("profilId", user?.profilId);
     formDataToSend.append("email", formData.email);
     formDataToSend.append("address", formData.address);
     formDataToSend.append("phoneNumber", formData.phoneNumber);
+    formDataToSend.append("profilId", user?.profil?.id);
     if (formData.avatar) {
       formDataToSend.append("avatar", formData.avatar);
     }

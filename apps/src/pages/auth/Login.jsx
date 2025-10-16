@@ -46,7 +46,7 @@ function Login({ onSwitch }) {
       toast.success("Connexion réussie ! Redirection...");
 
       setTimeout(() => {
-        navigate("/depenses"); // ou sur le dashboard
+        navigate("/dashboard"); // ou sur le dashboard
       }, 500);
     },
     onError: handleError,

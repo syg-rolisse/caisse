@@ -3,7 +3,13 @@ import { Mail, Shield, UserCheck, UserX, Calendar, Pencil, Trash2 } from 'lucide
 
 export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete }) {
   const formattedDate = new Date(user.createdAt).toLocaleDateString("fr-CA");
-  const avatarSrc = `${import.meta.env.VITE_BACKEND_URL}/${user?.avatarUrl || "uploads/avatars/5.png"}`;
+
+  const getDefaultAvatar = () => {
+    const defaultAvatarNumber = (user.id % 5) + 1;
+    return `uploads/avatars/default/${defaultAvatarNumber}.png`;
+  };
+
+  const avatarSrc = `${import.meta.env.VITE_BACKEND_URL}/${user?.avatarUrl || getDefaultAvatar()}`;
 
   return (
     <div className="tw-bg-white tw-rounded-xl tw-shadow-md hover:tw-shadow-lg tw-transition-shadow tw-duration-300 tw-border tw-border-gray-200 tw-flex tw-flex-col">

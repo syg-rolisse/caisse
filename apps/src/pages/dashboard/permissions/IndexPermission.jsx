@@ -81,7 +81,7 @@ export default function IndexPermission() {
         <PageHeaderActions indexTitle="Gestion des Permissions" />
 
         <div className="col-xl-12">
-          <div className="card custom-card">
+          <div className="card custom-card mb-5">
             <div className="card-header justify-content-between">
               <div className="card-title">Permissions par Profil</div>
             </div>
