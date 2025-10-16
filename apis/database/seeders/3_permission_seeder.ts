@@ -31,6 +31,12 @@ export default class PermissionSeeder extends BaseSeeder {
       dechargeDepense: true,
       readPermission: true,
       updatePermission: true,
+      readAbonnement: true,
+      createAbonnement: true,
+      readPack: true,
+      createPack: true,
+      updatePack: true,
+      deletePack: true,
     })
 
     //Profil Utilisateur 1 (profilId: 2) - Seul `createUser` à true
@@ -61,6 +67,12 @@ export default class PermissionSeeder extends BaseSeeder {
       dechargeDepense: true,
       readPermission: true,
       updatePermission: true,
+      readAbonnement: true,
+      createAbonnement: true,
+      readPack: true,
+      createPack: true,
+      updatePack: true,
+      deletePack: true,
     })
 
     // Profil Utilisateur 2 (profilId: 3) - Seul `createUser` à true
@@ -91,6 +103,12 @@ export default class PermissionSeeder extends BaseSeeder {
       dechargeDepense: false,
       readPermission: false,
       updatePermission: false,
+      readAbonnement: false,
+      createAbonnement: false,
+      readPack: false,
+      createPack: false,
+      updatePack: false,
+      deletePack: false,
     })
     await Permission.create({
       profilId: 4,
@@ -119,6 +137,12 @@ export default class PermissionSeeder extends BaseSeeder {
       dechargeDepense: false,
       readPermission: false,
       updatePermission: false,
+      readAbonnement: false,
+      createAbonnement: false,
+      readPack: false,
+      createPack: false,
+      updatePack: false,
+      deletePack: false,
     })
   }
 }

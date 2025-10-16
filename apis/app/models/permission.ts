@@ -42,6 +42,24 @@ export default class Permission extends BaseModel {
   declare deleteUser: boolean
 
   @column()
+  declare readAbonnement: boolean
+
+  @column()
+  declare createAbonnement: boolean
+
+  @column()
+  declare readPack: boolean
+
+  @column()
+  declare createPack: boolean
+
+  @column()
+  declare updatePack: boolean
+
+  @column()
+  declare deletePack: boolean
+
+  @column()
   declare readSortie: boolean
 
   @column()

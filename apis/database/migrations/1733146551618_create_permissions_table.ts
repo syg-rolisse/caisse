@@ -47,6 +47,14 @@ export default class extends BaseSchema {
       table.boolean('bloque_depense').defaultTo(false)
       table.boolean('decharge_depense').defaultTo(false)
 
+      table.boolean('read_pack').defaultTo(false)
+      table.boolean('create_pack').defaultTo(false)
+      table.boolean('update_pack').defaultTo(false)
+      table.boolean('delete_pack').defaultTo(false)
+
+      table.boolean('read_abonnement').defaultTo(false)
+      table.boolean('create_abonnement').defaultTo(false)
+
       table.timestamp('created_at').defaultTo(this.now())
       table.timestamp('updated_at').defaultTo(this.now())
     })

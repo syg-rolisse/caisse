@@ -92,6 +92,8 @@ jobs:
             echo "${{ secrets.STAGING_ENV_DB }}" > ./apis/.env.db
             # AJOUT : Création du .env pour le frontend (apps)
             echo "${{ secrets.STAGING_ENV_APPS }}" > ./apps/.env
+            # AJOUT : Création du .env pour le backoffice (backoffice)
+            echo "${{ secrets.STAGING_ENV_BACKOFFICE }}" > ./backoffice/.env
             
             echo "Redémarrage des services de staging..."
             docker compose -f docker-compose.staging.yml -p caisse_staging down || true
@@ -139,6 +141,8 @@ jobs:
             echo "${{ secrets.PRODUCTION_ENV_DB }}" > ./apis/.env.db
             # AJOUT : Création du .env pour le frontend (apps)
             echo "${{ secrets.PRODUCTION_ENV_APPS }}" > ./apps/.env
+            # AJOUT : Création du .env pour le backoffice (backoffice)
+            echo "${{ secrets.PRODUCTION_ENV_BACKOFFICE }}" > ./backoffice/.env
             
             echo "Redémarrage des services de production..."
             docker compose -f docker-compose.prod.yml -p caisse_prod down || true

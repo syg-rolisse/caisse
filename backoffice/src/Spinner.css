@@ -1,0 +1,60 @@
+.spinner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 80px; /* Ajustez l'espacement total */
+  margin: 10px auto;
+}
+
+/* Points avec des tailles différentes */
+.dot {
+  border-radius: 50%;
+  background-color: #ff7300;
+  animation: grow-shrink 1.5s infinite ease-in-out;
+}
+
+.dot.small {
+  width: 8px;
+  height: 8px;
+}
+
+.dot.medium {
+  width: 10px;
+  height: 10px;
+}
+
+.dot.large {
+  width: 12px;
+  height: 12px;
+}
+.dot.xl {
+  width: 14px;
+  height: 14px;
+}
+
+/* Délais d'animation pour chaque point */
+.dot:nth-child(1) {
+  animation-delay: 0s;
+}
+.dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
+.dot:nth-child(4) {
+  animation-delay: 0.9s;
+}
+
+/* Animation */
+@keyframes grow-shrink {
+  0%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

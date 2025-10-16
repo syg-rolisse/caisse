@@ -31,6 +31,14 @@ export const updatePermissionValidator = vine.compile(
     readUser: vine.boolean().optional(),
     updateUser: vine.boolean().optional(),
 
+    createAbonnement: vine.boolean().optional(),
+    readAbonnement: vine.boolean().optional(),
+
+    createPack: vine.boolean().optional(),
+    deletePack: vine.boolean().optional(),
+    readPack: vine.boolean().optional(),
+    updatePack: vine.boolean().optional(),
+
     rejectDepense: vine.boolean().optional(),
     payeDepense: vine.boolean().optional(),
     bloqueDepense: vine.boolean().optional(),
