@@ -6,7 +6,7 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import IndexDepense from "../pages/dashboard/depense/IndexDepense";
 import IndexSortie from "../pages/dashboard/mouvement-caisse/IndexMouvement";
 import IndexAbonnement from "../pages/dashboard/abonnement/IndexAbonnement";
-import IndexPack from "../pages/dashboard/pack/IndexPack";
+// import IndexPack from "../pages/dashboard/pack/IndexPack";
 import Editions from "../pages/dashboard/Editions";
 import IndexPermission from "../pages/dashboard/permissions/IndexPermission";
 import IndexTypeDepense from "../pages/dashboard/type-depense/IndexTypeDepense";
@@ -17,6 +17,16 @@ import NotFoundPage from "../pages/NotFoundPage";
 const routes = [
   {
     path: "/",
+    element: <AuthMainLayout />,
+    children: [
+      {
+        index: true,
+        element: null,
+      },
+    ],
+  },
+  {
+    path: "/login",
     element: <AuthMainLayout />,
     children: [
       {
@@ -40,7 +50,7 @@ const routes = [
           { path: "all_utilisateurs", element: <AllUser /> },
           { path: "utilisateurs", element: <IndexUser /> },
           { path: "permissions", element: <IndexPermission /> },
-          { path: "packs", element: <IndexPack /> },
+          // { path: "packs", element: <IndexPack /> },
           { path: "abonnements", element: <IndexAbonnement /> },
         ],
       },

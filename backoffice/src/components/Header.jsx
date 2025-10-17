@@ -1,117 +1,46 @@
-// import TopBar from "../components/TopBar";
+import PropTypes from "prop-types";
+import { Menu } from "lucide-react"; // On importe l'icône Menu
 
-const Header = () => {
+const Header = ({ toggleSidebar, isSidebarOpen }) => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-    <div>
-      <header className="app-header">
-        <div className="main-header-container container-fluid">
-          <div className="header-content-left">
-            <div className="header-element">
-              <a
-                aria-label="Hide Sidebar"
-                className="sidemenu-toggle header-link animated-arrow hor-toggle horizontal-navtoggle mx-0"
-                data-bs-toggle="sidebar"
-                href="#"
-              >
-                <span></span>
-              </a>
-            </div>
-
-            <div className="header-element header-search  tw-rounded-lg ">
-              <div className="tw-flex tw-items-center tw-justify-center tw-ml-4">
-                <span className="tw-inline-block tw-w-3 tw-h-3 tw-bg-green-600 tw-rounded-full tw-mr-2"></span>
-                <span className="tw-text-green-600 tw-font-semibold tw-text-sm">
-                  en ligne
-                </span>
-                <span className="tw-text-gray-800 tw-font-semibold tw-text-sm tw-ml-2">
-                  {user?.fullName}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="header-content-right">
-           
-
-            {/* <div className="header-element header-theme-mode">
-              <a href="#" className="header-link layout-setting">
-                <span className="light-layout">
-                  <i className="bx bx-moon fe-moon header-link-icon"></i>
-                </span>
-                <span className="dark-layout">
-                  <i className="bx bx-sun header-link-icon"></i>
-                </span>
-              </a>
-            </div>
-
-            <div className="header-element header-fullscreen">
-              <a href="#" className="header-link">
-                <i className="bx bx-fullscreen full-screen-open header-link-icon"></i>
-                <i className="bx bx-exit-fullscreen full-screen-close header-link-icon d-none"></i>
-              </a>
-            </div>
-
-            <div className="header-element meassage-dropdown">
-              <a
-                href="#"
-                className="header-link dropdown-toggle"
-                data-bs-auto-close="outside"
-                data-bs-toggle="dropdown"
-              >
-                <i className="bx bx-message-square-dots header-link-icon"></i>
-                <span className="pulse-danger"></span>
-              </a>
-            </div>
-
-            <div className="header-element notifications-dropdown">
-              <a
-                href="#"
-                className="header-link dropdown-toggle"
-                data-bs-auto-close="outside"
-                data-bs-toggle="dropdown"
-              >
-                <i className="bx bx-bell header-link-icon"></i>
-                <span
-                  className="badge bg-secondary fw-normal rounded-pill cart-badge"
-                  id="notifiation-data"
-                >
-                  5
-                </span>
-              </a>
-            </div> */}
-
+    <header className="tw-sticky tw-top-0 tw-z-20 tw-w-full tw-bg-white tw-border-b tw-border-gray-200">
+      <div className="tw-flex tw-items-center tw-justify-between tw-h-16 tw-px-4 sm:tw-px-6">
+        
+        <div className="tw-flex tw-items-center tw-gap-4">
           
-{/* 
-            <div className="header-element d-none d-sm-block">
-              <a
-                href="#"
-                className="header-link"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#offcanvassidebar"
-              >
-                <i className="bx bx-grid-alt header-link-icon"></i>
-              </a>
+          {/* BOUTON HAMBURGER AVEC ICÔNE MODERNE */}
+          <button
+            aria-label={isSidebarOpen ? "Cacher le menu" : "Afficher le menu"}
+            onClick={toggleSidebar}
+            // La zone de clic est toujours grande et confortable
+            className="tw-h-10 tw-w-10 tw-flex tw-items-center tw-justify-center tw-rounded-md hover:tw-bg-gray-100"
+          >
+            {/* On remplace le <span> invisible par une icône Lucide visible et stylée */}
+            <Menu className="tw-h-6 tw-w-6 tw-text-gray-600" />
+          </button>
+
+          <div className="header-element header-search tw-hidden sm:tw-block">
+            <div className="tw-flex tw-items-center tw-justify-center">
+              <span className="tw-inline-block tw-w-3 tw-h-3 tw-bg-green-600 tw-rounded-full tw-mr-2"></span>
+              <span className="tw-text-green-600 tw-font-semibold tw-text-sm">en ligne</span>
+              <span className="tw-text-gray-800 tw-font-semibold tw-text-sm tw-ml-2">{user?.fullName}</span>
             </div>
-
-            <div className="header-element tw-mr-24">
-              <a
-                href="#"
-                className="header-link me-0"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#switcher-canvas"
-              >
-                <i className="bx bx-cog header-link-icon"></i>
-              </a>
-            </div> */}
-
-            {/* <div className="-tw-mt-3">{user?.id && <TopBar />}</div> */}
           </div>
         </div>
-      </header>
-    </div>
+        
+        <div className="header-content-right">
+        </div>
+
+      </div>
+    </header>
   );
+};
+
+Header.propTypes = {
+  toggleSidebar: PropTypes.func.isRequired,
+  isSidebarOpen: PropTypes.bool.isRequired,
 };
 
 export default Header;

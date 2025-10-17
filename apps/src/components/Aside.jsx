@@ -1,52 +1,46 @@
 import { useMutation } from "@tanstack/react-query";
-// import { Link } from "react-router-dom";
-import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import axiosInstance from "../config/axiosConfig";
-function Aside() {
+import PropTypes from "prop-types";
+
+// Import de la nouvelle liste complète d'icônes modernes de Lucide
+import {
+  X,
+  LayoutDashboard,
+  Warehouse,
+  Landmark,
+  CircleDollarSign,
+  LogOut,
+  Printer,
+  Users,
+  CreditCard,
+  KeyRound,
+} from "lucide-react";
+
+function Aside({ isSidebarOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
-  const [isOverlay, setOverlay] = useState(false);
-  const handleFullOverlay = (value) => {
-    setOverlay(value);
-  };
+
   const handleError = (error) => {
     const validationErrors = error?.response?.data?.error;
     if (validationErrors && Array.isArray(validationErrors)) {
-      validationErrors.forEach((err) =>
-        toast.error(err.message, { duration: 12000 })
-      );
+      validationErrors.forEach((err) => toast.error(err.message, { duration: 12000 }));
     } else {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.response?.data,
-        {
-          duration: 4000,
-        }
-      );
+      toast.error(error?.response?.data?.message || error?.response?.data?.error || error?.response?.data, { duration: 4000 });
     }
   };
 
-  // Fonction pour vérifier l'autorisation et naviguer
   const { mutate: checkAuthorization } = useMutation(
     async (route) => {
-      const response = await axiosInstance.get(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/api/v1/authorizeToRead?userConnectedId=${user?.id}&route=${route}`
-      );
+      const response = await axiosInstance.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/authorizeToRead?userConnectedId=${user?.id}&route=${route}`);
       return response.data;
     },
     {
       onSuccess: (data, route) => {
-        if (data?.isAuthorized) {
-          navigate(route);
-        } else {
-          alert("Vous n'êtes pas autorisé à accéder à cette page.");
-        }
+        if (data?.isAuthorized) { navigate(route); } 
+        else { alert("Vous n'êtes pas autorisé à accéder à cette page."); }
       },
       onError: handleError,
     }
@@ -57,174 +51,76 @@ function Aside() {
   };
 
   return (
-    <div>
+    <>
       <aside
-        className={`app-sidebar sticky ${isOverlay ? "-tw-z-40" : ""}`}
+        className={`
+          tw-fixed tw-top-0 tw-left-0 tw-h-full tw-z-40
+          tw-w-64 tw-bg-white tw-border-r tw-border-gray-200
+          tw-transition-transform tw-duration-300 ease-in-out
+          ${isSidebarOpen ? 'tw-translate-x-0' : '-tw-translate-x-full'}
+        `}
         id="sidebar"
       >
-        <div className="tw-flex tw-flex-col tw-items-center tw-justify-center tw-space-y-4">
-  {/* Conteneur avec un arrière-plan en dégradé pour simuler une bordure colorée */}
-  <a
-    href="#"
-    className="
-    
-    "
-  >
-    {/* Div intérieur pour créer l'effet de bordure */}
-    <div className="tw-bg-white tw-p-1 tw-rounded-full">
-      <img
-        src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${user?.company?.logoUrl || `uploads/avatars/${(user?.id % 5) + 1}.png`}`}
-        alt="Logo de l’entreprise"
-        className="tw-w-44 tw-h-44 tw-object-cover tw-rounded-full"
-      />
-    </div>
-  </a>
+        <div className="tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-space-y-4 tw-p-4 tw-bg-slate-50 tw-border-b">
+          <button 
+            onClick={toggleSidebar} 
+            className="tw-absolute tw-top-2 tw-right-2 tw-h-10 tw-w-10 tw-flex tw-items-center tw-justify-center tw-rounded-full hover:tw-bg-slate-200 lg:tw-hidden"
+            aria-label="Fermer le menu"
+          >
+            <X className="tw-h-6 tw-w-6 tw-text-slate-600" />
+          </button>
 
-  {/* Affichage conditionnel du nom de l'entreprise */}
-  {user?.company?.showCompanyName && (
-    <p className="bariecito-policy tw-text-center tw-font-semibold tw-text-2xl tw-text-slate-700 tw-tracking-wide">
-      {user?.company?.companyName}
-    </p>
-  )}
-</div>
+            <div className="tw-p-1 tw-bg-gray-200 tw-rounded-full -tw-mt-6 tw-mb-2 tw-w-36 tw-h-36 ">
+              <img
+                src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${user?.company?.logoUrl || `uploads/avatars/ri3uadefault.jpg`}`}
+                alt="Logo de l’entreprise"
+                className="tw-w-36 tw-h-36 tw-object-cover tw-rounded-full"
+              />
+            </div>
+         
+          {user?.company?.showCompanyName && (
+            <p className="tw-text-center tw-font-semibold tw-text-lg tw-text-slate-800">
+              {user?.company?.companyName}
+            </p>
+          )}
+        </div>
+        
+        {/* CORPS DE LA SIDEBAR AVEC LE MENU COMPLET ET SCROLLABLE */}
+        <div className="tw-h-[calc(100vh-170px)] tw-overflow-y-auto tw-py-4">
+          <nav>
+            <ul className="tw-px-4 tw-space-y-1">
+              {/* Catégorie PRINCIPALE */}
+              <li><span className="tw-px-3 tw-text-xs tw-font-semibold tw-uppercase tw-text-gray-400">Principale</span></li>
+              <li><button onClick={() => handleNavigation("dashboard")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><LayoutDashboard className="tw-h-5 tw-w-5 tw-mr-3" /><span>Tableau de bord</span></button></li>
 
-        <div className="main-sidebar -tw-mt-12" id="sidebar-scroll">
-          <nav className="main-menu-container nav nav-pills flex-column sub-open">
-            <ul className="main-menu">
-              <li className="slide__category">
-                <span className="category-name">PRINCIPALE</span>
-              </li>
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("dashboard")}
-                >
-                  <i className="bx bx-category side-menu__icon"></i>
-                  <span className="side-menu__label">Tableau de bord</span>
-                </button>
-                {/* <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("old-dashboard")}
-                >
-                  <i className="bx bx-category side-menu__icon"></i>
-                  <span className="side-menu__label">Old Tableau de bord</span>
-                </button> */}
-              </li>
+              {/* Catégorie Modules */}
+              <li className="tw-pt-2"><span className="tw-px-3 tw-text-xs tw-font-semibold tw-uppercase tw-text-gray-400">Modules</span></li>
+              <li><button onClick={() => handleNavigation("approvisionnements")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Warehouse className="tw-h-5 tw-w-5 tw-mr-3" /><span>Approvisionnement</span></button></li>
+              <li><button onClick={() => handleNavigation("type-de-depense")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Landmark className="tw-h-5 tw-w-5 tw-mr-3" /><span>Type de dépenses</span></button></li>
+              <li><button onClick={() => handleNavigation("depenses")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><CircleDollarSign className="tw-h-5 tw-w-5 tw-mr-3" /><span>Dépenses</span></button></li>
+              <li><button onClick={() => handleNavigation("sorties")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><LogOut className="tw-h-5 tw-w-5 tw-mr-3" /><span>Sortie</span></button></li>
+              <li><button onClick={() => handleNavigation("editions")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Printer className="tw-h-5 tw-w-5 tw-mr-3" /><span>Editions</span></button></li>
 
-              <li className="slide__category">
-                <span className="category-name">Modules</span>
-              </li>
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("approvisionnements")}
-                >
-                  <i className="bx bx-store side-menu__icon"></i>
-                  <span className="side-menu__label">Approvisionnement</span>
-                </button>
-              </li>
-
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("type-de-depense")}
-                >
-                  <i className="bx bx-wallet side-menu__icon"></i>
-                  <span className="side-menu__label">Type de dépenses</span>
-                </button>
-              </li>
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("depenses")}
-                >
-                  <i className="bx bx-money side-menu__icon"></i>
-                  <span className="side-menu__label">Dépenses</span>
-                </button>
-              </li>
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("sorties")}
-                >
-                  <i className="bx bx-money-withdraw side-menu__icon"></i>
-                  <span className="side-menu__label">Sortie</span>
-                </button>
-              </li>
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("editions")}
-                >
-                  <i className="bx bx-printer side-menu__icon"></i>
-                  <span className="side-menu__label">Editions</span>
-                </button>
-              </li>
-
-              <li className="slide__category">
-                <span className="category-name">Rôles / Utilisateurs</span>
-              </li>
-
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("utilisateurs")}
-                >
-                  <i className="bx bx-user side-menu__icon"></i>
-                  <span className="side-menu__label">Utilisateurs</span>
-                </button>
-              </li>
-
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("packs")}
-                >
-                  <i className="bx bx-user side-menu__icon"></i>
-                  <span className="side-menu__label">Packs</span>
-                </button>
-              </li>
-
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("abonnements")}
-                >
-                  <i className="bx bx-user side-menu__icon"></i>
-                  <span className="side-menu__label">Mes abonnements</span>
-                </button>
-              </li>
-
-              {/* {user?.email === "rolissecodeur@gmail.com" && (
-                <li className="slide">
-                  <Link to={"all_utilisateurs"} className="side-menu__item">
-                    <i className="bx bx-user side-menu__icon"></i>
-                    <span className="side-menu__label">
-                      Tout les utilisateurs
-                    </span>
-                  </Link>
-                </li>
-              )} */}
-
-              <li className="slide">
-                <button
-                  className="side-menu__item"
-                  onClick={() => handleNavigation("permissions")}
-                >
-                  <i className="bx bx-key side-menu__icon"></i>
-                  <span className="side-menu__label">Rôle & Permissions</span>
-                </button>
-              </li>
+              {/* Catégorie Rôles / Utilisateurs */}
+              <li className="tw-pt-2"><span className="tw-px-3 tw-text-xs tw-font-semibold tw-uppercase tw-text-gray-400">Rôles / Utilisateurs</span></li>
+              <li><button onClick={() => handleNavigation("utilisateurs")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Users className="tw-h-5 tw-w-5 tw-mr-3" /><span>Utilisateurs</span></button></li>
+              <li><button onClick={() => handleNavigation("abonnements")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><CreditCard className="tw-h-5 tw-w-5 tw-mr-3" /><span>Mes abonnements</span></button></li>
+              <li><button onClick={() => handleNavigation("permissions")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><KeyRound className="tw-h-5 tw-w-5 tw-mr-3" /><span>Rôle & Permissions</span></button></li>
             </ul>
           </nav>
         </div>
       </aside>
-
+      
       <div className="-tw-mt-3 tw-absolute tw-top-2 tw-right-0 tw-z-50">
-        {user?.id && <TopBar fullOverlay={handleFullOverlay} />}
+        {user?.id && <TopBar />}
       </div>
-    </div>
+    </>
   );
 }
+
+Aside.propTypes = {
+  isSidebarOpen: PropTypes.bool.isRequired,
+  toggleSidebar: PropTypes.func.isRequired,
+};
 
 export default Aside;

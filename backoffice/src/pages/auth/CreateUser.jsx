@@ -67,22 +67,9 @@ function Register({ onSwitch }) {
   };
 
   return (
-    <div className="tw-relative tw-h-screen tw-w-screen">
-      <img
-        src="assets/images/media/caisse.jpg"
-        className="tw-absolute tw-inset-0 tw-w-full tw-h-full tw-object-cover"
-        alt="Logo"
-      />
-
-      <div className="tw-fixed tw-inset-0 tw-backdrop-blur-[10px]"></div>
-
-      <div className="row justify-content-center align-items-center tw-h-screen">
-        <div className="col-xxl-3 tw-z-50 col-xl-4 col-lg-5 col-md-5 col-sm-8 col-10 max-sm:tw-mt-28">
-          <div className="p-1 tw-rounded-lg gradient-border">
-            <div className="bg-white tw-rounded-lg p-3">
-              <div className="p-3 tw-border tw-border-zinc-200 tw-rounded-lg">
-                <p className="h5 fw-semibold bariecito-policy">Inscription</p>
-                <p className="mb-3 text-muted op-7 fw-normal">
+     <div className="p-3">
+                <p className="h5 fw-semibold bariecito-policy tw-text-slate-50">Inscription</p>
+                <p className="mb-3 tw-text-slate-50 fw-normal">
                   Créer un compte utilisateur gratuitement!
                 </p>
 
@@ -96,7 +83,7 @@ function Register({ onSwitch }) {
                   <div className="col-xl-12 mt-0">
                     <label
                       htmlFor="fullName"
-                      className="form-label text-default"
+                      className="form-label tw-text-slate-50"
                     >
                       Nom & Prénoms
                     </label>
@@ -113,7 +100,7 @@ function Register({ onSwitch }) {
                     />
                   </div>
                   <div className="col-xl-12">
-                    <label htmlFor="email" className="form-label text-default">
+                    <label htmlFor="email" className="form-label tw-text-slate-50">
                       Adresse mail
                     </label>
                     <input
@@ -132,7 +119,7 @@ function Register({ onSwitch }) {
                   <div className="col-xl-12">
                     <label
                       htmlFor="signup-password"
-                      className="form-label text-default"
+                      className="form-label tw-text-slate-50"
                     >
                       Mot de passe
                     </label>
@@ -170,7 +157,7 @@ function Register({ onSwitch }) {
                   <div className="col-xl-12 mb-3">
                     <label
                       htmlFor="signup-confirm"
-                      className="form-label text-default"
+                      className="form-label tw-text-slate-50"
                     >
                       Confirmation
                     </label>
@@ -222,23 +209,18 @@ function Register({ onSwitch }) {
                   </div>
                 </form>
                 <div className="text-center">
-                  <p className="fs-12 text-muted mt-4">
-                    Vous avez déjà un compte ?
+                  <p className="fs-12 tw-text-slate-50 mt-4">
+                    <span className="tw-border tw-border-slate-200 tw-p-2 tw-rounded">Vous avez déjà un compte ?
                     <a
                       href="#"
                       className="text-success tw-pl-1"
                       onClick={() => onSwitch("login")}
                     >
                       Connectez-vous
-                    </a>
+                    </a></span>
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 

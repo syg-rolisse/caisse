@@ -102,28 +102,9 @@ function RestPassword({ token, email, userId, onSwitch }) {
   };
 
   return (
-    <div className="row justify-content-center align-items-center tw-h-screen">
-      <div className="col-xxl-5 col-xl-4 col-lg-5 col-md-5 col-sm-8 col-8 max-sm:tw-mt-2">
-        <div className="p-3 tw-border tw-border-zinc-500 tw-rounded-lg">
-          <div className="mb-3">
-            <a href="index.html">
-              <img
-                src="../assets/images/brand-logos/desktop-logo.png"
-                alt=""
-                className="authentication-brand desktop-logo"
-              />
-              <img
-                src="../assets/images/brand-logos/desktop-white.png"
-                alt=""
-                className="authentication-brand desktop-dark"
-              />
-            </a>
-          </div>
-          <p className="h5 fw-semibold bariecito-policy">Mot de passe</p>
-          <p className="mb-3 text-muted op-7 fw-normal">
-            Saisissez votre nouveau passe
-          </p>
-
+   <div>
+              <p className="h5 fw-semibold bariecito-policy tw-text-slate-300">Mot de passe</p>
+          
           <div className="text-center my-4 authentication-barrier">
             <span className="tw-text-orange-500 bariecito-policy">
               CAISSE
@@ -134,7 +115,7 @@ function RestPassword({ token, email, userId, onSwitch }) {
             <div className="col-xl-12">
               <label
                 htmlFor="signup-password"
-                className="form-label text-default"
+                className="form-label tw-text-slate-300"
               >
                 Mot de passe
               </label>
@@ -169,7 +150,7 @@ function RestPassword({ token, email, userId, onSwitch }) {
             <div className="col-xl-12 mb-3">
               <label
                 htmlFor="signup-confirm"
-                className="form-label text-default"
+                className="form-label tw-text-slate-300"
               >
                 Confirmation
               </label>
@@ -216,19 +197,18 @@ function RestPassword({ token, email, userId, onSwitch }) {
           </form>
           <div className="text-center">
             <p className="fs-12 text-muted mt-4">
-              Vous avez déjà un compte?
+              Vous avez déjà un compte ? 
               <a
                 href="#"
                 className="text-success"
                 onClick={() => onSwitch("login")}
               >
+                {" "}
                 Connectez-vous
               </a>
             </p>
           </div>
-        </div>
-      </div>
-    </div>
+   </div>
   );
 }
 
