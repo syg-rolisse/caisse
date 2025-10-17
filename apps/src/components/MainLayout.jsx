@@ -8,55 +8,22 @@ import Footer from "./Footer";
 const MainLayout = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
-  // useEffect(() => {
-  //   const scripts = [
-  //     "assets/libs/@popperjs/core/umd/popper.min.js",
-  //     "assets/libs/bootstrap/js/bootstrap.bundle.min.js",
-  //     "assets/js/defaultmenu.min.js",
-  //     "assets/libs/node-waves/waves.min.js",
-  //    // "assets/js/sticky.js",
-  //     "assets/libs/simplebar/simplebar.min.js",
-  //     "assets/js/simplebar.js",
-  //     "assets/libs/@simonwep/pickr/pickr.es5.min.js",
-  //     "assets/libs/flatpickr/flatpickr.min.js",
-  //     "assets/js/date-range.js",
-  //     "assets/libs/apexcharts/apexcharts.min.js",
-  //     "assets/js/index3.js",
-  //     "assets/js/custom.js",
-  //   ];
+  const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
 
-  //   const loadScriptsSequentially = async () => {
-  //     for (const src of scripts) {
-  //       await new Promise((resolve, reject) => {
-  //         const script = document.createElement("script");
-  //         script.src = src;
-  //         script.defer = true;
-  //         script.onload = () => resolve();
-  //         script.onerror = () =>
-  //           reject(new Error(`Erreur de chargement : ${src}`));
-  //         document.body.appendChild(script);
-  //       });
-  //     }
-  //     console.log("Tous les scripts ont été chargés.");
-  //   };
-
-  //   loadScriptsSequentially();
-
-  //   return () => {
-  //     scripts.forEach((src) => {
-  //       const scriptElement = document.querySelector(`script[src="${src}"]`);
-  //       if (scriptElement) {
-  //         document.body.removeChild(scriptElement);
-  //       }
-  //     });
-  //   };
-  // }, [location]); // Ajoutez 'location' comme dépendance pour rafraîchir à chaque changement de route
+  const toggleSidebar = () => {
+    setSidebarOpen(prevState => !prevState);
+  };
 
   useEffect(() => {
     setIsLoading(true);
-
     setTimeout(() => setIsLoading(false), 1000);
   }, []);
+
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
   if (isLoading && location.pathname !== "/dashboard") {
     return (
@@ -67,21 +34,40 @@ const MainLayout = () => {
   }
 
   return (
-    <div>
+    <div className="tw-bg-gray-50">
       <Offcanvas />
-      <div className="">
-        <Header />
-        <Aside />
-        {/* main-content  */}
-        <div className="app-content tw-mt-16 tw-p-6">
+      
+      {isSidebarOpen && (
+        <div
+          onClick={toggleSidebar}
+          className="tw-fixed tw-inset-0 tw-bg-black/50 tw-z-30 lg:tw-hidden"
+          aria-hidden="true"
+        ></div>
+      )}
+      
+      {/* On passe maintenant toggleSidebar à Aside également */}
+      <Aside isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      
+      <div 
+        className={`
+          tw-relative tw-min-h-screen
+          tw-transition-all tw-duration-300 ease-in-out
+          ${isSidebarOpen ? 'lg:tw-ml-64' : 'lg:tw-ml-0'}
+        `}
+      >
+        <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+        
+        <main className="tw-p-6">
           <Outlet />
-        </div>
+        </main>
+        
+        <Footer />
       </div>
+
       <div className="scrollToTop" id="back-to-top">
         <i className="ri-arrow-up-s-fill fs-20"></i>
       </div>
       <div id="responsive-overlay"></div>
-      <Footer />
     </div>
   );
 };

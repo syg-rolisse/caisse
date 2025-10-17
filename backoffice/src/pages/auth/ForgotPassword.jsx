@@ -2,7 +2,6 @@ import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import TopBar from "../../components/TopBar";
 import axiosInstance from "../../config/axiosConfig"; 
 
 function ForgotPassword({ onSwitch }) {
@@ -58,55 +57,24 @@ function ForgotPassword({ onSwitch }) {
   };
 
   return (
-    <div className="tw-relative tw-h-screen tw-w-screen">
-      <div className="tw-absolute tw-top-0 tw-z-50">
-        <TopBar />
-      </div>
-
-      <img
-        src="assets/images/media/caisse.jpg"
-        className="tw-absolute tw-inset-0 tw-w-full tw-h-full tw-object-cover"
-        alt="Logo"
-      />
-
-      <div className="tw-fixed tw-inset-0 tw-backdrop-blur-[10px]"></div>
-
-      <div className="row justify-content-center align-items-center tw-h-screen">
-        <div className="col-xxl-3 tw-z-50 col-xl-4 col-lg-5 col-md-5 col-sm-8 col-10 max-sm:tw-mt-2">
-          <div className="p-1 tw-rounded-lg gradient-border">
-            <div className="bg-white tw-rounded-lg p-3">
-              <div className="p-3 tw-border tw-border-zinc-200 tw-rounded-lg">
-                <div className="mb-3">
-                  <a href="index.html">
-                    <img
-                      src="../assets/images/brand-logos/desktop-logo.png"
-                      alt=""
-                      className="authentication-brand desktop-logo"
-                    />
-                    <img
-                      src="../assets/images/brand-logos/desktop-white.png"
-                      alt=""
-                      className="authentication-brand desktop-dark"
-                    />
-                  </a>
-                </div>
-                <p className="h5 fw-semibold mb-2 bariecito-policy">
+   <div className="tw-mt-28">
+                    <p className="h5 fw-semibold mb-2 bariecito-policy tw-text-slate-200">
                   Mot de passe oublié
                 </p>
-                <p className="mb-3 text-muted op-7 fw-normal">
+                <p className="mb-3 fw-normal tw-text-slate-200">
                   Entrez votre adresse email pour recevoir un lien de
                   réinitialisation.
                 </p>
 
-                <div className="text-center my-5 authentication-barrier">
+                <div className="text-center my-3 authentication-barrier">
                   <span className="tw-text-orange-500 bariecito-policy">
                     CAISSE
                   </span>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="row gy-3">
+                <form onSubmit={handleSubmit(onSubmit)} className="row gy-3 tw-mb-8">
                   <div className="col-xl-12 mb-3">
-                    <label htmlFor="email" className="form-label text-default">
+                    <label htmlFor="email" className="form-label tw-text-slate-200">
                       Adresse email
                     </label>
                     <input
@@ -134,23 +102,18 @@ function ForgotPassword({ onSwitch }) {
                   </div>
                 </form>
                 <div className="text-center">
-                  <p className="fs-12 text-muted mt-4">
-                    Retourner à la{" "}
+                  <p className="fs-12 tw-text-slate-200 ">
+                    <span className="tw-border tw-border-slate-200 tw-p-2 tw-rounded">Retourner à la{" "}
                     <a
                       href="#"
                       className="text-success"
                       onClick={() => onSwitch("login")}
                     >
                       Connexion
-                    </a>
+                    </a></span>
                   </p>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+   </div>
   );
 }
 
