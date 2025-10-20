@@ -5,7 +5,7 @@ const AbonnementsController = () => import('#controllers/abonnements_controller'
 router
   .group(() => {
     router.get('abonnement/all', [AbonnementsController, 'index'])
-    router.post('abonnement', [AbonnementsController, 'renouveler'])
+    router.post('abonnement/renouveler', [AbonnementsController, 'renouveler'])
   })
   .use(middleware.auth())
   .prefix('api/v1/')

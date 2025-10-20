@@ -6,7 +6,7 @@ const BalanceCard = ({ solde = 0 }) => {
   const isPositive = solde > 0;
 
   return (
-    <div className="tw-col-span-1 md:tw-col-span-2 tw-bg-white tw-p-6 tw-rounded-xl tw-shadow-md tw-border tw-border-gray-100">
+    <div className=" tw-bg-white tw-p-6 tw-rounded-xl tw-shadow-md tw-border tw-border-gray-100">
       <div className="tw-flex tw-items-center tw-justify-between tw-mb-4">
         <h3 className="tw-text-lg tw-font-semibold tw-text-gray-700">Solde de la Caisse</h3>
         <div className="tw-p-2 tw-bg-green-100 tw-rounded-lg">

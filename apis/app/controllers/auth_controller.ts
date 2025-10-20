@@ -95,67 +95,6 @@ export default class AuthController {
     }
   }
 
-  // async login({ request, response }: HttpContext) {
-  //   try {
-  //     const { email, password } = await request.validateUsing(loginValidator)
-  //     console.log(request.body())
-
-  //     const userConnected = await User.findBy('email', email)
-  //     if (!userConnected) {
-  //       return response.badRequest({
-  //         status: 400,
-  //         error: "L'adresse e-mail fournie n'est pas retrouvée.",
-  //       })
-  //     }
-
-  //     const isValidCredentials = await User.verifyCredentials(email, password)
-  //     if (!isValidCredentials) {
-  //       return response.badRequest({
-  //         status: 400,
-  //         error: "Les informations d'identification ne sont pas valides. Veuillez réessayer.",
-  //       })
-  //     }
-
-  //     await userConnected.preload('userProfils') // Précharge les profils associés à l'utilisateur
-
-  //     if (userConnected && !userConnected?.$attributes?.validEmail) {
-  //       return response.badRequest({
-  //         status: 400,
-  //         error: "Votre mail n'a pas été confirmé. Vérifier votre boite et span.",
-  //       })
-  //     }
-
-  //     if (userConnected && !userConnected?.$attributes?.status) {
-  //       return response.badRequest({
-  //         status: 400,
-  //         error: 'Votre compte est inactif.',
-  //       })
-  //     }
-
-  //     const token = await User.accessTokens.create(userConnected)
-  //     if (!token) {
-  //       return response.internalServerError({
-  //         status: 500,
-  //         error: 'Une erreur est survenue lors de la création du token. Veuillez réessayer.',
-  //       })
-  //     }
-
-  //     const user = { ...userConnected.toJSON(), token }
-
-  //     return response.created({ user })
-  //   } catch (error) {
-  //     console.log(error.message)
-
-  //     return response.badRequest({
-  //       status: 400,
-  //       error:
-  //         error.message === 'Invalid user credentials'
-  //           ? 'Mot de passe incorrect'
-  //           : 'Une erreur est survenue. Veuillez réessayer.',
-  //     })
-  //   }
-  // }
-
   async verif_token_to_change_password({ request, response }: HttpContext) {
     try {
       const { userId, token, email } = request.qs()
@@ -376,6 +315,8 @@ export default class AuthController {
         isAuthorized = !(await bouncer.with('UserPolicy').denies('dashboard'))
       } else if (route === 'old-dashboard') {
         isAuthorized = !(await bouncer.with('UserPolicy').denies('dashboard'))
+      } else if (route === 'entreprises') {
+        isAuthorized = true
       }
 
       // Retourne une réponse avec `isAuthorized`

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { Package, CalendarDays, DollarSign, CheckCircle, XCircle } from 'lucide-react';
-import Paye from '../Paye';
+// import Paye from '../Paye';
 
 export default function Renouvellement({ item }) {
   return (
@@ -34,9 +34,9 @@ export default function Renouvellement({ item }) {
         </div>
       </div>
 
-      <div className="tw-p-3 tw-bg-gray-50 tw-border-t tw-border-gray-100">
+      {/* <div className="tw-p-3 tw-bg-gray-50 tw-border-t tw-border-gray-100">
         <Paye packId={item.id} montant={item.montant} />
-      </div>
+      </div> */}
     </div>
   );
 };

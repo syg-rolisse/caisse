@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { FedaCheckoutButton } from "fedapay-reactjs";
+// import { FedaCheckoutButton } from "fedapay-reactjs";
 import PropTypes from "prop-types";
 import toast from "react-hot-toast";
 import axiosInstance from "../config/axiosConfig";
@@ -11,7 +11,7 @@ const Paye = ({ packId, montant }) => {
 
   const { mutate: createOrRenewAbonnement } = useMutation({
     mutationFn: (data) =>
-      axiosInstance.put(
+      axiosInstance.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/abonnement/renouveler?companieId=${user?.company?.id}`,
         data
       ),
@@ -24,10 +24,12 @@ const Paye = ({ packId, montant }) => {
       }, 4000);
     },
     onError: (error) => {
+      console.log(error);
       toast.error(error?.response?.data?.error || "Erreur lors du traitement du paiement.");
     },
   });
 
+  // eslint-disable-next-line no-unused-vars
   const checkoutButtonOptions = {
     public_key: PUBLIC_KEY,
     transaction: {
@@ -54,7 +56,8 @@ const Paye = ({ packId, montant }) => {
 
   return (
     <div>
-      <FedaCheckoutButton options={checkoutButtonOptions} />
+      <button className="btn btn-primary" onClick={() => createOrRenewAbonnement({ packId: packId, userId: user.id })}>Renouveler Maintenant</button>
+      {/* <FedaCheckoutButton options={checkoutButtonOptions} /> */}
     </div>
   );
 };

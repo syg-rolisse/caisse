@@ -36,14 +36,14 @@ export default class Abonnement extends BaseModel {
   @column()
   declare packMontant: number
 
-  @column()
+  @column.dateTime()
   declare dateDebut: DateTime
 
-  @column()
+  @column.dateTime()
   declare dateFin: DateTime
 
-  @column()
-  declare statut: boolean
+  // @column()
+  // declare statut: boolean
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

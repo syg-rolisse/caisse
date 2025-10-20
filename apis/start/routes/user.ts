@@ -12,6 +12,7 @@ router
     router.get('allUserSys', [UserController, 'allUserSys'])
     router.get('user', [UserController, 'show'])
     router.get('company', [UserController, 'showCompnany'])
+    router.get('allCompanies', [UserController, 'allCompanies'])
 
     router.put('user', [UserController, 'update'])
     router.put('company', [UserController, 'updateCompany'])

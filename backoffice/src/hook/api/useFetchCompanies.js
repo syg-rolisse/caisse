@@ -2,26 +2,30 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchAbonnement() {
+export function useFetchCompanies() {
   const handleError = useHandleError();
 
   return useQuery({
-    queryKey: ["abonnements"],
+    queryKey: ["companies"],
+    
     queryFn: async () => {
-      const user = JSON.parse(localStorage.getItem("user"));
       const response = await axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/abonnement/all`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/allCompanies`,
         {
           params: {
-            companieId: user.company.id,
+            page: 1,
+            perpage: 1000,
           },
         }
       );
-      console.log(response.data);
+
       return {
-        abonnements: response.data?.abonnements,
+        companies: response.data?.companies,      
+        allCompanies: response.data?.allCompanies, 
       };
     },
+    
+    enabled: true,
 
     onError: handleError,
   });

@@ -34,21 +34,21 @@ const UserStatsCard = ({ stats }) => {
     <div className="tw-col-span-1 md:tw-col-span-2 tw-bg-white tw-p-6 tw-rounded-xl tw-shadow-md tw-border tw-border-gray-100">
       <div className="tw-flex tw-items-center tw-justify-between tw-mb-4">
         <h3 className="tw-text-lg tw-font-semibold tw-text-gray-700">
-          Utilisateurs
+          Utilisateurs <span className="tw-bg-orange-100 tw-rounded-lg tw-p-1 tw-text-orange-600"><AnimatedStat value={totalUsers} /></span>
         </h3>
-        <div className="tw-p-2 tw-bg-violet-100 tw-rounded-lg">
-          <Users className="tw-w-6 tw-h-6 tw-text-violet-600" />
+        <div className="tw-p-2 tw-bg-orange-100 tw-rounded-lg">
+          <Users className="tw-w-6 tw-h-6 tw-text-orange-600" />
         </div>
       </div>
 
       {/* Le total des utilisateurs est maintenant animé */}
-      <motion.p
+      {/* <motion.p
         key={totalUsers} // La key aide React à identifier le changement
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="tw-text-4xl tw-font-bold tw-text-gray-800"
       >
         <AnimatedStat value={totalUsers} />
-      </motion.p>
+      </motion.p> */}
 
       <div className="tw-flex tw-items-center tw-gap-4 tw-mt-2 tw-text-sm">
         <span className="tw-flex tw-items-center tw-text-green-600">

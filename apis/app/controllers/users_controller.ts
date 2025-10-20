@@ -59,18 +59,21 @@ export default class UsersController {
   }
 
   // 2. allUserSys()
-  async allUserSys({ request, response }: HttpContext) {
+  async allUserSys({ response }: HttpContext) {
     try {
-      const { page, perpage, status } = request.qs()
+      const { allUsers, users } = await user_service.fetchAndFormatAllUsers(1, 10000)
+      return response.ok({ users, allUsers })
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      return response.status(500).json({ error: 'An error occurred while fetching users.' })
+    }
+  }
 
-      const query = User.query().orderBy('id', 'desc').preload('Profil').preload('Companies')
-
-      if (status) {
-        // query.where('status', JSON.parse(status))
-      }
-
-      const users = await query.paginate(page || 1, perpage || 10)
-      return response.json(users.toJSON())
+  // 2. allCompanies()
+  async allCompanies({ response }: HttpContext) {
+    try {
+      const { allCompanies, companies } = await user_service.fetchAndFormatAllCompanies(1, 10000)
+      return response.ok({ companies, allCompanies })
     } catch (error) {
       console.error('Error fetching users:', error)
       return response.status(500).json({ error: 'An error occurred while fetching users.' })
