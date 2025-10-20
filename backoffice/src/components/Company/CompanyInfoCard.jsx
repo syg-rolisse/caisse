@@ -1,5 +1,6 @@
 import { Phone, MapPin, BadgeCheck, BadgeX } from "lucide-react";
 import PropTypes from "prop-types";
+import SubscriptionCountdownCard from "./SubscriptionCountdownCard";
 
 CompanyInfoCard.propTypes = {
   company: PropTypes.object.isRequired,
@@ -41,6 +42,10 @@ export default function CompanyInfoCard({ company }) {
               {company.status ? "Actif" : "Inactif"}
             </span>
           </div>
+
+            <SubscriptionCountdownCard abonnements={company.abonnements} />
+          
+
         </div>
       </div>
     </div>
