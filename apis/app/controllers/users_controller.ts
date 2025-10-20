@@ -59,7 +59,7 @@ export default class UsersController {
   }
 
   // 2. allUserSys()
-  async allUserSys({ request, response }: HttpContext) {
+  async allUserSys({ response }: HttpContext) {
     try {
       const { allUsers, users } = await user_service.fetchAndFormatAllUsers(1, 10000)
       return response.ok({ users, allUsers })
@@ -70,7 +70,7 @@ export default class UsersController {
   }
 
   // 2. allCompanies()
-  async allCompanies({ request, response }: HttpContext) {
+  async allCompanies({ response }: HttpContext) {
     try {
       const { allCompanies, companies } = await user_service.fetchAndFormatAllCompanies(1, 10000)
       return response.ok({ companies, allCompanies })
