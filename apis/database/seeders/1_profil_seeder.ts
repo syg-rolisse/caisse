@@ -1,29 +1,18 @@
 import Profil from '#models/profil'
+import Companie from '#models/companie'
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 
-export default class extends BaseSeeder {
-  async run() {
-    await Profil.createMany([
-      {
-        wording: 'Superadmin',
+export default class ProfilSeeder extends BaseSeeder {
+  public async run() {
+    const companies = await Companie.all()
 
-        companieId: 1,
-      },
-      {
-        wording: 'Admin',
-
-        companieId: 1,
-      },
-      {
-        wording: 'Employé',
-
-        companieId: 1,
-      },
-      {
-        wording: 'Sécrétaire',
-
-        companieId: 1,
-      },
-    ])
+    for (const company of companies) {
+      await Profil.createMany([
+        { wording: 'Superadmin', companieId: company.id },
+        { wording: 'Admin', companieId: company.id },
+        { wording: 'Employé', companieId: company.id },
+        { wording: 'Secrétaire', companieId: company.id },
+      ])
+    }
   }
 }
