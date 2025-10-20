@@ -1,5 +1,8 @@
 import { MultipartFile } from '@adonisjs/core/bodyparser'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+import User from './user.js'
+import Abonnement from './abonnement.js'
 import { DateTime } from 'luxon'
 export default class Companie extends BaseModel {
   @column({ isPrimary: true })
@@ -22,6 +25,12 @@ export default class Companie extends BaseModel {
 
   @column()
   declare avatar: MultipartFile | undefined
+
+  @hasMany(() => User)
+  declare users: HasMany<typeof User>
+
+  @hasMany(() => Abonnement)
+  declare abonnements: HasMany<typeof Abonnement>
 
   @column()
   declare logoUrl: string

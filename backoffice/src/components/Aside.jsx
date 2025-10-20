@@ -6,7 +6,7 @@ import axiosInstance from "../config/axiosConfig";
 import PropTypes from "prop-types";
 
 // Import des icônes modernes de Lucide
-import { X, Users, Package, CreditCard, KeyRound } from "lucide-react";
+import { X, Users, Package, KeyRound } from "lucide-react";
 
 function Aside({ isSidebarOpen, toggleSidebar }) {
   const navigate = useNavigate();
@@ -85,8 +85,8 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
               <li><span className="tw-px-3 tw-text-xs tw-font-semibold tw-uppercase tw-text-gray-400">Modules</span></li>
               <li><button onClick={() => handleNavigation("utilisateurs")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Users className="tw-h-5 tw-w-5 tw-mr-3" /><span>Utilisateurs</span></button></li>
               <li><button onClick={() => handleNavigation("packs")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Package className="tw-h-5 tw-w-5 tw-mr-3" /><span>Packs</span></button></li>
-              <li><button onClick={() => handleNavigation("abonnements")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><CreditCard className="tw-h-5 tw-w-5 tw-mr-3" /><span>Mes abonnements</span></button></li>
-              <li><button onClick={() => handleNavigation("permissions")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><KeyRound className="tw-h-5 tw-w-5 tw-mr-3" /><span>Rôle & Permissions</span></button></li>
+              {/* <li><button onClick={() => handleNavigation("permissions")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><KeyRound className="tw-h-5 tw-w-5 tw-mr-3" /><span>Rôle & Permissions</span></button></li> */}
+              <li><button onClick={() => handleNavigation("entreprises")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><KeyRound className="tw-h-5 tw-w-5 tw-mr-3" /><span>Entreprises</span></button></li>
             </ul>
           </nav>
         </div>

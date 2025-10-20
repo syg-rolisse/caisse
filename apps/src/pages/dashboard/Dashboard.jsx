@@ -1,15 +1,13 @@
-import {  useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSocket } from "../../context/socket.jsx"; // 👈 CORRECTION
-
-// Import de nos hooks basés sur useQuery
+import { useSocket } from "../../context/socket.jsx";
 import { useFetchSolde } from "../../hook/api/useFetchSolde";
 import { useFetchTypeDepense } from "../../hook/api/useFetchTypeDepense";
 import { useFetchUsers } from "../../hook/api/useFetchUsers";
-
-// Composants UI
+import { useFetchAbonnement } from "../../hook/api/useFetchAbonnement";
 import UserStatsCard from "../../components/dashboard/UserStatsCard";
 import BalanceCard from "../../components/dashboard/BalanceCard";
+import SubscriptionCountdownCard from "../../components/dashboard/SubscriptionCountdownCard";
 import TypeDepenseCard from "../../components/dashboard/TypeDepenseCard";
 import DashboardHeader from "../../components/dashboard/DashboardHeader";
 import ExpenseChart from "../../components/dashboard/ExpenseChart";
@@ -17,7 +15,7 @@ import { Loader2, ServerCrash } from "lucide-react";
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
-  const socket = useSocket(); // 👈 CORRECTION
+  const socket = useSocket();
   const user = JSON.parse(localStorage.getItem("user"));
   const companyId = user?.company?.id;
 
@@ -30,8 +28,12 @@ export default function Dashboard() {
   const { data: usersData, isLoading: isUsersLoading, isError: isUsersError, error: usersError } = 
     useFetchUsers({ companyId, page: 1, perpage: 9999 });
 
+  const { data: abonnementData, isLoading: isAbonnementLoading, isError: isAbonnementError, error: abonnementError } =
+    useFetchAbonnement({ companyId });
+
   const solde = soldeData?.solde ?? 0;
   const allUsers = usersData?.allUsers || [];
+  const allAbonnements = abonnementData?.abonnements || [];
 
   const allTypeDepenseWithStats = useMemo(() => {
     const rawData = typeDepenseData?.allTypeDepenses || [];
@@ -68,31 +70,32 @@ export default function Dashboard() {
     if (!socket || !companyId) return;
     socket.emit("join_company_room", companyId);
 
-    const invalidateFinancials = () => {
+    const invalidateAllDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ["solde", companyId] });
       queryClient.invalidateQueries({ queryKey: ["typeDepenses"] });
       queryClient.invalidateQueries({ queryKey: ["depenses"] });
-    };
-
-    const invalidateUsers = () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["abonnements"] });
     };
 
-    const financialEvents = ["type_depense_created", "type_depense_updated", "type_depense_deleted", "depense_created", "depense_updated", "depense_deleted", "appro_created", "appro_updated", "appro_deleted"];
-    const userEvents = ["user_created", "user_updated", "user_deleted"];
+    const dashboardEvents = [
+        "type_depense_created", "type_depense_updated", "type_depense_deleted", 
+        "depense_created", "depense_updated", "depense_deleted", 
+        "appro_created", "appro_updated", "appro_deleted",
+        "user_created", "user_updated", "user_deleted",
+        "abonnement_updated"
+    ];
 
-    financialEvents.forEach(event => socket.on(event, invalidateFinancials));
-    userEvents.forEach(event => socket.on(event, invalidateUsers));
+    dashboardEvents.forEach(event => socket.on(event, invalidateAllDashboardData));
 
     return () => {
-      financialEvents.forEach(event => socket.off(event, invalidateFinancials));
-      userEvents.forEach(event => socket.off(event, invalidateUsers));
+      dashboardEvents.forEach(event => socket.off(event, invalidateAllDashboardData));
     };
   }, [socket, companyId, queryClient]);
 
-  const isLoading = isSoldeLoading || isTypeDepenseLoading || isUsersLoading;
-  const isError = isSoldeError || isTypeDepenseError || isUsersError;
-  const anyError = soldeError || typeDepenseError || usersError;
+  const isLoading = isSoldeLoading || isTypeDepenseLoading || isUsersLoading || isAbonnementLoading;
+  const isError = isSoldeError || isTypeDepenseError || isUsersError || isAbonnementError;
+  const anyError = soldeError || typeDepenseError || usersError || abonnementError;
 
   if (isLoading) {
     return (
@@ -116,10 +119,15 @@ export default function Dashboard() {
     <div className="tw-p-4 md:tw-p-6 tw-mb-12">
       <DashboardHeader />
 
-      <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-6 tw-mb-8">
-        <UserStatsCard stats={userStats} />
-        <BalanceCard solde={solde} />
-      </div>
+<div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-6 tw-mb-8">
+  <div className="md:tw-col-span-2 xl:tw-col-span-2">
+    <UserStatsCard stats={userStats} />
+  </div>
+  
+  <BalanceCard solde={solde} />
+
+  <SubscriptionCountdownCard abonnements={allAbonnements} />
+</div>
 
       <div className="tw-mb-8">
         <ExpenseChart data={allTypeDepenseWithStats} />

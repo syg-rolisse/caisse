@@ -113,15 +113,7 @@ export default function IndexPermission() {
                         )}
                       </div>
                       <div className="tw-p-4 tw-grid tw-grid-cols-2 tw-gap-4">
-                        <div>
-                          <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Général</h4>
-                          <ul className="tw-space-y-1">
-                            <PermissionItem label="Voir Tableau de bord" hasPermission={permission.readDashboard} />
-                            <PermissionItem label="Gérer Permissions" hasPermission={permission.updatePermission} />
-                            <PermissionItem label="Renouveler l'abonnement" hasPermission={permission.createAbonnement} />
-                            <PermissionItem label="Voir les abonnements" hasPermission={permission.readAbonnement} />
-                          </ul>
-                        </div>
+                       
                         <div>
                           <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Utilisateurs</h4>
                           <ul className="tw-space-y-1">
@@ -131,24 +123,8 @@ export default function IndexPermission() {
                             <PermissionItem label="Supprimer" hasPermission={permission.deleteUser} />
                           </ul>
                         </div>
-                        <div>
-                          <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Approvisionnements</h4>
-                          <ul className="tw-space-y-1">
-                            <PermissionItem label="Créer" hasPermission={permission.createAppro} />
-                            <PermissionItem label="Lire" hasPermission={permission.readAppro} />
-                            <PermissionItem label="Modifier" hasPermission={permission.updateAppro} />
-                            <PermissionItem label="Supprimer" hasPermission={permission.deleteAppro} />
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Dépenses & Types</h4>
-                           <ul className="tw-space-y-1">
-                            <PermissionItem label="Créer" hasPermission={permission.createDepense || permission.createTypeDeDepense} />
-                            <PermissionItem label="Lire" hasPermission={permission.readDepense || permission.readTypeDeDepense} />
-                            <PermissionItem label="Modifier" hasPermission={permission.updateDepense || permission.updateTypeDeDepense} />
-                            <PermissionItem label="Supprimer" hasPermission={permission.deleteDepense || permission.deleteTypeDeDepense} />
-                          </ul>
-                        </div>
+                       
+                       
                         <div>
                           <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Packs</h4>
                            <ul className="tw-space-y-1">
@@ -159,15 +135,7 @@ export default function IndexPermission() {
                           </ul>
                         </div>
                         
-                         <div className="">
-                          <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Actions sur Dépenses</h4>
-                           <ul className="tw-space-y-1">
-                            <PermissionItem label="Payer" hasPermission={permission.payeDepense} />
-                            <PermissionItem label="Rejeter" hasPermission={permission.rejectDepense} />
-                            <PermissionItem label="Bloquer" hasPermission={permission.bloqueDepense} />
-                            <PermissionItem label="Décharger" hasPermission={permission.dechargeDepense} />
-                          </ul>
-                        </div>
+                        
                       </div>
                     </div>
                   ))}

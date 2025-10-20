@@ -2,20 +2,19 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchUsers({ page, perpage, companyId }) {
+export function useFetchUsers() {
   const handleError = useHandleError();
 
   return useQuery({
-    queryKey: ["users", companyId, page, perpage],
+    queryKey: ["users"],
     
     queryFn: async () => {
       const response = await axiosInstance.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/all`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/allUserSys`,
         {
           params: {
-            companieId: companyId,
-            page: page,
-            perpage: perpage,
+            page: 1,
+            perpage: 1000,
           },
         }
       );
@@ -26,7 +25,7 @@ export function useFetchUsers({ page, perpage, companyId }) {
       };
     },
     
-    enabled: !!companyId,
+    enabled: true,
 
     onError: handleError,
   });

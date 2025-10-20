@@ -13,7 +13,7 @@ function AllUser() {
   const [perpage, setPerPage] = useState(5);
   const [currentUserId, setCurrentUserId] = useState();
   const [currentDeleteUserId, setDeleteUserId] = useState();
-  const [status] = useState(false);
+  // const [status] = useState(false);
   const [errorMessage, setErrorMessage] = useState();
 
   const fetchUsers = useMutation(

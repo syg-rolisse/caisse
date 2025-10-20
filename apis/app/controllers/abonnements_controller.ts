@@ -57,22 +57,29 @@ export default class AbonnementsController {
       }
 
       const payload = await request.validateUsing(renewAbonnementValidator)
-
-      // 1. Récupérer les informations du pack sélectionné
       const selectedPack = await Pack.findOrFail(payload.packId)
 
-      // 2. Calculer les nouvelles dates
-      const dateDebut = DateTime.now()
+      const previousAbonnement = await Abonnement.query()
+        .where('companieId', companieId)
+        .orderBy('dateFin', 'desc')
+        .first()
+
+      let dateDebut: DateTime
+
+      if (previousAbonnement) {
+        // Si un abonnement existe, le nouveau commence à la fin du précédent ou aujourd'hui (la date la plus tardive)
+        const today = DateTime.now()
+        dateDebut = DateTime.max(previousAbonnement.dateFin, today)
+      } else {
+        // S'il n'y a aucun abonnement, le nouveau commence maintenant
+        dateDebut = DateTime.now()
+      }
+
       const dateFin = dateDebut.plus({ days: selectedPack.duree })
 
-      // 3. Chercher un abonnement existant pour cette compagnie ou en créer un nouveau
-      const abonnement = await Abonnement.firstOrNew(
-        { companieId: companieId }, // Critère de recherche
-        { userId: payload.userId } // Données à utiliser si un nouvel enregistrement est créé
-      )
-
-      // 4. Fusionner les nouvelles informations
-      abonnement.merge({
+      // Création d'un NOUVEL enregistrement d'abonnement
+      const newAbonnement = await Abonnement.create({
+        companieId: Number(companieId),
         packId: selectedPack.id,
         userId: payload.userId,
         packLibelle: selectedPack.libelle,
@@ -80,17 +87,12 @@ export default class AbonnementsController {
         packMontant: selectedPack.montant,
         dateDebut: dateDebut,
         dateFin: dateFin,
-        statut: true, // Un renouvellement active l'abonnement
       })
 
-      // 5. Sauvegarder l'abonnement (crée ou met à jour)
-      await abonnement.save()
-
-      // 6. Émettre l'événement socket
       await emitAbonnementUpdate(companieId, 'abonnement_updated')
 
       return response.ok({
-        abonnement,
+        abonnement: newAbonnement,
         message: 'Abonnement renouvelé avec succès.',
       })
     } catch (error) {

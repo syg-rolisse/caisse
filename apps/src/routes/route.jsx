@@ -7,7 +7,6 @@ import IndexDepense from "../pages/dashboard/depense/IndexDepense";
 import IndexSortie from "../pages/dashboard/mouvement-caisse/IndexMouvement";
 import IndexAbonnement from "../pages/dashboard/abonnement/IndexAbonnement";
 // import IndexPack from "../pages/dashboard/pack/IndexPack";
-import Editions from "../pages/dashboard/Editions";
 import IndexPermission from "../pages/dashboard/permissions/IndexPermission";
 import IndexTypeDepense from "../pages/dashboard/type-depense/IndexTypeDepense";
 import IndexUser from "../pages/dashboard/users/IndexUser";
@@ -42,7 +41,6 @@ const routes = [
         element: <MainLayout />,
         children: [
           { path: "dashboard", element: <Dashboard /> },
-          { path: "editions", element: <Editions /> },
           { path: "approvisionnements", element: <IndexApprovisionnement /> },
           { path: "sorties", element: <IndexSortie /> },
           { path: "depenses", element: <IndexDepense /> },
