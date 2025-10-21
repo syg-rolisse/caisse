@@ -402,6 +402,7 @@ export default class UsersController {
       if (!userId || !token || !email) {
         return response.badRequest({ status: 400, message: 'Paramètres manquants.' })
       }
+      console.log(request.qs())
 
       const userToken = await VerifMailToken.query().where({ userId, token, email }).first()
 
@@ -432,6 +433,7 @@ export default class UsersController {
         return response.badRequest({ status: 400, message: 'Token non reconnu !' })
       }
     } catch (error) {
+      console.log(error?.message)
       const message = processErrorMessages(error)
       return response.badRequest({ status: 400, error: message })
     }
