@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { CSSTransition, SwitchTransition } from "react-transition-group";
 import axiosInstance from "../../config/axiosConfig";
 import Company from "./Company";
@@ -22,42 +22,12 @@ function AuthContainer() {
   const [userId, setUserId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const img = new Image();
-    img.src = "assets/images/media/caisse.jpg";
-    img.onload = () => {
-      setIsLoading(true);
-      const urlParams = new URLSearchParams(window.location.search);
-      const tokenParam = urlParams.get("token");
-      const emailParam = urlParams.get("email");
-      const userIdParam = urlParams.get("userId");
-      const renderParam = urlParams.get("render");
-
-      if (tokenParam) setToken(tokenParam);
-      if (emailParam) setEmail(emailParam);
-      if (userIdParam) setUserId(userIdParam);
-
-      if (renderParam === "register" && tokenParam && emailParam && userIdParam) {
-        navigate(window.location.pathname, { replace: true });
-        activeAccount.mutate({ token, email, userId });
-      }
-
-      if (renderParam === "reset-password" && tokenParam && emailParam && userIdParam) {
-        setActiveComponent("reset-password");
-      }
-
-      setTimeout(() => setIsLoading(false), 500);
-    };
-  }, []);
+  // const navigate = useNavigate();
 
   const activeAccount = useMutation(
     ({ token, email, userId }) =>
       axiosInstance.post(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/api/v1/activeAccount?token=${token}&email=${email}&userId=${userId}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/activeAccount?token=${token}&email=${email}&userId=${userId}`
       ),
     {
       onSuccess: (response) => {
@@ -65,11 +35,49 @@ function AuthContainer() {
         setTimeout(() => setActiveComponent("login"), 2000);
       },
       onError: (error) => {
-        const errorMessage = error?.response?.data?.error || error?.response?.data?.message;
+        const errorMessage =
+          error?.response?.data?.error || error?.response?.data?.message;
         toast.error(errorMessage, { duration: 5000 });
       },
     }
   );
+
+  useEffect(() => {
+    setIsLoading(true);
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const tokenParam = urlParams.get("token");
+    const emailParam = urlParams.get("email");
+    const userIdParam = urlParams.get("userId");
+    const renderParam = urlParams.get("render");
+
+    // Stocke dans le state uniquement pour reset-password
+    if (tokenParam) setToken(tokenParam);
+    if (emailParam) setEmail(emailParam);
+    if (userIdParam) setUserId(userIdParam);
+
+    console.log("Paramètres URL :", {
+      renderParam,
+      tokenParam,
+      emailParam,
+      userIdParam,
+    });
+
+    if (renderParam === "register" && tokenParam && emailParam && userIdParam) {
+      // Appelle directement mutate avec les params (pas le state)
+      activeAccount.mutate({
+        token: tokenParam,
+        email: emailParam,
+        userId: userIdParam,
+      });
+    }
+
+    if (renderParam === "reset-password" && tokenParam && emailParam && userIdParam) {
+      setActiveComponent("reset-password");
+    }
+
+    setTimeout(() => setIsLoading(false), 500);
+  }, []);
 
   const renderComponent = () => {
     switch (activeComponent) {
@@ -80,7 +88,14 @@ function AuthContainer() {
       case "forgot":
         return <ForgotPassword onSwitch={setActiveComponent} />;
       case "reset-password":
-        return <RestPassword token={token} email={email} userId={userId} onSwitch={setActiveComponent} />;
+        return (
+          <RestPassword
+            token={token}
+            email={email}
+            userId={userId}
+            onSwitch={setActiveComponent}
+          />
+        );
       default:
         return <Login onSwitch={setActiveComponent} />;
     }
@@ -111,7 +126,7 @@ function AuthContainer() {
 
         <div className="tw-relative tw-z-10 tw-flex tw-min-h-screen tw-items-center tw-justify-center">
           <div className="tw-w-full tw-max-w-md max-sm:tw-max-w-[90%]">
-            <div className="tw-overflow-hidden max-sm:tw-p-4 tw-rounded-2xl tw-border tw-border-slate-700  tw-shadow-2xl tw-backdrop-blur-xl">
+            <div className="tw-overflow-hidden max-sm:tw-p-4 tw-rounded-2xl tw-border tw-border-slate-700 tw-shadow-2xl tw-backdrop-blur-xl">
               <div className="sm:tw-p-10">
                 <div className="tw-flex tw-justify-center tw-absolute -tw-top-8 tw-left-0 tw-right-0">
                   <img
@@ -120,15 +135,6 @@ function AuthContainer() {
                     className="tw-h-52 tw-w-auto tw-opacity-80 tw-object-contain"
                   />
                 </div>
-
-                {/* <div className="tw-mb-8 tw-text-center">
-                  <h1 className="tw-text-2xl tw-font-bold tw-text-slate-100">
-                    Bienvenue
-                  </h1>
-                  <p className="tw-mt-1 tw-text-sm tw-text-slate-400">
-                    Connectez-vous pour accéder à votre espace.
-                  </p>
-                </div> */}
 
                 <SwitchTransition mode="out-in">
                   <CSSTransition
