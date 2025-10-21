@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Mail, Shield, UserCheck, UserX, Calendar, Pencil, Trash2, } from 'lucide-react';
+import { Mail, Shield, UserCheck, UserX, Calendar, Pencil, Trash2, MailCheck, MailX } from 'lucide-react';
 
 export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete }) {
   const formattedDate = new Date(user.createdAt).toLocaleDateString("fr-CA");
@@ -42,10 +42,14 @@ export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete })
             )}
             <span>Statut : <span className={`tw-font-semibold ${user.status ? 'tw-text-green-600' : 'tw-text-red-600'}`}>{user.status ? 'Actif' : 'Inactif'}</span></span>
           </div>
-          {/* <div className="tw-flex tw-items-center">
-            <Briefcase size={14} className="tw-mr-2 tw-text-gray-400" />
-            <span>Entreprise : <span className="tw-font-medium tw-text-gray-600">{user.Companies?.companyName || 'Non renseigné'}</span></span>
-          </div> */}
+          <div className="tw-flex tw-items-center">
+            {user.validEmail ? (
+              <MailCheck size={14} className="tw-mr-2 tw-text-green-500" />
+            ) : (
+              <MailX size={14} className="tw-mr-2 tw-text-red-500" />
+            )}
+            <span>Email : <span className={`tw-font-semibold ${user.validEmail ? 'tw-text-green-600' : 'tw-text-red-600'}`}>{user.validEmail ? 'Validé' : 'Non validé'}</span></span>
+          </div>
           <div className="tw-flex tw-items-center">
             <Calendar size={14} className="tw-mr-2 tw-text-gray-400" />
             <span>Inscrit le : <span className="tw-font-medium tw-text-gray-600">{formattedDate}</span></span>
