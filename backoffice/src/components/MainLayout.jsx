@@ -57,7 +57,7 @@ const MainLayout = () => {
       >
         <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         
-        <main className="tw-p-6">
+        <main className="tw-p-2">
           <Outlet />
         </main>
         

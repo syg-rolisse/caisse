@@ -116,7 +116,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="tw-p-4 md:tw-p-6 tw-mb-12">
+    <div className="tw-p-4 max-sm:tw-p-3 tw-mb-12">
+  
       <DashboardHeader />
 
 <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-6 tw-mb-8">
