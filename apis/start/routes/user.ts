@@ -9,10 +9,12 @@ const PATH_TRAVERSAL_REGEX = /(?:^|[\\/])\.\.(?:[\\/]|$)/
 router
   .group(() => {
     router.get('user/all', [UserController, 'all'])
-    router.get('allUserSys', [UserController, 'allUserSys'])
+    router.get('allUserSys', [UserController, 'allUserSys']).use(middleware.verifySourceAndUser())
     router.get('user', [UserController, 'show'])
     router.get('company', [UserController, 'showCompnany'])
-    router.get('allCompanies', [UserController, 'allCompanies'])
+    router
+      .get('allCompanies', [UserController, 'allCompanies'])
+      .use(middleware.verifySourceAndUser())
 
     router.put('user', [UserController, 'update'])
     router.put('company', [UserController, 'updateCompany'])

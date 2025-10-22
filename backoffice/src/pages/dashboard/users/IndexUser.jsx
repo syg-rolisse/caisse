@@ -141,10 +141,10 @@ export default function IndexUser() {
                       <UserCard
                         key={user.id}
                         user={user}
-                        canEdit={can('updateUser')}
-                        canDelete={can('deleteUser')}
-                        onEdit={() => { setCurrentUser(user); setShowModal(true); }}
-                        onDelete={() => { setCurrentUser(user); setShowDeleteModal(true); }}
+                        // canEdit={can('updateUser')}
+                        // canDelete={can('deleteUser')}
+                        // onEdit={() => { setCurrentUser(user); setShowModal(true); }}
+                        // onDelete={() => { setCurrentUser(user); setShowDeleteModal(true); }}
                       />
                     ))}
                   </div>

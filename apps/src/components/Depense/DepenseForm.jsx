@@ -30,12 +30,13 @@ function DepenseForm({ depense, onSuccess, onClose }) {
     formState: { errors },
   } = useForm({ defaultValues: defaultFormValues });
 
+  const watchedFacture = watch("facture");
+  const newFactureName = watchedFacture && watchedFacture.length > 0 ? watchedFacture[0].name : null;
+
   const { mutate, isLoading } = useMutation({
     mutationFn: ({ data, depenseId }) => {
       const url = depenseId
-        ? `${
-            import.meta.env.VITE_BACKEND_URL
-          }/api/v1/depense?depenseId=${depenseId}&userConnectedId=${user?.id}`
+        ? `${import.meta.env.VITE_BACKEND_URL}/api/v1/depense?depenseId=${depenseId}&userConnectedId=${user?.id}`
         : `${import.meta.env.VITE_BACKEND_URL}/api/v1/depense`;
       const method = depenseId ? axiosInstance.put : axiosInstance.post;
       return method(url, data);
@@ -118,15 +119,17 @@ function DepenseForm({ depense, onSuccess, onClose }) {
           errors={errors}
         />
         <div>
-          <label htmlFor="facture" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700">
+          <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700">
             Facture (PDF optionnel)
           </label>
-          {depense?.factureUrl && (
+          
+          {/* Affiche la facture existante si aucune nouvelle facture n'est sélectionnée */}
+          {depense?.factureUrl && !newFactureName && (
             <div className="tw-mt-2 tw-p-3 tw-rounded-md tw-bg-green-50 tw-border tw-border-green-200 tw-flex tw-items-center tw-justify-between">
-              <div className="tw-flex tw-items-center">
-                <FileText className="tw-w-5 tw-h-5 tw-text-green-600 tw-mr-2" />
-                <span className="tw-text-sm tw-font-medium tw-text-green-800">
-                  Facture jointe
+              <div className="tw-flex tw-items-center tw-min-w-0">
+                <FileText className="tw-w-5 tw-h-5 tw-text-green-600 tw-mr-2 tw-flex-shrink-0" />
+                <span className="tw-text-sm tw-font-medium tw-text-green-800 tw-truncate">
+                  Facture précédemment jointe
                 </span>
               </div>
               <a
@@ -136,36 +139,54 @@ function DepenseForm({ depense, onSuccess, onClose }) {
                 className="tw-inline-flex tw-items-center tw-px-2.5 tw-py-1.5 tw-border tw-border-transparent tw-text-xs tw-font-medium tw-rounded tw-text-green-700 tw-bg-green-100 hover:tw-bg-green-200"
               >
                 <Download size={14} className="tw-mr-1" />
-                Voir le fichier
+                Voir
               </a>
             </div>
           )}
-          <div className="tw-mt-2 tw-flex tw-items-center tw-justify-center tw-px-6 tw-pt-5 tw-pb-6 tw-border-2 tw-border-gray-300 tw-border-dashed tw-rounded-md">
-            <div className="tw-space-y-1 tw-text-center">
-              <Paperclip className="tw-mx-auto tw-h-12 tw-w-12 tw-text-gray-400" />
-              <div className="tw-flex tw-text-sm tw-text-gray-600">
-                <label
-                  htmlFor="facture"
-                  className="tw-relative tw-cursor-pointer tw-rounded-md tw-bg-white tw-font-medium tw-text-orange-600 hover:tw-text-orange-500 focus-within:tw-outline-none"
+
+          {/* Zone de téléversement interactive */}
+          <div className="tw-mt-2 tw-flex tw-items-center tw-justify-center tw-px-6 tw-py-5 tw-border-2 tw-border-gray-300 tw-border-dashed tw-rounded-md">
+            {newFactureName ? (
+              <div className="tw-w-full tw-flex tw-items-center tw-justify-between">
+                <div className="tw-flex tw-items-center tw-min-w-0">
+                  <FileText className="tw-w-6 tw-h-6 tw-text-orange-500 tw-mr-3 tw-flex-shrink-0" />
+                  <span className="tw-text-sm tw-text-gray-700 tw-truncate" title={newFactureName}>{newFactureName}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setValue("facture", null)}
+                  className="tw-ml-4 tw-p-1 tw-rounded-full hover:tw-bg-red-100 tw-text-red-500"
+                  aria-label="Retirer le fichier"
                 >
-                  <span>
-                    {depense?.factureUrl ? "Remplacer la facture" : "Joindre une facture"}
-                  </span>
-                  <input
-                    id="facture"
-                    type="file"
-                    className="tw-sr-only"
-                    accept=".pdf"
-                    {...register("facture")}
-                  />
-                </label>
+                  <X size={18} />
+                </button>
               </div>
-              <p className="tw-text-xs tw-text-gray-500">
-                Fichier PDF uniquement
-              </p>
-            </div>
+            ) : (
+              <div className="tw-space-y-1 tw-text-center">
+                <Paperclip className="tw-mx-auto tw-h-12 tw-w-12 tw-text-gray-400" />
+                <div className="tw-flex tw-text-sm tw-text-gray-600">
+                  <label
+                    htmlFor="facture"
+                    className="tw-relative tw-cursor-pointer tw-rounded-md tw-bg-white tw-font-medium tw-text-orange-600 hover:tw-text-orange-500 focus-within:tw-outline-none"
+                  >
+                    <span>
+                      {depense?.factureUrl ? "Remplacer la facture" : "Joindre une facture"}
+                    </span>
+                    <input
+                      id="facture"
+                      type="file"
+                      className="tw-sr-only"
+                      accept=".pdf"
+                      {...register("facture")}
+                    />
+                  </label>
+                </div>
+                <p className="tw-text-xs tw-text-gray-500">Fichier PDF uniquement</p>
+              </div>
+            )}
           </div>
         </div>
+
         {depense?.id && (
           <div className="tw-relative tw-flex tw-items-start">
             <div className="tw-flex tw-h-6 tw-items-center">
@@ -183,6 +204,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
             </div>
           </div>
         )}
+
         <div className="tw-pt-5 tw-flex tw-justify-between tw-items-center">
           <button
             type="button"

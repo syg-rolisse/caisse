@@ -6,6 +6,7 @@ import Pagination from "../../../components/Pagination";
 import Spinner from "../../../components/Spinner";
 import DeleteUser from "../../../components/User/DeleteUser";
 import UserForm from "../../../components/User/UserForm";
+import UserRoleForm from "../../../components/User/UserRoleForm";
 import WelcomeModal from "../../../components/WelcomeModal";
 import UserCard from "../../../components/User/UserCard"; // 👈 Importer le nouveau composant
 import { useFetchUsers } from "../../../hook/api/useFetchUsers";
@@ -20,6 +21,7 @@ export default function IndexUser() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const socket = useSocket();
@@ -54,6 +56,7 @@ export default function IndexUser() {
   const handleSuccess = useCallback(() => {
     setShowModal(false);
     setShowDeleteModal(false);
+    setShowRoleModal(false);
     setCurrentUser(null);
     queryClient.invalidateQueries({ queryKey: ["users"] });
   }, [queryClient]);
@@ -86,6 +89,9 @@ export default function IndexUser() {
     <div>
       <WelcomeModal isActive={showModal} onClose={() => setShowModal(false)}>
         <UserForm user={currentUser} onSuccess={handleSuccess} onClose={() => setShowModal(false)} />
+      </WelcomeModal>
+      <WelcomeModal isActive={showRoleModal} onClose={() => setShowRoleModal(false)}>
+        <UserRoleForm user={currentUser} onSuccess={handleSuccess} onClose={() => setShowRoleModal(false)} />
       </WelcomeModal>
       <WelcomeModal isActive={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
         <DeleteUser user={currentUser} onSuccess={handleSuccess} onClose={() => setShowDeleteModal(false)} />
@@ -141,9 +147,11 @@ export default function IndexUser() {
                       <UserCard
                         key={user.id}
                         user={user}
-                        canEdit={can('updateUser')}
+                        // canEdit={can('updateUser')}
                         canDelete={can('deleteUser')}
-                        onEdit={() => { setCurrentUser(user); setShowModal(true); }}
+                        canChangeRole={can('updateUser')}
+                        // onEdit={() => { setCurrentUser(user); setShowModal(true); }}
+                        onChangeRole={() => { setCurrentUser(user); setShowRoleModal(true); }}
                         onDelete={() => { setCurrentUser(user); setShowDeleteModal(true); }}
                       />
                     ))}

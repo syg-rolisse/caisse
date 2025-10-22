@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
-import { Mail, Shield, UserCheck, UserX, Calendar, Pencil, Trash2, MailCheck, MailX } from 'lucide-react';
+import { Mail, Shield, UserCheck, UserX, Calendar, MailCheck, MailX } from 'lucide-react';
 
-export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete }) {
+export default function UserCard({ user }) {
   const formattedDate = new Date(user.createdAt).toLocaleDateString("fr-CA");
 
   const getDefaultAvatar = () => {
@@ -57,7 +57,7 @@ export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete })
         </div>
       </div>
 
-      {(canEdit || canDelete) && (
+      {/* {(canEdit || canDelete) && (
         <div className="tw-p-3 tw-bg-gray-50 tw-border-t tw-border-gray-100 tw-flex tw-justify-end tw-gap-2">
           {canEdit && (
             <button onClick={onEdit} className="btn btn-icon btn-sm btn-primary-transparent rounded-pill tw-flex tw-items-center tw-justify-center" title="Modifier">
@@ -70,15 +70,11 @@ export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete })
             </button>
           )}
         </div>
-      )}
+      )} */}
     </div>
   );
 };
 
 UserCard.propTypes = {
   user: PropTypes.object.isRequired,
-  onEdit: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  canEdit: PropTypes.bool,
-  canDelete: PropTypes.bool,
 };

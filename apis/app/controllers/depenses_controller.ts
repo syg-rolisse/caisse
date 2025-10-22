@@ -298,7 +298,8 @@ export default class DepensesController {
       if (await bouncer.with('SortiePolicy').denies('reject')) {
         return response.forbidden("Désolé, vous n'êtes pas autorisé à rejeter une dépense.")
       }
-      const { depenseId, rejetMessage, rejeter } = request.qs()
+      const { depenseId } = request.qs()
+      const { rejetMessage, rejeter } = request.body()
 
       // GUARD CLAUSE: Vérifier que la dépense existe
       const depense = await Depense.query().where({ id: depenseId }).preload('Mouvements').first()

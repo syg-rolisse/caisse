@@ -11,4 +11,5 @@ router
     router.delete('pack', [PacksController, 'delete'])
   })
   .use(middleware.auth())
+  .use(middleware.verifySourceAndUser())
   .prefix('api/v1/')

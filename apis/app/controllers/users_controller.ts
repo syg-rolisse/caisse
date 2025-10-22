@@ -17,6 +17,9 @@ import { seedTypeDeDepense } from '../../helpers/seed_type_de_depense.js'
 import { seedPermission } from '../../helpers/seed_permission.js'
 import { UpdateCompanieValidator } from '#validators/companie'
 import Ws from '#services/ws'
+import Pack from '#models/pack'
+import Abonnement from '#models/abonnement'
+import { DateTime } from 'luxon'
 
 // Fonction helper pour notifier les clients d'une mise à jour des utilisateurs
 async function emitUserUpdate(companyId: number, eventName: string) {
@@ -139,6 +142,24 @@ export default class UsersController {
             .subject('CAISSE | VALIDATION DE MAIL')
             .embed('public/logo/logo.png', 'logo')
             .htmlView('emails/verify_email', { link, texto })
+        })
+
+        const selectedPack = await Pack.query().where('libelle', 'Démo').firstOrFail()
+        let dateDebut: DateTime = DateTime.now()
+
+        const dateFin = dateDebut.plus({ days: selectedPack.duree })
+
+        // Ajout d'un abonnement gratuit de 30 jours
+
+        await Abonnement.create({
+          companieId: Number(company.id),
+          packId: selectedPack.id,
+          userId: user.id,
+          packLibelle: selectedPack.libelle,
+          packDescription: selectedPack.description,
+          packMontant: selectedPack.montant,
+          dateDebut: dateDebut,
+          dateFin: dateFin,
         })
 
         await trx.commit()
@@ -325,41 +346,34 @@ export default class UsersController {
   }
 
   // 9. changeAccountStatus()
-  async changeAccountStatus({ request, response }: HttpContext) {
+  async changeAccountStatus({ auth, request, response }: HttpContext) {
     const trx = await db.transaction()
+    const userConnected = auth.user!
     try {
-      const { userId, userConnectedId } = request.qs()
-      const { profilId, status } = request.body()
-
-      if (profilId === undefined || status === undefined) {
-        throw new Error('Profil ID et Status sont requis.')
+      const { userId, profilId, status } = request.body()
+      if (profilId === undefined || status === undefined || userId === undefined) {
+        throw new Error("Le profil, le statut et l'utilisateur sont requis.")
       }
-
       const user = await User.findOrFail(userId, { client: trx })
-      const userConnected = await User.findOrFail(userConnectedId, { client: trx })
-
       if (userConnected.profilId !== 1) {
         await trx.rollback()
         return response.forbidden("Seul l'administrateur est autorisé à modifier les statuts.")
       }
-
       if (user.profilId === 1) {
         await trx.rollback()
-        return response.forbidden("Le profil de l'admin ne peut être modifié.")
+        return response.forbidden(
+          'Le profil de super admin ne peut être modifié pour des raison de sécurité.'
+        )
       }
-
       user.merge({ status: status, profilId: profilId })
       await user.save()
-
       await trx.commit()
-
       if (user.companieId) {
         await emitUserUpdate(user.companieId, 'user_updated')
       }
-
       return response.ok({
         status: 200,
-        message: status ? 'Compte activé avec succès' : 'Compte désactivé avec succès',
+        message: 'Modification éffectuée avec succès.',
       })
     } catch (error) {
       await trx.rollback()
@@ -379,8 +393,15 @@ export default class UsersController {
       }
 
       const { userId } = request.qs()
-      const user = await User.findOrFail(userId)
+      const user = await User.query().where('id', userId).preload('Depense').firstOrFail()
       const companyId = user.companieId
+
+      if (Array.isArray(user.Depense) && user.Depense.length > 0) {
+        return response.badRequest({
+          status: 400,
+          error: "Vueillez d'abord supprimer les dépenses liées à ce compte.",
+        })
+      }
 
       await user.delete()
 
@@ -390,6 +411,7 @@ export default class UsersController {
 
       return response.ok({ status: 200, message: 'Utilisateur supprimé avec succès' })
     } catch (error) {
+      console.log(error?.message)
       const message = processErrorMessages(error)
       return response.badRequest({ status: 400, error: message })
     }

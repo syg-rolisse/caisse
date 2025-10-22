@@ -4,13 +4,10 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import InputField from "../InputField"; // Notre composant réutilisable
 import { useHandleError } from "../../hook/useHandleError";
 import { CheckCircle, Loader2, X } from "lucide-react";
 
 const defaultFormValues = {
-  fullName: "",
-  email: "",
   profilId: "",
   status: true,
 };
@@ -27,12 +24,10 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
   } = useForm({ defaultValues: defaultFormValues });
 
   const { mutate, isLoading } = useMutation({
-    mutationFn: ({ data, userId }) => {
+    mutationFn: ({ data }) => {
       // Logique pour déterminer l'URL et la méthode
-      const url = userId
-        ? `${import.meta.env.VITE_BACKEND_URL}/api/v1/user?userId=${userId}&userConnectedId=${loggedInUser?.id}`
-        : `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/createUser`;
-      const method = userId ? axiosInstance.put : axiosInstance.post;
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/changeAccountStatus`
+      const method = axiosInstance.put;
       return method(url, data);
     },
     onSuccess: (response) => {
@@ -44,33 +39,22 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
 
   const onSubmit = (data) => {
     if (!loggedInUser) {
-      toast.error("Utilisateur non trouvé.");
+      toast.error("Il semble que vous êtes déconnecté.");
       return;
     }
 
     const payload = {
       ...data,
-      companieId: loggedInUser.company.id,
+      userId: userToEdit.id,
     };
-    
-    // Si on est en mode création, l'email est requis
-    if (!userToEdit) {
-      if (!data.email) {
-        toast.error("L'adresse e-mail est requise pour la création.");
-        return;
-      }
-    }
 
-    mutate({ data: payload, userId: userToEdit?.id });
+    mutate({ data: payload});
   };
 
   // Pré-remplir le formulaire si un utilisateur est passé en props
   useEffect(() => {
     if (userToEdit) {
-      console.log(userToEdit);
       reset({
-        fullName: userToEdit.fullName || "",
-        email: userToEdit.email || "",
         profilId: userToEdit.Profil?.id || "",
         status: userToEdit.status,
       });
@@ -90,32 +74,6 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
         </p>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-6">
-        <InputField
-          id="fullName"
-          label="Nom & Prénom"
-          placeholder="Ex: John Doe"
-          disabled={userToEdit}
-          {...register("fullName", { required: "Le nom complet est requis" })}
-          errors={errors}
-        />
-        
-        <InputField
-          id="email"
-          label="Adresse e-mail"
-          type="email"
-          placeholder="Ex: john.doe@example.com"
-          {...register("email", { 
-            // L'email est requis uniquement à la création
-            required: !userToEdit ? "L'adresse e-mail est requise" : false,
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: "Adresse e-mail invalide",
-            },
-           })}
-          errors={errors}
-          // L'email ne peut pas être modifié
-          disabled={!!userToEdit} 
-        />
         
         <div>
           <label htmlFor="profilId" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700">
@@ -126,8 +84,7 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
             className={`tw-mt-1 tw-block tw-w-full tw-px-3 tw-py-2 tw-border ${errors.profilId ? 'tw-border-red-500' : 'tw-border-gray-300'} tw-rounded-md tw-shadow-sm focus:tw-outline-none focus:tw-ring-orange-500 focus:tw-border-orange-500 sm:tw-text-sm`}
             {...register("profilId", { required: "Le rôle est requis" })}
           >
-            <option value="" disabled>Sélectionner un rôle</option>
-            <option value="1">Super Admin</option>
+            <option value="">Sélectionner un rôle</option>
             <option value="2">Admin</option>
             <option value="3">Employé</option>
             <option value="4">Secrétaire</option>

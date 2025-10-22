@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { RiEyeLine, RiEyeOffLine } from "react-icons/ri";
 import "react-phone-input-2/lib/style.css";
 import axiosInstance from "../../config/axiosConfig";
+import { showErrorToast } from "../../utils/showErrorToast";
 
 function RestPassword({ token, email, userId, onSwitch }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -40,20 +41,7 @@ function RestPassword({ token, email, userId, onSwitch }) {
         onSwitch("login");
       },
       onError: (error) => {
-        const validationErrors = error?.response?.data?.error;
-
-        if (validationErrors && Array.isArray(validationErrors)) {
-          validationErrors.forEach((error) => {
-            toast.error(error.message, { duration: 12000 });
-          });
-        } else {
-          toast.error(
-            error?.response?.data ||
-              error?.response?.data?.message ||
-              error?.response?.data?.error,
-            { duration: 12000 }
-          );
-        }
+        showErrorToast(error);
       },
     }
   );
@@ -73,7 +61,6 @@ function RestPassword({ token, email, userId, onSwitch }) {
         //onSwitch("login");
       },
       onError: (error) => {
-        console.log(error);
 
         const validationErrors = error?.response?.data?.error;
 

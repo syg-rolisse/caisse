@@ -7,6 +7,7 @@ import { RiEyeLine, RiEyeOffLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../config/axiosConfig";
 import { useAuth } from "../../context/AuthContext"; // 👈 1. Importer notre hook d'authentification
+import { showErrorToast } from "../../utils/showErrorToast";
 
 function Login({ onSwitch }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,14 +16,6 @@ function Login({ onSwitch }) {
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
-  };
-
-  const handleError = (error) => {
-    const errorMessage =
-      error?.response?.data?.error ||
-      error?.response?.data?.message ||
-      "Une erreur inattendue est survenue.";
-    toast.error(errorMessage, { duration: 5000 });
   };
 
   const {
@@ -50,7 +43,9 @@ function Login({ onSwitch }) {
         navigate("/packs"); // ou sur le dashboard
       }, 500);
     },
-    onError: handleError,
+    onError: (error) => {
+      showErrorToast(error);
+    },
   });
 
   const onSubmit = (data) => {
@@ -66,7 +61,10 @@ function Login({ onSwitch }) {
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="row gy-3 tw-mb-8">
         <div className="col-xl-12 mt-0">
-          <label htmlFor="signin-username" className="form-label tw-text-slate-200">
+          <label
+            htmlFor="signin-username"
+            className="form-label tw-text-slate-200"
+          >
             Nom d&apos;utilisateur
           </label>
           <input
@@ -132,7 +130,7 @@ function Login({ onSwitch }) {
         </div>
       </form>
 
-      <div className="text-center ">
+      {/* <div className="text-center ">
         <p className="fs-12 tw-text-slate-200 mt-4">
           <span className="tw-border tw-border-slate-200 tw-p-2 tw-rounded">
             Vous n&apos;avez pas de compte ?{" "}
@@ -145,7 +143,7 @@ function Login({ onSwitch }) {
             </a>
           </span>
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }
