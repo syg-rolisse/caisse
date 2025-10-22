@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react"; // 👈 Ajout de useEffect
 import PropTypes from "prop-types";
-import { useFetchTypeDepense } from "../../hook/api/useFetchTypeDepense"; // 👈 1. Importer le bon hook
+import { useFetchTypeDepense } from "../../hook/api/useFetchTypeDepense";
 import { ChevronDown, Loader2, AlertCircle, Tag } from "lucide-react";
 
 export default function SelectTypeDeDepense({
@@ -10,21 +10,32 @@ export default function SelectTypeDeDepense({
   label,
   validationRules,
   watch,
+  setValue, // 👈 Récupérer setValue
+  defaultValue, // 👈 Récupérer defaultValue
 }) {
-  // 2. Récupérer l'ID de l'entreprise
   const user = JSON.parse(localStorage.getItem("user"));
   const companyId = user?.company?.id;
 
-  // 3. Appeler directement le hook useQuery pour récupérer les données.
-  // On passe bien un objet en paramètre.
   const { data, isLoading: typeDepenseLoading, isError: typeDepenseError } = useFetchTypeDepense({
     companyId,
     page: 1,
-    perpage: 9999, // On récupère tout
+    perpage: 9999,
   });
 
-  // 4. Extraire la liste des données. Votre logique existante fonctionne parfaitement avec ça.
   const allTypeDepense = data?.allTypeDepenses || [];
+
+  // ✅ CORRECTION : Ce useEffect synchronise la valeur par défaut avec react-hook-form
+  useEffect(() => {
+    // S'assurer qu'on a une valeur par défaut et que les options sont chargées
+    if (defaultValue && allTypeDepense.length > 0) {
+      const valueExists = allTypeDepense.some(opt => String(opt.id) === String(defaultValue));
+      if (valueExists) {
+        // Mettre à jour la valeur dans le formulaire et marquer le champ comme "touché"
+        setValue(name, defaultValue, { shouldTouch: true, shouldValidate: true });
+      }
+    }
+  }, [defaultValue, allTypeDepense, setValue, name]);
+
 
   const currentValue = watch(name);
 
@@ -69,9 +80,8 @@ export default function SelectTypeDeDepense({
           id={name}
           className="tw-absolute tw-inset-0 tw-w-full tw-h-full tw-opacity-0 tw-cursor-pointer"
           {...register(name, validationRules)}
-          disabled={typeDepenseLoading || typeDepenseError} // Important: désactiver si pas de données
+          disabled={typeDepenseLoading || typeDepenseError}
         >
-          {/* On ajoute une option vide pour la sélection initiale */}
           <option value="">-- Sélectionnez --</option>
           {allTypeDepense.map((type) => (
             <option key={type.id} value={type.id}>
@@ -94,7 +104,9 @@ SelectTypeDeDepense.propTypes = {
   register: PropTypes.func.isRequired,
   errors: PropTypes.object.isRequired,
   watch: PropTypes.func.isRequired,
+  setValue: PropTypes.func.isRequired, // 👈 Ajouter aux propTypes
   name: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
   validationRules: PropTypes.object,
+  defaultValue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // 👈 Ajouter aux propTypes
 };

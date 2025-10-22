@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { Mail, Shield, UserCheck, UserX, Calendar, Pencil, Trash2, MailCheck, MailX } from 'lucide-react';
 
-export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete }) {
+export default function UserCard({ user, onChangeRole, onDelete, canChangeRole, canDelete }) {
   const formattedDate = new Date(user.createdAt).toLocaleDateString("fr-CA");
 
   const getDefaultAvatar = () => {
@@ -57,16 +57,16 @@ export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete })
         </div>
       </div>
 
-      {(canEdit || canDelete) && (
-        <div className="tw-p-3 tw-bg-gray-50 tw-border-t tw-border-gray-100 tw-flex tw-justify-end tw-gap-2">
-          {canEdit && (
-            <button onClick={onEdit} className="btn btn-icon btn-sm btn-primary-transparent rounded-pill tw-flex tw-items-center tw-justify-center" title="Modifier">
-              <Pencil size={16} />
+      {(canDelete) && (
+        <div className="tw-p-3 tw-bg-gray-50 tw-border-t tw-border-gray-100 tw-flex tw-justify-end tw-items-center tw-gap-2">
+          {canChangeRole && (
+            <button onClick={onChangeRole} className="btn btn-primary-transparent rounded-pill tw-flex tw-items-center tw-justify-center" title="Modifier">
+              <Pencil size={16} /> &nbsp;<span className="tw-hidden md:tw-inline">Role & status</span>
             </button>
           )}
           {canDelete && (
             <button onClick={onDelete} className="btn btn-icon btn-sm btn-danger-transparent rounded-pill tw-flex tw-items-center tw-justify-center" title="Supprimer">
-              <Trash2 size={16} />
+              <Trash2 size={32} />
             </button>
           )}
         </div>
@@ -77,8 +77,8 @@ export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete })
 
 UserCard.propTypes = {
   user: PropTypes.object.isRequired,
-  onEdit: PropTypes.func.isRequired,
+  onChangeRole: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  canEdit: PropTypes.bool,
+  canChangeRole: PropTypes.bool,
   canDelete: PropTypes.bool,
 };

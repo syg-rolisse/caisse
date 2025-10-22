@@ -21,4 +21,5 @@ router
       'verif_token_to_change_password',
     ])
   })
+  .use(middleware.verifySourceAndUser())
   .prefix('api/v1/')

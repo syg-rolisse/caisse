@@ -67,14 +67,14 @@ export default function TopBar({ fullOverlay }) {
         <button
           ref={buttonRef}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="tw-flex tw-items-center tw-gap-2 tw-p-1.5 tw-rounded-full tw-bg-white/50 hover:tw-bg-white/80 tw-transition-colors tw-shadow-sm"
+          className="tw-mr-4 tw-flex tw-items-center tw-gap-2 tw-p-1.5 tw-rounded-full tw-bg-white/50 hover:tw-bg-white/80 tw-transition-colors tw-shadow-sm"
         >
           <img
             src={avatarSrc}
             alt="Avatar"
             className="tw-w-8 tw-h-8 tw-rounded-full tw-object-cover"
           />
-          <span className="tw-font-semibold tw-text-sm tw-text-gray-700 max-sm:tw-hidden">{user?.fullName}</span>
+          {/* <span className="tw-font-semibold tw-text-sm tw-text-gray-700 max-sm:tw-hidden">{user?.fullName}</span> */}
           <ChevronDown size={16} className={`tw-text-gray-600 tw-transition-transform ${isMenuOpen ? 'tw-rotate-180' : ''}`} />
         </button>
 
