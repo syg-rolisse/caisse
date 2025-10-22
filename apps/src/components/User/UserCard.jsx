@@ -14,17 +14,17 @@ export default function UserCard({ user, onEdit, onDelete, canEdit, canDelete })
   return (
     <div className="tw-bg-white tw-rounded-xl tw-shadow-md hover:tw-shadow-lg tw-transition-shadow tw-duration-300 tw-border tw-border-gray-200 tw-flex tw-flex-col">
       <div className="tw-p-4 tw-flex-grow">
-        <div className="tw-flex tw-items-start tw-gap-4">
+       <div className="tw-flex tw-items-start tw-gap-4">
           <img
             src={avatarSrc}
             alt={`Avatar de ${user.fullName}`}
             className="tw-w-16 tw-h-16 tw-object-cover tw-rounded-full tw-border-2 tw-border-gray-200"
           />
-          <div className="tw-flex-1">
-            <h3 className="tw-font-bold tw-text-lg tw-text-gray-800">{user.fullName}</h3>
-            <div className="tw-flex tw-items-center tw-text-sm tw-text-gray-500">
-              <Mail size={14} className="tw-mr-2" />
-              <span>{user.email}</span>
+          <div className="tw-flex-1 tw-min-w-0">
+            <h3 className="tw-font-bold tw-text-lg tw-text-gray-800 tw-truncate">{user.fullName}</h3>
+            <div className="tw-flex  tw-text-sm tw-text-gray-500">
+              <Mail size={24} className="tw-mr-1" />
+              <span className="tw-break-all">{user.email}</span>
             </div>
           </div>
         </div>
