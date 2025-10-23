@@ -8,12 +8,10 @@ app.ready(() => {
     Ws.io = new Server(server.getNodeServer(), {
       cors: {
         origin: [
+          'https://staging-caisse.oraadvices.com',
           'https://caisse.oraadvices.com',
-          'http://82.112.254.228:5174',
-          'http://82.112.254.228:81',
-          'http://82.112.254.228:82',
-          'http://82.112.254.228:83',
-          'http://82.112.254.228:84',
+          'https://staging-backoffice-caisse.oraadvices.com',
+          'https://backoffice-caisse.oraadvices.com',
           'http://localhost:5173',
           'http://localhost:5174',
         ],

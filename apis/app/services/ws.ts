@@ -15,13 +15,12 @@ class Ws {
       cors: {
         // Remplacer '*' par la liste explicite des origines
         origin: [
-          'http://82.112.254.228:5174',
-          'http://82.112.254.228:81',
           'https://staging-caisse.oraadvices.com',
           'https://caisse.oraadvices.com',
           'https://staging-backoffice-caisse.oraadvices.com',
           'https://backoffice-caisse.oraadvices.com',
           'http://localhost:5173',
+          'http://localhost:5174',
         ],
         methods: ['GET', 'POST'],
         // Ajouter cette ligne, c'est la plus importante !
