@@ -9,12 +9,22 @@ import InputField from "../../components/InputField";
 import { useHandleError } from "../../hook/useHandleError";
 import { CheckCircle, Loader2, X, FileText, Download, Paperclip } from "lucide-react";
 
+const formatDateForInput = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const defaultFormValues = {
   wording: "",
   montant: "",
   decharger: false,
   typeDeDepenseId: "",
   facture: null,
+  dateOperation: formatDateForInput(new Date()),
 };
 
 function DepenseForm({ depense, onSuccess, onClose }) {
@@ -58,6 +68,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
     formData.append("wording", data.wording);
     formData.append("typeDeDepenseId", data.typeDeDepenseId);
     formData.append("montant", data.montant);
+    formData.append("dateOperation", data.dateOperation);
     formData.append("decharger", data.decharger || false);
     formData.append("userId", user.id);
     formData.append("companieId", user?.company?.id);
@@ -75,6 +86,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
         montant: depense.montant || "",
         decharger: depense.decharger || false,
         typeDeDepenseId: depense.typeDeDepenseId || "",
+        dateOperation: formatDateForInput(depense.dateOperation) || formatDateForInput(new Date()),
         facture: null,
       });
     } else {
@@ -118,12 +130,18 @@ function DepenseForm({ depense, onSuccess, onClose }) {
           })}
           errors={errors}
         />
+        <InputField
+          id="dateOperation"
+          label="Date de l'opération"
+          type="date"
+          {...register("dateOperation", { required: "La date est requise" })}
+          errors={errors}
+        />
         <div>
           <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700">
             Facture (PDF optionnel)
           </label>
           
-          {/* Affiche la facture existante si aucune nouvelle facture n'est sélectionnée */}
           {depense?.factureUrl && !newFactureName && (
             <div className="tw-mt-2 tw-p-3 tw-rounded-md tw-bg-green-50 tw-border tw-border-green-200 tw-flex tw-items-center tw-justify-between">
               <div className="tw-flex tw-items-center tw-min-w-0">
@@ -144,7 +162,6 @@ function DepenseForm({ depense, onSuccess, onClose }) {
             </div>
           )}
 
-          {/* Zone de téléversement interactive */}
           <div className="tw-mt-2 tw-flex tw-items-center tw-justify-center tw-px-6 tw-py-5 tw-border-2 tw-border-gray-300 tw-border-dashed tw-rounded-md">
             {newFactureName ? (
               <div className="tw-w-full tw-flex tw-items-center tw-justify-between">

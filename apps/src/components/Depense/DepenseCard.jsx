@@ -11,6 +11,7 @@ const DepenseCard = ({ depense, onEdit, onDelete }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString("fr-FR", {
       day: '2-digit', month: '2-digit', year: 'numeric'
     });
@@ -129,7 +130,7 @@ const DepenseCard = ({ depense, onEdit, onDelete }) => {
             </div>
             <div className="tw-flex tw-items-center tw-gap-1.5 tw-flex-shrink-0">
               <Calendar size={14} />
-              <span>{formatDate(depense.createdAt)}</span>
+              <span>{formatDate(depense.dateOperation)}</span>
             </div>
           </div>
           {depense.bloquer ? <Lock size={16} title="Bloqué" /> : <Unlock size={16} className="tw-text-gray-600" title="Débloqué" />}

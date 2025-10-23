@@ -38,6 +38,9 @@ export default class Depense extends BaseModel {
   declare decharger: boolean
 
   @column()
+  declare dateOperation: Date
+
+  @column()
   declare bloquer: boolean
 
   @column()
