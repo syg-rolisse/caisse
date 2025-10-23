@@ -11,6 +11,7 @@ vine.messagesProvider = new SimpleMessagesProvider({
   'typeDeDepenseId.number': "L'identifiant du type de dépense est requis.",
   'typeDeDepenseId.required': "L'identifiant du type de dépense est requis.",
   'companieId.required': "Identifiant de l'entreprise requis",
+  'dateOperation.required': "Date de l'operation est requise",
 })
 
 export const createDepenseValidator = vine.compile(
@@ -23,6 +24,7 @@ export const createDepenseValidator = vine.compile(
     status: vine.boolean().optional(),
     decharger: vine.boolean().optional(),
     bloquer: vine.boolean().optional(),
+    dateOperation: vine.date({ formats: ['YYYY-MM-DD'] }),
   })
 )
 
@@ -34,5 +36,6 @@ export const updateDepenseValidator = vine.compile(
     status: vine.boolean().optional(),
     decharger: vine.boolean().optional(),
     bloquer: vine.boolean().optional(),
+    dateOperation: vine.date({ formats: ['YYYY-MM-DD'] }),
   })
 )

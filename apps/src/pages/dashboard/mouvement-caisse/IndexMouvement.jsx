@@ -243,9 +243,16 @@ export default function IndexMouvement() {
                             } ${depense.rejeter ? "tw-bg-red-50" : ""}`}
                           >
                             <td>
-                              <div className="tw-flex tw-bg-orange-300 tw-rounded-full tw-p-1 tw-justify-center tw-items-center tw-gap-2">
+                              <div
+                                className="
+                                tw-w-10 tw-h-10                  
+                                tw-rounded-full                 
+                                tw-bg-blue-100 dark:tw-bg-blue-500/20 
+                                tw-flex tw-items-center tw-justify-center 
+                                "
+                                >
                                 <CircleDollarSign
-                                  className="tw-text-gray-600"
+                                  className="tw-text-blue-600 dark:tw-text-blue-400"
                                   size={20}
                                 />
                               </div>
