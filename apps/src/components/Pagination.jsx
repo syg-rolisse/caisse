@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const Pagination = ({ meta, onPageChange }) => {
   // Debug log pour voir ce qui est reçu
   useEffect(() => {
-    console.log('[Pagination Child] Received meta object:', meta);
   }, [meta]);
 
   // Si pas de meta ou aucun résultat, on ne montre rien

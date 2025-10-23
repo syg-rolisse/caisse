@@ -17,8 +17,10 @@ class Ws {
         origin: [
           'http://82.112.254.228:5174',
           'http://82.112.254.228:81',
-          'http://82.112.254.228:80',
+          'https://staging-caisse.oraadvices.com',
           'https://caisse.oraadvices.com',
+          'https://staging-backoffice-caisse.oraadvices.com',
+          'https://backoffice-caisse.oraadvices.com',
           'http://localhost:5173',
         ],
         methods: ['GET', 'POST'],
