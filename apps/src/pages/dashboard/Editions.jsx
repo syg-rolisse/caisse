@@ -8,7 +8,7 @@ import Spinner from "../../components/Spinner";
 import { useFetchUsers } from "../../hook/api/useFetchUsers";
 import { useFetchEditions } from "../../hook/api/useFetchEditions";
 import { useSocket } from "../../context/socket.jsx";
-import { ServerCrash } from "lucide-react";
+import { ServerCrash, Lock, Unlock } from "lucide-react";
 import UserAndDateRangeFilter from "../../components/UserAndDateRangeFilter";
 
 export default function Editions() {
@@ -348,15 +348,9 @@ export default function Editions() {
                         )}
                         {columnVisibility.bloquer && (
                           <td className="text-center">
-                            <span
-                              className={`badge ${
-                                depense.bloquer
-                                  ? "bg-dark-transparent"
-                                  : "bg-light-transparent"
-                              }`}
-                            >
-                              {depense.bloquer ? "Bloqué" : "Débloqué"}
-                            </span>
+                            <div className="tw-flex tw-items-center tw-justify-center">
+                              {depense.bloquer ? <Lock className="w-5 h-5 tw-text-gray-700" /> : <Unlock className="w-5 h-5 tw-text-gray-700" />}
+                            </div>
                           </td>
                         )}
                         {columnVisibility.createdAt && (
