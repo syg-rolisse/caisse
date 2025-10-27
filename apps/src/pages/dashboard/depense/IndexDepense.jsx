@@ -66,6 +66,8 @@ export default function IndexDepense() {
 
   const handleSearch = useCallback((newFilters) => {
     setPage(1);
+    console.log(newFilters);
+    
     setFilters(newFilters);
   }, []);
 
