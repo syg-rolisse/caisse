@@ -141,14 +141,25 @@ export default function IndexPermission() {
                           </ul>
                         </div>
                         <div>
-                          <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Dépenses & Types</h4>
+                          <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Dépenses</h4>
                            <ul className="tw-space-y-1">
-                            <PermissionItem label="Créer" hasPermission={permission.createDepense || permission.createTypeDeDepense} />
-                            <PermissionItem label="Lire" hasPermission={permission.readDepense || permission.readTypeDeDepense} />
-                            <PermissionItem label="Modifier" hasPermission={permission.updateDepense || permission.updateTypeDeDepense} />
-                            <PermissionItem label="Supprimer" hasPermission={permission.deleteDepense || permission.deleteTypeDeDepense} />
+                            <PermissionItem label="Créer" hasPermission={permission.createDepense} />
+                            <PermissionItem label="Lire" hasPermission={permission.readDepense} />
+                            <PermissionItem label="Modifier" hasPermission={permission.updateDepense} />
+                            <PermissionItem label="Supprimer" hasPermission={permission.deleteDepense} />
                           </ul>
                         </div>
+                        
+                        <div>
+                          <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Types De Dépenses</h4>
+                           <ul className="tw-space-y-1">
+                            <PermissionItem label="Créer" hasPermission={permission.createTypeDeDepense} />
+                            <PermissionItem label="Lire" hasPermission={permission.readTypeDeDepense} />
+                            <PermissionItem label="Modifier" hasPermission={permission.updateTypeDeDepense} />
+                            <PermissionItem label="Supprimer" hasPermission={permission.deleteTypeDeDepense} />
+                          </ul>
+                        </div>
+
                         <div>
                           <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Packs</h4>
                            <ul className="tw-space-y-1">
