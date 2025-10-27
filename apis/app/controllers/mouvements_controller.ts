@@ -7,25 +7,16 @@ import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
 import Ws from '#services/ws'
-import depense_service from '#services/depense_service'
 
-async function emitDepenseUpdate(companyId: number, eventName: string) {
+function emitDepenseUpdate(companyId: number, eventName: string) {
   if (!companyId) return
 
   try {
-    const { allDepenses, depenses } = await depense_service.fetchAndFormatDepenses(companyId, 1, 10)
-
     const roomName = `company_${companyId}`
-    const payload = {
-      depenses,
-      allDepenses,
-      companyId,
-    }
-
-    Ws.io?.to(roomName).emit(eventName, payload)
-    console.log(`Événement '${eventName}' émis dans le salon '${roomName}'`)
+    Ws.io?.to(roomName).emit(eventName)
+    console.log(`Signal '${eventName}' émis dans le salon '${roomName}'`)
   } catch (error) {
-    console.error(`Erreur lors de l'émission du socket '${eventName}':`, error)
+    console.error(`Erreur lors de l'émission du signal socket '${eventName}':`, error)
   }
 }
 
@@ -41,8 +32,7 @@ export default class MouvementsController {
         return response.badRequest({ error: "Identifiant de l'entreprise non reconnu." })
       }
 
-      const depense = await Depense.query()
-        .useTransaction(trx)
+      const depense = await Depense.query({ client: trx })
         .where({ id: payload.depenseId })
         .preload('user')
         .preload('Mouvements')
@@ -80,7 +70,7 @@ export default class MouvementsController {
       delete payload.companieId
       const mouvement = await Mouvement.create({ ...payload }, { client: trx })
 
-      let solde = await Solde.query().useTransaction(trx).where({ companieId }).first()
+      let solde = await Solde.query({ client: trx }).where({ companieId }).first()
       if (solde) {
         solde.merge({ montant: solde.montant - payload.montant })
         await solde.save()
@@ -88,7 +78,7 @@ export default class MouvementsController {
 
       await trx.commit()
 
-      await emitDepenseUpdate(companieId, 'depense_updated')
+      emitDepenseUpdate(companieId, 'depense_updated')
 
       return response.created({
         mouvement,
@@ -109,8 +99,7 @@ export default class MouvementsController {
       const currentMouvement = await Mouvement.findOrFail(sortieId)
       const payload = await request.validateUsing(updateMouvementValidator)
 
-      const depense = await Depense.query()
-        .useTransaction(trx)
+      const depense = await Depense.query({ client: trx })
         .where({ id: payload.depenseId })
         .preload('Mouvements')
         .first()
@@ -142,7 +131,7 @@ export default class MouvementsController {
       depense.merge({ status: montantTotalApresAjout === depense.montant })
       await depense.save()
 
-      let solde = await Solde.query().useTransaction(trx).forUpdate().first()
+      let solde = await Solde.query({ client: trx }).forUpdate().first()
       if (solde) {
         solde.merge({ montant: solde.montant + currentMouvement.montant - payload.montant })
         await solde.save()
@@ -155,7 +144,7 @@ export default class MouvementsController {
       await trx.commit()
 
       if (depense.companieId) {
-        await emitDepenseUpdate(depense.companieId, 'depense_updated')
+        emitDepenseUpdate(depense.companieId, 'depense_updated')
       }
 
       return response.ok({
@@ -213,7 +202,7 @@ export default class MouvementsController {
       mouvement.useTransaction(trx)
       await mouvement.delete()
 
-      let solde = await Solde.query().useTransaction(trx).forUpdate().first()
+      let solde = await Solde.query({ client: trx }).forUpdate().first()
       if (solde) {
         solde.merge({ montant: solde.montant + mouvement.montant })
         await solde.save()
@@ -222,7 +211,7 @@ export default class MouvementsController {
       await trx.commit()
 
       if (depense.companieId) {
-        await emitDepenseUpdate(depense.companieId, 'depense_updated')
+        emitDepenseUpdate(depense.companieId, 'depense_updated')
       }
 
       return response.ok({
