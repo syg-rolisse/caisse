@@ -84,9 +84,11 @@ export default class TypeDeDepensesController {
   async editions({ request, response }: HttpContext) {
     try {
       const { du, au, userId, companieId } = request.qs()
+
       if (!companieId || Number.isNaN(Number(companieId))) {
         return response.ok({ data: [], message: "Identifiant de l'entreprise non reconnu..." })
       }
+
       const depenses = await Depense.query()
         .where({ companieId })
         .if(userId, (query) => query.where('userId', userId))
@@ -95,7 +97,9 @@ export default class TypeDeDepensesController {
         .preload('typeDeDepense')
         .preload('Mouvements')
         .preload('user')
-        .select('id', 'montant', 'facture_url', 'wording', 'createdAt', 'userId', 'typeDeDepenseId')
+        .orderBy('typeDeDepenseId', 'asc')
+        .orderBy('createdAt', 'desc')
+
       return response.ok(depenses)
     } catch (error) {
       console.error('Erreur lors de la récupération des dépenses:', error)
