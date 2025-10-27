@@ -8,24 +8,15 @@ import { processErrorMessages } from '../../helpers/remove_duplicate.js'
 import depense_service from '#services/depense_service'
 import Ws from '#services/ws'
 
-// La fonction helper reste la même, elle est déjà sécurisée
-async function emitDepenseUpdate(companyId: number, eventName: string) {
+function emitDepenseUpdate(companyId: number, eventName: string) {
   if (!companyId) return
 
   try {
-    const { allDepenses, depenses } = await depense_service.fetchAndFormatDepenses(companyId, 1, 10)
-
     const roomName = `company_${companyId}`
-    const payload = {
-      depenses,
-      allDepenses,
-      companyId,
-    }
-
-    Ws.io?.to(roomName).emit(eventName, payload)
-    console.log(`Événement '${eventName}' émis dans le salon '${roomName}'`)
+    Ws.io?.to(roomName).emit(eventName)
+    console.log(`Signal '${eventName}' émis dans le salon '${roomName}'`)
   } catch (error) {
-    console.error(`Erreur lors de l'émission du socket '${eventName}':`, error)
+    console.error(`Erreur lors de l'émission du signal socket '${eventName}':`, error)
   }
 }
 
@@ -33,18 +24,23 @@ export default class DepensesController {
   // index() et create() étaient déjà corrects, pas de changement majeur
   async index({ request, response }: HttpContext) {
     try {
-      const { page, perpage, companieId } = request.qs()
+      const { page, perpage, companieId, userId, dateDebut, dateFin } = request.qs()
+
       const pageNumber = page ? Number.parseInt(page) : 1
       const perPageNumber = perpage ? Number.parseInt(perpage) : 10
 
       const { allDepenses, depenses } = await depense_service.fetchAndFormatDepenses(
         companieId,
         pageNumber,
-        perPageNumber
+        perPageNumber,
+        userId,
+        dateDebut,
+        dateFin
       )
+
       return response.ok({ depenses, allDepenses })
     } catch (error) {
-      console.error('Erreur lors de la récupération des Type De Depense:', error)
+      console.error('Erreur lors de la récupération des dépenses:', error)
       return response.status(500).send({ error: 'Erreur interne du serveur' })
     }
   }
@@ -71,7 +67,7 @@ export default class DepensesController {
       const depense = await Depense.create({ ...payload, factureUrl: factureUrl })
 
       if (depense.companieId) {
-        await emitDepenseUpdate(depense.companieId, 'depense_created')
+        emitDepenseUpdate(depense.companieId, 'depense_created')
       }
 
       return response.created({

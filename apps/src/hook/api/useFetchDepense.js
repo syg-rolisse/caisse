@@ -1,34 +1,37 @@
+// src/hook/api/useFetchDepense.js
+
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchDepenses({ page, perpage, companyId }) {
+export function useFetchDepenses({ page, perpage, companyId, userId, dateDebut, dateFin }) {
   const handleError = useHandleError();
 
   return useQuery({
-    // La clé de query inclut toutes les dépendances pour une mise en cache correcte
-    queryKey: ["depenses", companyId, page, perpage],
+    // MODIFICATION CLÉ : Ajoutez toutes les dépendances de la requête ici
+    queryKey: ["depenses", companyId, page, perpage, userId, dateDebut, dateFin],
     
     queryFn: async () => {
       const response = await axiosInstance.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/depense/all`,
         {
-          // Utiliser l'objet `params` d'Axios est plus propre
           params: {
             companieId: companyId,
             page: page,
             perpage: perpage,
+            userId: userId,
+            dateDebut: dateDebut,
+            dateFin: dateFin,
           },
         }
       );
 
       return {
-        depenses: response.data?.depenses,      // liste paginée avec meta
-        allDepenses: response.data?.allDepenses, // liste brute
+        depenses: response.data?.depenses,
+        allDepenses: response.data?.allDepenses,
       };
     },
     
-    // La requête ne s'exécutera que si companyId est fourni
     enabled: !!companyId,
 
     onError: handleError,

@@ -1,3 +1,5 @@
+// src/pages/Depense/IndexDepense.jsx
+
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -12,6 +14,7 @@ import { useFetchDepenses } from "../../../hook/api/useFetchDepense";
 import { useSocket } from "../../../context/socket.jsx";
 import { usePermissions } from "../../../hook/usePermissions";
 import { ServerCrash } from "lucide-react";
+import UserAndDateRangeFilter from "../../../components/UserAndDateRangeFilter";
 
 export default function IndexDepense() {
   const [page, setPage] = useState(1);
@@ -20,6 +23,11 @@ export default function IndexDepense() {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentDepense, setCurrentDepense] = useState(null);
+  const [filters, setFilters] = useState({
+    userId: null,
+    dateDebut: null,
+    dateFin: null,
+  });
 
   const socket = useSocket();
   const { can } = usePermissions();
@@ -31,6 +39,9 @@ export default function IndexDepense() {
     page,
     perpage,
     companyId,
+    userId: filters.userId,
+    dateDebut: filters.dateDebut,
+    dateFin: filters.dateFin,
   });
 
   const depenses = data?.depenses?.data || [];
@@ -41,7 +52,8 @@ export default function IndexDepense() {
     if (searchTerm.trim() === "") {
       return depenses;
     }
-    return allDepense.filter((depense) => {
+    const listToFilter = allDepense.length > 0 ? allDepense : depenses;
+    return listToFilter.filter((depense) => {
       const searchTermLower = searchTerm.toLowerCase();
       return (
         depense.wording?.toLowerCase().includes(searchTermLower) ||
@@ -52,6 +64,11 @@ export default function IndexDepense() {
     });
   }, [depenses, allDepense, searchTerm]);
 
+  const handleSearch = useCallback((newFilters) => {
+    setPage(1);
+    setFilters(newFilters);
+  }, []);
+
   const handlePerPageChange = (e) => {
     setPerPage(Number(e.target.value));
     setPage(1);
@@ -61,7 +78,7 @@ export default function IndexDepense() {
     setShowModal(false);
     setShowDeleteModal(false);
     setCurrentDepense(null);
-    queryClient.invalidateQueries(["depenses"]);
+    queryClient.invalidateQueries({ queryKey: ["depenses"] });
   }, [queryClient]);
 
   useEffect(() => {
@@ -70,7 +87,7 @@ export default function IndexDepense() {
     socket.emit("join_company_room", companyId);
 
     const handleDataUpdate = () => {
-      queryClient.invalidateQueries(["depenses"]);
+      queryClient.invalidateQueries({ queryKey: ["depenses"] });
     };
 
     socket.on("depense_created", handleDataUpdate);
@@ -105,7 +122,14 @@ export default function IndexDepense() {
           showPrimaryAction={can('createDepense')}
         />
 
-        <div className="tw-flex tw-items-center tw-gap-4 tw-my-4 tw-w-full">
+        <div className="tw-my-4 tw-bg-gray-50 dark:tw-bg-gray-800 tw-rounded-lg">
+           <UserAndDateRangeFilter 
+                companyId={companyId} 
+                onSearch={handleSearch} 
+            />
+        </div>
+
+        <div className="tw-flex tw-items-center tw-gap-4 tw-mb-4 tw-w-full">
           <div className="tw-flex tw-items-center tw-gap-2">
             <span>Afficher</span>
             <select className="form-select form-select-sm tw-h-10 tw-w-20" onChange={handlePerPageChange} value={perpage}>
@@ -116,7 +140,7 @@ export default function IndexDepense() {
             <input
               className="form-control form-control-xl"
               type="text"
-              placeholder="Faites une recherche ici..."
+              placeholder="Faites une recherche sur les résultats actuels..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -127,8 +151,8 @@ export default function IndexDepense() {
           {isLoading && (<div className="col-12 text-center py-5"><Spinner /></div>)}
           {isError && (
             <div className="col-12 text-center py-5">
-              <div className="flex flex-col items-center gap-2 text-red-500">
-                <ServerCrash className="w-8 h-8" />
+              <div className="tw-flex tw-flex-col tw-items-center tw-gap-2 tw-text-red-500">
+                <ServerCrash className="tw-w-8 tw-h-8" />
                 <span>{error?.message || "Impossible de charger les dépenses."}</span>
               </div>
             </div>
@@ -137,7 +161,7 @@ export default function IndexDepense() {
             <div className="col-12 text-center">
               <span className="tw-bg-gray-100 tw-text-gray-600 tw-p-3 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
                 <i className="fe fe-info me-2"></i>
-                Aucune dépense trouvée.
+                Aucune dépense trouvée pour les filtres sélectionnés.
               </span>
             </div>
           )}
