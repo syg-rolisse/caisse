@@ -87,15 +87,8 @@ jobs:
             echo "${{ secrets.STAGING_ENV_APPS }}" > ./apps/.env
             echo "${{ secrets.STAGING_ENV_BACKOFFICE }}" > ./backoffice/.env
             
-            echo "Arrêt et suppression forcés des anciens conteneurs de staging..."
-            docker stop caisse_staging_backoffice caisse_staging_apps caisse_staging_apis caisse_staging_db || true
-            docker rm caisse_staging_backoffice caisse_staging_apps caisse_staging_apis caisse_staging_db || true
-            
-            echo "Reconstruction des images de staging sans cache..."
-            docker compose -f docker-compose.staging.yml build --no-cache
-            
-            echo "Démarrage des nouveaux services de staging..."
-            docker compose -f docker-compose.staging.yml -p caisse_staging up -d
+            echo "Reconstruction forcée et démarrage des nouveaux services de staging..."
+            docker compose -f docker-compose.staging.yml -p caisse_staging up -d --build --force-recreate
             
             echo "Nettoyage des anciennes images Docker..."
             docker image prune -f
@@ -147,17 +140,8 @@ jobs:
             echo "${{ secrets.PRODUCTION_ENV_APPS }}" > ./apps/.env
             echo "${{ secrets.PRODUCTION_ENV_BACKOFFICE }}" > ./backoffice/.env
             
-            echo "Arrêt et suppression forcés des anciens conteneurs de production..."
-            docker stop caisse_prod_backoffice caisse_prod_apps caisse_prod_apis caisse_prod_db || true
-            docker rm caisse_prod_backoffice caisse_prod_apps caisse_prod_apis caisse_prod_db || true
-            
-            echo "Reconstruction des images de production sans cache..."
-            docker compose -f docker-compose.prod.yml build --no-cache
-            
-            echo "Démarrage des nouveaux services de production..."
-            docker compose -f docker-compose.prod.yml -p caisse_prod up -d
+            echo "Reconstruction forcée et démarrage des nouveaux services de production..."
+            docker compose -f docker-compose.prod.yml -p caisse_prod up -d --build --force-recreate
             
             echo "Nettoyage des anciennes images Docker..."
             docker image prune -f
-            
-            
