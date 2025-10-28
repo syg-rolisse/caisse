@@ -138,9 +138,9 @@ export default class DepensesController {
       if (await bouncer.with('DepensePolicy').denies('update')) {
         return response.forbidden("Désolé, vous n'êtes pas autorisé à modifier une dépense.")
       }
-      if (await bouncer.with('SortiePolicy').denies('decharge')) {
-        return response.forbidden("Désolé, vous n'êtes pas autorisé à mettre une décharge.")
-      }
+      // if (await bouncer.with('SortiePolicy').denies('decharge')) {
+      //   return response.forbidden("Désolé, vous n'êtes pas autorisé à mettre une décharge.")
+      // }
       const user = await User.findOrFail(userConnectedId)
 
       // GUARD CLAUSE: Vérifier que la dépense existe
@@ -165,7 +165,7 @@ export default class DepensesController {
       if (depense.rejeter) {
         return response.forbidden("Désolé, cette dépense n'a pas été approuvée.")
       }
-      if (user.profilId !== depense.userId) {
+      if (user.id !== depense.userId) {
         return response.forbidden(
           "Désolé, vous n'avez pas enregistré cette dépense, vous ne pouvez pas la modifier"
         )
