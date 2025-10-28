@@ -194,16 +194,20 @@ export default class DepensesController {
   // delete() avec les corrections
   async delete({ auth, bouncer, request, response }: HttpContext) {
     try {
+      console.log('zzzzzzzzzzzzzzzzzzzzzz')
+
       const userConnected = auth.user
       await userConnected?.load('Profil', (profilQuery) => {
         profilQuery.preload('Permission', (permissionQuery: any) => {
           permissionQuery.where('companie_id', userConnected.companieId)
         })
       })
+      console.log('userConnected', userConnected?.Profil?.Permission)
+
       if (await bouncer.with('DepensePolicy').denies('delete')) {
         return response.forbidden("Vous n'êtes pas autorisé à supprimer cette dépense.")
       }
-
+      console.log('userConnected?.companieId', userConnected?.companieId)
       const { depenseId, userConnectedId } = request.qs()
       const user = await User.findOrFail(userConnectedId)
 
