@@ -52,7 +52,7 @@ export default class AuthController {
 
       await userConnected.load('Profil', (profilQuery) => {
         profilQuery.preload('Permission', (permissionQuery: any) => {
-          permissionQuery.where('compagnie_id', userConnected.companieId)
+          permissionQuery.where('companie_id', userConnected.companieId)
         })
       })
 
@@ -282,7 +282,7 @@ export default class AuthController {
 
       await user.load('Profil', (profilQuery) => {
         profilQuery.preload('Permission', (permissionQuery: any) => {
-          permissionQuery.where('compagnie_id', user.companieId)
+          permissionQuery.where('companie_id', user.companieId)
         })
       })
 
