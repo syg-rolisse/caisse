@@ -9,7 +9,7 @@ export default function Footer() {
           <span className="text-muted">
             Copyright © {currentYear}{" "}
             <span className="tw-text-orange-600"> &nbsp;Ora ADVICES&nbsp;</span>
-            Tous droit réservés
+            Tous droits réservés
           </span>
         </div>
       </footer>
