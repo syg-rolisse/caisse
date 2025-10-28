@@ -275,8 +275,6 @@ export default class AuthController {
       const user = await auth.authenticate() // Authentification explicite
 
       const { userConnectedId, route } = request.qs()
-      console.log('Requête QS :', request.qs())
-      console.log('Utilisateur authentifié :', user?.id)
 
       if (user.id !== Number.parseInt(userConnectedId)) {
         return response.status(403).json({
@@ -285,12 +283,17 @@ export default class AuthController {
         })
       }
 
+      // await user.load('Profil', (profilQuery) => {
+      //   profilQuery.preload('Permission')
+      // })
+
       await user.load('Profil', (profilQuery) => {
-        profilQuery.preload('Permission')
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('compagnie_id', user.companieId)
+        })
       })
 
       let isAuthorized = false
-      console.log(route)
 
       // Vérifie si l'utilisateur a l'autorisation de lire selon le route
       if (route === 'approvisionnements') {
