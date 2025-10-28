@@ -58,7 +58,11 @@ export default class DepensesController {
         factureUrl = `facture/${fileName}`
       }
 
-      await userConnected?.load('Profil', (profilQuery: any) => profilQuery.preload('Permission'))
+      await userConnected?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', userConnected.companieId)
+        })
+      })
       if (await bouncer.with('DepensePolicy').denies('create')) {
         return response.forbidden("Désolé, vous n'êtes pas autorisé à ajouter une dépense.")
       }
@@ -126,7 +130,11 @@ export default class DepensesController {
     try {
       const { depenseId, userConnectedId } = request.qs()
       const userConnected = auth.user
-      await userConnected?.load('Profil', (profilQuery: any) => profilQuery.preload('Permission'))
+      await userConnected?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', userConnected.companieId)
+        })
+      })
       if (await bouncer.with('DepensePolicy').denies('update')) {
         return response.forbidden("Désolé, vous n'êtes pas autorisé à modifier une dépense.")
       }
@@ -186,12 +194,20 @@ export default class DepensesController {
   // delete() avec les corrections
   async delete({ auth, bouncer, request, response }: HttpContext) {
     try {
+      console.log('zzzzzzzzzzzzzzzzzzzzzz')
+
       const userConnected = auth.user
-      await userConnected?.load('Profil', (profilQuery: any) => profilQuery.preload('Permission'))
+      await userConnected?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', userConnected.companieId)
+        })
+      })
+      console.log('userConnected', userConnected?.Profil?.Permission)
+
       if (await bouncer.with('DepensePolicy').denies('delete')) {
         return response.forbidden("Vous n'êtes pas autorisé à supprimer cette dépense.")
       }
-
+      console.log('userConnected?.companieId', userConnected?.companieId)
       const { depenseId, userConnectedId } = request.qs()
       const user = await User.findOrFail(userConnectedId)
 
@@ -239,7 +255,11 @@ export default class DepensesController {
     try {
       const { depenseId, bloquer } = request.qs()
       const user = auth.user
-      await user?.load('Profil', (profilQuery: any) => profilQuery.preload('Permission'))
+      await user?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', user?.companieId)
+        })
+      })
       if (await bouncer.with('SortiePolicy').denies('bloque')) {
         return response.forbidden("Désolé, vous n'êtes pas autorisé à bloquer une dépense.")
       }
@@ -290,7 +310,11 @@ export default class DepensesController {
   async rejeter({ auth, bouncer, request, response }: HttpContext) {
     try {
       const user = auth.user
-      await user?.load('Profil', (profilQuery: any) => profilQuery.preload('Permission'))
+      await user?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', user?.companieId)
+        })
+      })
       if (await bouncer.with('SortiePolicy').denies('reject')) {
         return response.forbidden("Désolé, vous n'êtes pas autorisé à rejeter une dépense.")
       }

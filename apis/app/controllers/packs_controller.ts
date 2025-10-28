@@ -17,7 +17,6 @@ async function emitPackUpdate(eventName: string) {
 
     // Ws.io?.emit() envoie à tous les clients connectés
     Ws.io?.emit(eventName, payload)
-    console.log(`Événement global '${eventName}' émis`)
   } catch (error) {
     console.error(`Erreur lors de l'émission du socket global '${eventName}':`, error)
   }
@@ -38,8 +37,6 @@ export default class PacksController {
     try {
       const payload = await request.validateUsing(createPackValidator)
       const pack = await Pack.create(payload)
-
-      console.log('Pack créé:', pack)
 
       await emitPackUpdate('pack_created')
 
@@ -92,8 +89,6 @@ export default class PacksController {
   async delete({ request, response }: HttpContext) {
     try {
       const { packId } = request.qs()
-
-      console.log('Pack ID:', packId)
 
       const pack = await Pack.query().where('id', packId).preload('Abonnement').firstOrFail()
       if (pack.Abonnement && pack.Abonnement.length > 0) {

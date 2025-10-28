@@ -386,7 +386,11 @@ export default class UsersController {
   async delete({ auth, bouncer, request, response }: HttpContext) {
     try {
       const userConnected = auth.user!
-      await userConnected.load('Profil', (profilQuery) => profilQuery.preload('Permission'))
+      await userConnected?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', userConnected.companieId)
+        })
+      })
 
       if (await bouncer.with('UserPolicy').denies('delete')) {
         return response.forbidden("Désolé, vous n'êtes pas autorisé à supprimer des utilisateurs.")

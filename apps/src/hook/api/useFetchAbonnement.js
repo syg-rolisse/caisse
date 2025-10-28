@@ -17,7 +17,6 @@ export function useFetchAbonnement() {
           },
         }
       );
-      console.log(response.data);
       return {
         abonnements: response.data?.abonnements,
       };
