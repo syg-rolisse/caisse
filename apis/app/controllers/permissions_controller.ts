@@ -15,14 +15,19 @@ async function emitPermissionsUpdate(profilId: number, companyId: number) {
       .andWhere('companieId', companyId)
 
     for (const user of affectedUsers) {
-      await user.load('Profil', (p) => p.preload('Permission'))
+      await user.load('Profil', (profilQuery: any) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', user.companieId)
+        })
+      })
+
       await user.load('Companies')
 
       const roomName = `company_${user.companieId}`
 
       Ws.io?.to(roomName).emit('permissions_updated', user.serialize())
       console.log(
-        `Événement 'permissions_updated' émis pour les utilisateurs ${user.id} dans le salon ${roomName}`
+        `Événement 'permissions_updated' émis pour l’utilisateur ${user.id} dans le salon ${roomName}`
       )
     }
   } catch (error) {
@@ -38,7 +43,9 @@ export default class PermissionsController {
       return response.unauthorized('Utilisateur non authentifié')
     }
     await user.load('Profil', (profilQuery: any) => {
-      profilQuery.preload('Permission')
+      profilQuery.preload('Permission', (permissionQuery: any) => {
+        permissionQuery.where('companie_id', user.companieId)
+      })
     })
 
     if (await bouncer.with('PermissionPolicy').denies('view')) {
@@ -64,7 +71,9 @@ export default class PermissionsController {
         return response.unauthorized('Utilisateur non authentifié')
       }
       await user.load('Profil', (profilQuery: any) => {
-        profilQuery.preload('Permission')
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', user.companieId)
+        })
       })
 
       if (await bouncer.with('PermissionPolicy').denies('view')) {
@@ -98,7 +107,9 @@ export default class PermissionsController {
         return response.unauthorized('Utilisateur non authentifié')
       }
       await user.load('Profil', (profilQuery: any) => {
-        profilQuery.preload('Permission')
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', user.companieId)
+        })
       })
 
       if (await bouncer.with('PermissionPolicy').denies('update')) {

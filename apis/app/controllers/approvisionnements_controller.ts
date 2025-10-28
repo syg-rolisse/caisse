@@ -66,9 +66,11 @@ export default class ApprovisionnementsController {
   public async create({ auth, bouncer, request, response }: HttpContext) {
     const trx = await db.transaction()
     try {
-      const user = auth.user
-      await user?.load('Profil', (profilQuery: any) => {
-        profilQuery.preload('Permission')
+      const user = auth.user!
+      await user.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', user?.companieId)
+        })
       })
 
       if (await bouncer.with('ApproPolicy').denies('create')) {
@@ -133,6 +135,7 @@ export default class ApprovisionnementsController {
       const user = auth.user
       await user?.load('Profil', (profilQuery: any) => {
         profilQuery.preload('Permission')
+        profilQuery.where('companie_id', user?.companieId)
       })
 
       if (await bouncer.with('ApproPolicy').denies('update')) {
@@ -186,6 +189,7 @@ export default class ApprovisionnementsController {
       const user = auth.user
       await user?.load('Profil', (profilQuery: any) => {
         profilQuery.preload('Permission')
+        profilQuery.where('companie_id', user?.companieId)
       })
 
       if (await bouncer.with('ApproPolicy').denies('delete')) {
