@@ -5,7 +5,7 @@ export default class DepenseService {
     companyId: number,
     page = 1,
     perPage = 1000,
-    userId: number,
+    userId: number | undefined | null,
     dateDebut: string,
     dateFin: string
   ) {

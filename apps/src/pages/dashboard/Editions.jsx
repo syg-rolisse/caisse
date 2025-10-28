@@ -43,6 +43,8 @@ export default function Editions() {
   });
 
   const handleSearch = useCallback((newFilters) => {
+    console.log(newFilters);
+    
     setFilters(newFilters);
   }, []);
 

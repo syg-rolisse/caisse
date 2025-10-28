@@ -83,26 +83,46 @@ export default class TypeDeDepensesController {
 
   async editions({ request, response }: HttpContext) {
     try {
-      const { du, au, userId, companieId } = request.qs()
+      const { companieId, userId, dateDebut, dateFin } = request.qs()
 
-      if (!companieId || Number.isNaN(Number(companieId))) {
-        return response.ok({ data: [], message: "Identifiant de l'entreprise non reconnu..." })
+      if (!companieId) {
+        return response.badRequest({ message: 'Le paramètre companieId est manquant.' })
+      }
+      const companyIdNumber = Number.parseInt(companieId, 10)
+      if (Number.isNaN(companyIdNumber)) {
+        return response.badRequest({ message: 'Le format de companieId est invalide.' })
       }
 
-      const depenses = await Depense.query()
-        .where({ companieId })
-        .if(userId, (query) => query.where('userId', userId))
-        .if(du, (query) => query.where('createdAt', '>=', du))
-        .if(au, (query) => query.where('createdAt', '<=', au))
+      const userIdNumber = userId && userId !== '' ? Number.parseInt(userId, 10) : undefined
+      if (userId && Number.isNaN(userIdNumber)) {
+        return response.badRequest({ message: 'Le format de userId est invalide.' })
+      }
+
+      const query = Depense.query()
+        .where({ companieId: companyIdNumber })
+        .preload('user')
         .preload('typeDeDepense')
         .preload('Mouvements')
-        .preload('user')
+
+      if (userIdNumber) {
+        query.where({ userId: userIdNumber })
+      }
+
+      if (dateDebut) {
+        query.where('dateOperation', '>=', `${dateDebut} 00:00:00`)
+      }
+
+      if (dateFin) {
+        query.where('dateOperation', '<=', `${dateFin} 23:59:59`)
+      }
+
+      const depenses = await query
         .orderBy('typeDeDepenseId', 'asc')
-        .orderBy('createdAt', 'desc')
+        .orderBy('dateOperation', 'desc')
 
       return response.ok(depenses)
     } catch (error) {
-      console.error('Erreur lors de la récupération des dépenses:', error)
+      console.error('Erreur lors de la récupération des éditions:', error)
       return response.status(500).send({ error: 'Erreur interne du serveur' })
     }
   }
