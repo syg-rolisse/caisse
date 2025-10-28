@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import ExportToExcelButton from "../../components/ExportToExcelButton";
+import ExportToPDFButton from "../../components/ExportToPDFButton";
 import PageHeaderActions from "../../components/common/PageHeaderActions";
 import Spinner from "../../components/Spinner";
 import { useFetchUsers } from "../../hook/api/useFetchUsers";
@@ -44,7 +45,7 @@ export default function Editions() {
 
   const handleSearch = useCallback((newFilters) => {
     console.log(newFilters);
-    
+
     setFilters(newFilters);
   }, []);
 
@@ -58,9 +59,15 @@ export default function Editions() {
     };
 
     const events = [
-      "user_created", "user_updated", "user_deleted", "depense_created",
-      "depense_updated", "depense_deleted", "type_depense_created",
-      "type_depense_updated", "type_depense_deleted",
+      "user_created",
+      "user_updated",
+      "user_deleted",
+      "depense_created",
+      "depense_updated",
+      "depense_deleted",
+      "type_depense_created",
+      "type_depense_updated",
+      "type_depense_deleted",
     ];
     events.forEach((event) => socket.on(event, handleDataUpdate));
 
@@ -111,19 +118,24 @@ export default function Editions() {
   };
 
   const isLoading = isLoadingUsers || isLoadingEditions;
-  const visibleColumnCount = Object.values(columnVisibility).filter(Boolean).length;
+  const visibleColumnCount =
+    Object.values(columnVisibility).filter(Boolean).length;
 
   return (
     <div>
-      <div className="container-fluid">
+      <div className="tw-border tw-p-3 tw-rounded-md container-fluid table-responsive tw-my-5 tw-mb-20">
         <PageHeaderActions indexTitle="Editions" />
         <div className="tw-my-4 tw-bg-gray-50 dark:tw-bg-gray-800 tw-rounded-lg">
-          <UserAndDateRangeFilter companyId={companyId} onSearch={handleSearch} />
+          <UserAndDateRangeFilter
+            companyId={companyId}
+            onSearch={handleSearch}
+          />
         </div>
-        <div className="table-responsive tw-my-5 tw-mb-20">
-          <div className="tw-border tw-p-3 tw-rounded-md">
-            <div className="tw-mb-4">
+        <div className="">
+          <div className="">
+            <div className="tw-mb-4 tw-flex tw-items-center tw-justify-start tw-gap-2">
               <ExportToExcelButton tableId="editionsTable" />
+              <ExportToPDFButton tableId="editionsTable" />
             </div>
             <div className="d-flex flex-wrap mb-3 w-100">
               {Object.keys(columnVisibility).map((column) => (
@@ -135,58 +147,254 @@ export default function Editions() {
                     checked={columnVisibility[column]}
                     onChange={() => toggleColumnVisibility(column)}
                   />
-                  <label className="form-check-label ms-2" htmlFor={`col-${column}`}>
+                  <label
+                    className="form-check-label ms-2"
+                    htmlFor={`col-${column}`}
+                  >
                     {columnLabels[column]}
                   </label>
                 </div>
               ))}
             </div>
-            <table className="customTable table table-bordered text-nowrap mb-0" id="editionsTable">
+            <table
+              className="customTable table table-bordered text-nowrap mb-0"
+              id="editionsTable"
+            >
               <thead>
                 <tr>
-                  {columnVisibility.typeDepense && <th className="fw-bold">Type</th>}
-                  {/* {columnVisibility.id && <th className="fw-bold">N°</th>} */}
-                  {columnVisibility.user && <th className="fw-bold">Effectué par</th>}
-                  {columnVisibility.dateOperation && <th className="fw-bold">Date Opération</th>}
-                  {columnVisibility.wording && <th className="fw-bold">Libellé</th>}
-                  {columnVisibility.montant && <th className="fw-bold">Montant Dû</th>}
-                  {columnVisibility.totalDecaisse && <th className="fw-bold">Total Décaissé</th>}
-                  {columnVisibility.resteAPayer && <th className="fw-bold">Reste à Payer</th>}
-                  {columnVisibility.status && <th className="fw-bold">Statut</th>}
-                  {columnVisibility.approbation && <th className="fw-bold">Approbation</th>}
-                  {columnVisibility.bloquer && <th className="fw-bold">Bloqué</th>}
-                  {columnVisibility.facture && <th className="fw-bold">Facture</th>}
-                  {columnVisibility.decharger && <th className="fw-bold">Décharge</th>}
-                  
-                  {columnVisibility.createdAt && <th className="fw-bold">Créé le</th>}
+                  {columnVisibility.typeDepense && (
+                    <th className="fw-bold">Type</th>
+                  )}
+                  {columnVisibility.id && <th className="fw-bold"></th>}
+                  {columnVisibility.user && (
+                    <th className="fw-bold">Effectué par</th>
+                  )}
+                  {columnVisibility.dateOperation && (
+                    <th className="fw-bold">Date Opération</th>
+                  )}
+                  {columnVisibility.wording && (
+                    <th className="fw-bold">Libellé</th>
+                  )}
+                  {columnVisibility.montant && (
+                    <th className="fw-bold">Montant Dû</th>
+                  )}
+                  {columnVisibility.totalDecaisse && (
+                    <th className="fw-bold">Total Décaissé</th>
+                  )}
+                  {columnVisibility.resteAPayer && (
+                    <th className="fw-bold">Reste à Payer</th>
+                  )}
+                  {columnVisibility.status && (
+                    <th className="fw-bold">Statut</th>
+                  )}
+                  {columnVisibility.approbation && (
+                    <th className="fw-bold">Approbation</th>
+                  )}
+                  {columnVisibility.bloquer && (
+                    <th className="fw-bold">Bloqué</th>
+                  )}
+                  {columnVisibility.facture && (
+                    <th className="fw-bold">Facture</th>
+                  )}
+                  {columnVisibility.decharger && (
+                    <th className="fw-bold">Décharge</th>
+                  )}
+
+                  {columnVisibility.createdAt && (
+                    <th className="fw-bold">Créé le</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {isLoading && (<tr><td colSpan={visibleColumnCount} className="text-center py-5"><Spinner /></td></tr>)}
-                {isError && (<tr><td colSpan={visibleColumnCount} className="text-center py-5"><div className="flex flex-col items-center gap-2 text-red-500"><ServerCrash className="w-8 h-8" /><span>{error?.message || "Erreur de chargement des données."}</span></div></td></tr>)}
-                {!isLoading && !isError && depenses.length === 0 && (<tr><td colSpan={visibleColumnCount} className="text-center py-4"><span className="tw-text-gray-500">Aucun résultat trouvé pour ces critères.</span></td></tr>)}
-                {!isLoading && !isError && depenses.map((depense, index, arr) => {
-                    const isFirstRowOfGroup = index === 0 || arr[index - 1].typeDeDepense.wording !== depense.typeDeDepense.wording;
-                    const showGroupedCell = columnVisibility.typeDepense && isFirstRowOfGroup;
-                    const totalDecaisse = depense.Mouvements.reduce((sum, m) => sum + m.montant, 0);
+                {isLoading && (
+                  <tr>
+                    <td
+                      colSpan={visibleColumnCount}
+                      className="text-center py-5"
+                    >
+                      <Spinner />
+                    </td>
+                  </tr>
+                )}
+                {isError && (
+                  <tr>
+                    <td
+                      colSpan={visibleColumnCount}
+                      className="text-center py-5"
+                    >
+                      <div className="flex flex-col items-center gap-2 text-red-500">
+                        <ServerCrash className="w-8 h-8" />
+                        <span>
+                          {error?.message ||
+                            "Erreur de chargement des données."}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {!isLoading && !isError && depenses.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={visibleColumnCount}
+                      className="text-center py-4"
+                    >
+                      <span className="tw-text-gray-500">
+                        Aucun résultat trouvé pour ces critères.
+                      </span>
+                    </td>
+                  </tr>
+                )}
+                {!isLoading &&
+                  !isError &&
+                  depenses.map((depense, index, arr) => {
+                    const isFirstRowOfGroup =
+                      index === 0 ||
+                      arr[index - 1].typeDeDepense.wording !==
+                        depense.typeDeDepense.wording;
+                    const showGroupedCell =
+                      columnVisibility.typeDepense && isFirstRowOfGroup;
+                    const totalDecaisse = depense.Mouvements.reduce(
+                      (sum, m) => sum + m.montant,
+                      0
+                    );
                     const resteAPayer = depense.montant - totalDecaisse;
 
                     return (
                       <tr key={depense.id}>
-                        {showGroupedCell && (<td rowSpan={arr.filter((d) => d.typeDeDepense.wording === depense.typeDeDepense.wording).length} className="align-middle text-center">{depense.typeDeDepense.wording}</td>)}
-                        {/* {columnVisibility.id && (<td className="text-center"><span className="tw-bg-blue-100 tw-text-blue-600 tw-rounded-full tw-p-1">{depense.id}</span></td>)} */}
-                        {columnVisibility.user && (<td>{depense.user?.fullName}</td>)}
-                        {columnVisibility.dateOperation && (<td className="text-center">{new Date(depense.dateOperation).toLocaleDateString("fr-CA")}</td>)}
+                        {showGroupedCell && (
+                          <td
+                            rowSpan={
+                              arr.filter(
+                                (d) =>
+                                  d.typeDeDepense.wording ===
+                                  depense.typeDeDepense.wording
+                              ).length
+                            }
+                            className="align-middle text-center"
+                          >
+                            {depense.typeDeDepense.wording}
+                          </td>
+                        )}
+                        {columnVisibility.id && (
+                          <td className="text-center">
+                            <span className="tw-bg-blue-100 tw-text-blue-600 tw-rounded-full tw-text-[13px] tw-p-3">
+                              {depenses?.length - index}
+                            </span>
+                          </td>
+                        )}
+                        {columnVisibility.user && (
+                          <td>{depense.user?.fullName}</td>
+                        )}
+                        {columnVisibility.dateOperation && (
+                          <td className="text-center">
+                            {new Date(depense.dateOperation).toLocaleDateString(
+                              "fr-CA"
+                            )}
+                          </td>
+                        )}
                         {columnVisibility.wording && <td>{depense.wording}</td>}
-                        {columnVisibility.montant && (<td className="tw-font-bold tw-text-center">{depense.montant?.toLocaleString()} F</td>)}
-                        {columnVisibility.totalDecaisse && (<td className="tw-font-semibold tw-text-center">{totalDecaisse.toLocaleString()} F</td>)}
-                        {columnVisibility.resteAPayer && (<td className={`tw-font-bold tw-text-center ${resteAPayer > 0 ? "tw-text-red-600" : "tw-text-green-600"}`}>{resteAPayer.toLocaleString()} F</td>)}
-                        {columnVisibility.status && (<td className="text-center"><span className={`badge ${depense.status ? "bg-success-transparent" : "bg-danger-transparent"}`}>{depense.status ? "Payé" : "Impayé"}</span></td>)}
-                        {columnVisibility.approbation && (<td className="text-center"><span className={`badge ${!depense.rejeter ? "bg-success-transparent" : "bg-danger-transparent"}`}>{!depense.rejeter ? "Approuvé" : "Rejeté"}</span></td>)}
-                        {columnVisibility.bloquer && (<td className="text-center"><div className="tw-flex tw-items-center tw-justify-center">{depense.bloquer ? <Lock className="w-4 h-4 tw-text-gray-700" /> : <Unlock className="w-4 h-4 tw-text-gray-700" />}</div></td>)}
-                        {columnVisibility.facture && (<td className="text-center">{depense.factureUrl ? (<a className="btn btn-icon btn-sm btn-success-transparent rounded-pill" href={`${import.meta.env.VITE_BACKEND_URL}/uploads/${depense.factureUrl}`} target="_blank" rel="noopener noreferrer"><i className="bx bx-download"></i></a>) : (<span className="btn btn-icon btn-sm btn-danger-transparent rounded-pill" style={{ cursor: "not-allowed" }}><i className="bx bx-x-circle"></i></span>)}</td>)}
-                        {columnVisibility.decharger && (<td className="text-center"><span className={`badge ${depense.decharger ? "bg-success-transparent" : "bg-danger-transparent"}`}>{depense.decharger ? "Oui" : "Non"}</span></td>)}
-                        {columnVisibility.createdAt && (<td className="text-center">{new Date(depense.createdAt).toLocaleDateString("fr-CA")}</td>)}
+                        {columnVisibility.montant && (
+                          <td className="tw-font-bold tw-text-center">
+                            {depense.montant?.toLocaleString()} F
+                          </td>
+                        )}
+                        {columnVisibility.totalDecaisse && (
+                          <td className="tw-font-semibold tw-text-center">
+                            {totalDecaisse.toLocaleString()} F
+                          </td>
+                        )}
+                        {columnVisibility.resteAPayer && (
+                          <td
+                            className={`tw-font-bold tw-text-center ${
+                              resteAPayer > 0
+                                ? "tw-text-red-600"
+                                : "tw-text-green-600"
+                            }`}
+                          >
+                            {resteAPayer.toLocaleString()} F
+                          </td>
+                        )}
+                        {columnVisibility.status && (
+                          <td className="text-center">
+                            <span
+                              className={`badge ${
+                                depense.status
+                                  ? "bg-success-transparent"
+                                  : "bg-danger-transparent"
+                              }`}
+                            >
+                              {depense.status ? "Payé" : "Impayé"}
+                            </span>
+                          </td>
+                        )}
+                        {columnVisibility.approbation && (
+                          <td className="text-center">
+                            <span
+                              className={`badge ${
+                                !depense.rejeter
+                                  ? "bg-success-transparent"
+                                  : "bg-danger-transparent"
+                              }`}
+                            >
+                              {!depense.rejeter ? "Approuvé" : "Rejeté"}
+                            </span>
+                          </td>
+                        )}
+                        {columnVisibility.bloquer && (
+                          <td className="text-center">
+                            <div className="tw-flex tw-items-center tw-justify-center">
+                              {depense.bloquer ? (
+                                <Lock className="w-4 h-4 tw-text-gray-700" />
+                              ) : (
+                                <Unlock className="w-4 h-4 tw-text-gray-700" />
+                              )}
+                            </div>
+                          </td>
+                        )}
+                        {columnVisibility.facture && (
+                          <td className="text-center">
+                            {depense.factureUrl ? (
+                              <a
+                                className="btn btn-icon btn-sm btn-success-transparent rounded-pill d-flex justify-content-center align-items-center mx-auto"
+                                href={`${
+                                  import.meta.env.VITE_BACKEND_URL
+                                }/uploads/${depense.factureUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <i className="bx bx-download"></i>
+                              </a>
+                            ) : (
+                              <span
+                                className="btn btn-icon btn-sm btn-danger-transparent rounded-pill d-flex justify-content-center align-items-center mx-auto"
+                                style={{ cursor: "not-allowed" }}
+                              >
+                                <i className="bx bx-x-circle"></i>
+                              </span>
+                            )}
+                          </td>
+                        )}
+
+                        {columnVisibility.decharger && (
+                          <td className="text-center">
+                            <span
+                              className={`badge ${
+                                depense.decharger
+                                  ? "bg-success-transparent"
+                                  : "bg-danger-transparent"
+                              }`}
+                            >
+                              {depense.decharger ? "Oui" : "Non"}
+                            </span>
+                          </td>
+                        )}
+                        {columnVisibility.createdAt && (
+                          <td className="text-center">
+                            {new Date(depense.createdAt).toLocaleDateString(
+                              "fr-CA"
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
