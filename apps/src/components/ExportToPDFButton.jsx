@@ -22,10 +22,9 @@ const ExportToPDFButton = ({ tableId, fileNamePrefix = "brouillard_de_caisse" })
 
     doc.setFont("helvetica", "bold");
     
-    // CORRECTION N°1 : Mise à jour du titre du document
     const mainTitle = "Brouillard de caisse";
     const reportDate = new Date().toLocaleDateString("fr-FR");
-    const companyName = user?.company?.companyName || "Mon Entreprise";
+    const companyName = user?.company?.name || "Mon Entreprise"; // Correction de companyName -> name
 
     doc.autoTable({
       html: `#${tableId}`,
@@ -35,6 +34,9 @@ const ExportToPDFButton = ({ tableId, fileNamePrefix = "brouillard_de_caisse" })
         fontSize: 8,
         cellPadding: 2,
         overflow: 'linebreak',
+        // MODIFICATION N°1 : Bordures plus fines et couleur plus douce
+        lineWidth: 0.1,
+        lineColor: [220, 220, 220], 
       },
       headStyles: {
         fillColor: [41, 128, 185],
@@ -42,28 +44,20 @@ const ExportToPDFButton = ({ tableId, fileNamePrefix = "brouillard_de_caisse" })
         fontStyle: "bold",
         halign: 'center',
       },
+      // MODIFICATION N°2 : Couleur de ligne alternée plus subtile
       alternateRowStyles: {
-        fillColor: [245, 245, 245],
+        fillColor: [239, 247, 254], // Un bleu très clair au lieu du gris
       },
-      // CORRECTION N°2 : Centrer verticalement le contenu de la première colonne
       columnStyles: {
-        0: { // Cible la première colonne (index 0)
+        0: { 
           valign: 'middle', 
           halign: 'center',
         },
       },
-      // CORRECTION N°3 : Nettoyer les données des cellules pour éviter les erreurs de formatage
-      // Ce hook est appelé pour chaque cellule avant qu'elle ne soit dessinée
       didParseCell: (data) => {
-        // On s'assure de travailler sur les cellules du corps du tableau
         if (data.section === 'body') {
-          const cellText = data.cell.text[0]; // On récupère le texte de la cellule
-          
-          // Si le texte est une chaîne et contient un chiffre
-          // (pour ne pas affecter les textes qui ne sont pas des nombres)
+          const cellText = data.cell.text[0];
           if (typeof cellText === 'string' && /\d/.test(cellText)) {
-            // On supprime les espaces et les slashs qui pourraient être mal interprétés
-            // "11 000" -> "11000", "11/000" -> "11000"
             data.cell.text[0] = cellText.replace(/[\s/]/g, '');
           }
         }
