@@ -1,5 +1,3 @@
-// src/components/SearchableUserSelect.jsx
-
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, ChevronDown, X, UserX } from 'lucide-react';
 import PropTypes from "prop-types";
@@ -95,7 +93,7 @@ export default function SearchableUserSelect({
           onFocus={() => { setIsOpen(true); setIsFocused(true); }}
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
-          className="tw-w-full tw-pl-10 tw-pr-10 tw-py-2 tw-border tw-border-gray-300 dark:tw-border-gray-600 tw-rounded-lg tw-bg-white dark:tw-bg-gray-700 focus:tw-outline-none focus:tw-ring-1 focus:tw-ring-orange-500"
+          className="tw-w-full tw-pl-10 tw-pr-10 tw-py-2 tw-border tw-border-gray-300 dark:tw-border-gray-600 tw-rounded-lg tw-bg-white dark:tw-bg-gray-700 dark:tw-text-gray-200 focus:tw-outline-none focus:tw-ring-1 focus:tw-ring-orange-500"
         />
         <div className="tw-absolute tw-right-3 tw-top-1/2 -tw-translate-y-1/2">
           {value ? (
@@ -103,7 +101,7 @@ export default function SearchableUserSelect({
               <X size={20} />
             </button>
           ) : (
-            <ChevronDown className="tw-text-gray-400" size={20} />
+            <ChevronDown className="tw-text-gray-400 dark:tw-text-gray-500" size={20} />
           )}
         </div>
       </div>
@@ -129,7 +127,7 @@ export default function SearchableUserSelect({
               </div>
             ))
           ) : (
-            <div className="tw-flex tw-flex-col tw-items-center tw-justify-center tw-p-4 tw-text-center tw-text-gray-500">
+            <div className="tw-flex tw-flex-col tw-items-center tw-justify-center tw-p-4 tw-text-center tw-text-gray-500 dark:tw-text-gray-400">
               <UserX size={32} className="tw-mb-2" />
               <p className="tw-text-sm tw-font-medium">Aucun utilisateur trouvé.</p>
             </div>

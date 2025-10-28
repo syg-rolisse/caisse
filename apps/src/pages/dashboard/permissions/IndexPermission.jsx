@@ -176,7 +176,7 @@ export default function IndexPermission() {
                             <PermissionItem label="Payer" hasPermission={permission.payeDepense} />
                             <PermissionItem label="Rejeter" hasPermission={permission.rejectDepense} />
                             <PermissionItem label="Bloquer" hasPermission={permission.bloqueDepense} />
-                            <PermissionItem label="Décharger" hasPermission={permission.dechargeDepense} />
+                            {/* <PermissionItem label="Décharger" hasPermission={permission.dechargeDepense} /> */}
                           </ul>
                         </div>
                       </div>
