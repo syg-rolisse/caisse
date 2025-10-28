@@ -8,7 +8,7 @@ import mail from '@adonisjs/mail/services/main'
 import { DateTime } from 'luxon'
 import crypto from 'node:crypto'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
-import { seedProfile } from '../../helpers/seed_profil.js'
+// import { seedProfile } from '../../helpers/seed_profil.js'
 
 export default class AuthController {
   async index() {
@@ -18,14 +18,8 @@ export default class AuthController {
   async login({ request, response }: HttpContext) {
     try {
       const { email, password } = await request.validateUsing(loginValidator)
-      seedProfile(1)
-      const userConnected = await User.query()
-        .where('email', email)
-        .preload('Profil', (query) => {
-          query.preload('Permission')
-        })
-        .preload('Companies') // Précharger la relation Company
-        .first()
+
+      const userConnected = await User.query().where('email', email).preload('Companies').first()
 
       if (!userConnected) {
         return response.badRequest({
@@ -34,7 +28,6 @@ export default class AuthController {
         })
       }
 
-      // Vérifier les informations d'identification
       const isValidCredentials = await User.verifyCredentials(email, password)
       if (!isValidCredentials) {
         return response.badRequest({
@@ -43,7 +36,6 @@ export default class AuthController {
         })
       }
 
-      // Vérifier que l'email de l'utilisateur est confirmé
       if (!userConnected?.$attributes?.validEmail) {
         return response.badRequest({
           status: 400,
@@ -51,7 +43,6 @@ export default class AuthController {
         })
       }
 
-      // Vérifier que le compte est actif
       if (!userConnected?.$attributes?.status) {
         return response.badRequest({
           status: 400,
@@ -59,7 +50,12 @@ export default class AuthController {
         })
       }
 
-      // Créer un jeton d'accès pour l'utilisateur
+      await userConnected.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('compagnie_id', userConnected.companieId)
+        })
+      })
+
       const token = await User.accessTokens.create(userConnected)
       if (!token) {
         return response.internalServerError({
@@ -68,7 +64,6 @@ export default class AuthController {
         })
       }
 
-      // Retourner l'utilisateur avec le jeton
       return response.created({
         user: {
           id: userConnected.id,
@@ -83,8 +78,6 @@ export default class AuthController {
       })
     } catch (error) {
       console.log(error.message)
-
-      // Gérer les erreurs spécifiques ou génériques
       return response.badRequest({
         status: 400,
         error:
@@ -275,8 +268,6 @@ export default class AuthController {
       const user = await auth.authenticate() // Authentification explicite
 
       const { userConnectedId, route } = request.qs()
-      console.log('Requête QS :', request.qs())
-      console.log('Utilisateur authentifié :', user?.id)
 
       if (user.id !== Number.parseInt(userConnectedId)) {
         return response.status(403).json({
@@ -285,12 +276,17 @@ export default class AuthController {
         })
       }
 
+      // await user.load('Profil', (profilQuery) => {
+      //   profilQuery.preload('Permission')
+      // })
+
       await user.load('Profil', (profilQuery) => {
-        profilQuery.preload('Permission')
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('compagnie_id', user.companieId)
+        })
       })
 
       let isAuthorized = false
-      console.log(route)
 
       // Vérifie si l'utilisateur a l'autorisation de lire selon le route
       if (route === 'approvisionnements') {
