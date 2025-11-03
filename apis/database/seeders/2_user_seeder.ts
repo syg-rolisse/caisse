@@ -10,7 +10,7 @@ export default class UserSeeder extends BaseSeeder {
         fullName: 'Rolisse ADJEVI',
         email: 'rolissecodeur@gmail.com',
         password: 'password',
-        profilId: 1,
+        profilId: 6,
         validEmail: true,
         status: true,
         companieId: 1,

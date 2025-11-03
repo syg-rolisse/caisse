@@ -169,16 +169,7 @@ export default function IndexPermission() {
                             <PermissionItem label="Supprimer" hasPermission={permission.deletePack} />
                           </ul>
                         </div>
-                        
-                         <div className="">
-                          <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Actions sur Dépenses</h4>
-                           <ul className="tw-space-y-1">
-                            <PermissionItem label="Payer" hasPermission={permission.payeDepense} />
-                            <PermissionItem label="Rejeter" hasPermission={permission.rejectDepense} />
-                            <PermissionItem label="Bloquer" hasPermission={permission.bloqueDepense} />
-                            {/* <PermissionItem label="Décharger" hasPermission={permission.dechargeDepense} /> */}
-                          </ul>
-                        </div>
+                     
                          <div className="">
                           <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Editions (Stats Dépenses)</h4>
                            <ul className="tw-space-y-1">

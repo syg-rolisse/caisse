@@ -56,6 +56,10 @@ export default class AbonnementsController {
         return response.badRequest({ error: "L'identifiant de l'entreprise est requis." })
       }
 
+      console.log(companieId)
+
+      console.log(request.body())
+
       const payload = await request.validateUsing(renewAbonnementValidator)
       const selectedPack = await Pack.findOrFail(payload.packId)
 
@@ -96,6 +100,7 @@ export default class AbonnementsController {
         message: 'Abonnement renouvelé avec succès.',
       })
     } catch (error) {
+      console.log(error)
       const message = processErrorMessages(error)
       return response.badRequest({ status: 400, error: message })
     }
