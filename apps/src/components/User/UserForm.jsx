@@ -131,6 +131,8 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
             <option value="2">Admin</option>
             <option value="3">Employé</option>
             <option value="4">Secrétaire</option>
+            <option value="5">Stagiaire</option>
+
           </select>
           {errors.profilId && <p className="tw-mt-1 tw-text-sm tw-text-red-600">{errors.profilId.message}</p>}
         </div>

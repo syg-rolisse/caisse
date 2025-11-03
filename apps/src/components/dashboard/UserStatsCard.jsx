@@ -9,7 +9,7 @@ const AnimatedStat = ({ value }) => {
 AnimatedStat.propTypes = { value: PropTypes.number.isRequired };
 
 const UserStatsCard = ({ stats }) => {
-  const { totalUsers = 0, activeUsers = 0, inactiveUsers = 0, Superadmin = 0, Admin = 0, Employé = 0, Sécrétaire = 0 } = stats;
+  const { totalUsers = 0, activeUsers = 0, inactiveUsers = 0, Superadmin = 0, Admin = 0, Employé = 0, Sécrétaire = 0, Stagiaire = 0 } = stats;
 
   return (
     <div className="tw-bg-white tw-p-6 tw-rounded-xl tw-shadow-md tw-border tw-border-gray-100 tw-h-full tw-flex tw-flex-col">
@@ -41,11 +41,14 @@ const UserStatsCard = ({ stats }) => {
         <span className="tw-inline-flex tw-items-center tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-medium tw-bg-sky-100 tw-text-sky-800">
           <UserCog size={14} className="tw-mr-1" /> Admin : <AnimatedStat value={Admin} />
         </span>
-        <span className="tw-inline-flex tw-items-center tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-medium tw-bg-amber-100 tw-text-amber-800">
+        <span className="tw-inline-flex tw-items-center tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-medium tw-bg-green-100 tw-text-green-800">
           <Briefcase size={14} className="tw-mr-1" /> Employé : <AnimatedStat value={Employé} />
         </span>
         <span className="tw-inline-flex tw-items-center tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-medium tw-bg-amber-100 tw-text-amber-800">
           <Briefcase size={14} className="tw-mr-1" /> Sécrétaire : <AnimatedStat value={Sécrétaire} />
+        </span>
+        <span className="tw-inline-flex tw-items-center tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-medium tw-bg-violet-100 tw-text-violet-800">
+          <Briefcase size={14} className="tw-mr-1" /> Stagiaire : <AnimatedStat value={Stagiaire} />
         </span>
       </div>
     </div>
@@ -61,6 +64,7 @@ UserStatsCard.propTypes = {
     Admin: PropTypes.number,
     Employé: PropTypes.number,
     Sécrétaire: PropTypes.number,
+    Stagiaire: PropTypes.number,
   }).isRequired,
 };
 
