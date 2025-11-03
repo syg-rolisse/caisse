@@ -16,28 +16,28 @@ export default class UserSeeder extends BaseSeeder {
         companieId: 1,
       },
       {
-        fullName: 'Alice Johnson',
-        email: 'alice.j@innovatech.com',
+        fullName: 'Martinien SEHOUHOUE',
+        email: 'martinien.sehouhoue@oraadvices.com',
         password: 'password',
-        profilId: 1, // Supposons que profilId 1 est un manager/admin
+        profilId: 3,
         validEmail: true,
         status: true,
-        companieId: 1,
+        companieId: 2,
       },
       {
-        fullName: 'Bob Williams',
-        email: 'bob.w@innovatech.com',
+        fullName: 'Fridos KINDJI',
+        email: 'fridos.kindji@oraadvices.com',
         password: 'password',
-        profilId: 2, // Supposons que profilId 2 est un utilisateur standard
+        profilId: 2,
         validEmail: true,
         status: true,
-        companieId: 1,
+        companieId: 2,
       },
 
       // --- Utilisateurs pour l'entreprise 2 : Creative Buzz Agency ---
       {
-        fullName: 'Charlie Brown',
-        email: 'charlie.b@creativebuzz.com',
+        fullName: 'Honore EDAH',
+        email: 'honore.edah@oraadvices.com',
         password: 'password',
         profilId: 1,
         validEmail: true,
@@ -45,8 +45,8 @@ export default class UserSeeder extends BaseSeeder {
         companieId: 2,
       },
       {
-        fullName: 'Dana Smith',
-        email: 'dana.s@creativebuzz.com',
+        fullName: 'Victoire DANON',
+        email: 'victoire.danon@oraadvices.com',
         password: 'password',
         profilId: 2,
         validEmail: true,
@@ -56,42 +56,13 @@ export default class UserSeeder extends BaseSeeder {
 
       // --- Utilisateurs pour l'entreprise 3 : EcoBuild Constructions ---
       {
-        fullName: 'Eve Davis',
-        email: 'eve.d@ecobuild.com',
+        fullName: 'ADMIN',
+        email: 'contact@oraadvices.com',
         password: 'password',
         profilId: 1,
         validEmail: true,
         status: true,
-        companieId: 3,
-      },
-      {
-        fullName: 'Frank Miller',
-        email: 'frank.m@ecobuild.com',
-        password: 'password',
-        profilId: 2,
-        validEmail: true,
-        status: true,
-        companieId: 3,
-      },
-
-      // --- Utilisateurs pour l'entreprise 4 : Gourmet Foods Inc. ---
-      {
-        fullName: 'Grace Wilson',
-        email: 'grace.w@gourmetfoods.com',
-        password: 'password',
-        profilId: 1,
-        validEmail: true,
-        status: true,
-        companieId: 4,
-      },
-      {
-        fullName: 'Heidi Moore',
-        email: 'heidi.m@gourmetfoods.com',
-        password: 'password',
-        profilId: 2,
-        validEmail: true,
-        status: true,
-        companieId: 4,
+        companieId: 2,
       },
     ]
 
