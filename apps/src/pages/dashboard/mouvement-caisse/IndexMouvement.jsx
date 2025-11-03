@@ -12,6 +12,7 @@ import BloquerDepense from "../../../components/Sortie/BloquerDepense";
 import { useFetchDepenses } from "../../../hook/api/useFetchDepense";
 import { useSocket } from "../../../context/socket.jsx";
 import { usePermissions } from "../../../hook/usePermissions";
+import EmptyState from "../../../components/EmptyState";
 import {
   ChevronDown,
   ChevronRight,
@@ -143,12 +144,12 @@ export default function IndexMouvement() {
       </WelcomeModal>
 
       <div className="container-fluid">
-        <PageHeaderActions indexTitle="Gestion des Sorties / Dépenses" />
+        <PageHeaderActions indexTitle="Gestion des Mouvements / Dépenses" />
 
         <div className="col-xl-12">
           <div className="card custom-card">
             <div className="card-header justify-content-between">
-              <div className="card-title">Liste des Dépenses</div>
+              <div className="card-title">Liste des Dépenses | Mouvements</div>
             </div>
             <div className="card-body card-border tw-rounded-md tw-m-5">
               <div className="d-sm-flex mb-4 justify-content-between">
@@ -196,7 +197,7 @@ export default function IndexMouvement() {
                     {isLoading && (
                       <tr>
                         <td
-                          colSpan={hasAnyActionPermission ? "6" : "5"}
+                          colSpan={hasAnyActionPermission ? "7" : "6"}
                           className="text-center py-5"
                         >
                           <Spinner />
@@ -206,7 +207,7 @@ export default function IndexMouvement() {
                     {isError && (
                       <tr>
                         <td
-                          colSpan={hasAnyActionPermission ? "6" : "5"}
+                          colSpan={hasAnyActionPermission ? "7" : "6"}
                           className="text-center py-5"
                         >
                           <div className="flex flex-col items-center gap-2 text-red-500">
@@ -224,12 +225,10 @@ export default function IndexMouvement() {
                       filteredDepenses.length === 0 && (
                         <tr>
                           <td
-                            colSpan={hasAnyActionPermission ? "6" : "5"}
+                            colSpan={hasAnyActionPermission ? "7" : "6"}
                             className="text-center"
                           >
-                            <span className="tw-text-gray-500">
-                              Aucune dépense trouvée
-                            </span>
+                            <EmptyState message="Aucune dépense trouvée" />
                           </td>
                         </tr>
                       )}

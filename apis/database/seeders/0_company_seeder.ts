@@ -16,7 +16,7 @@ export default class CompanieSeeder extends BaseSeeder {
         companyName: 'ORA ADVICES',
         status: true,
         showCompanyName: true,
-        address: '456 Marketing Ave, New York, NY 10001',
+        address: 'ABOMEY CALAVI',
         phoneNumber: '+1-800-555-0102',
         logoUrl: 'logo/company-logo.png',
       },

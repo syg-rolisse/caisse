@@ -9,6 +9,7 @@ import { useFetchEditions } from "../../hook/api/useFetchEditions";
 import { useSocket } from "../../context/socket.jsx";
 import { ServerCrash, Lock, Unlock } from "lucide-react";
 import UserAndDateRangeFilter from "../../components/UserAndDateRangeFilter";
+import EmptyState from "../../components/EmptyState";
 
 export default function Editions() {
   const currentYear = new Date().getFullYear();
@@ -238,8 +239,8 @@ export default function Editions() {
                       colSpan={visibleColumnCount}
                       className="text-center py-4"
                     >
-                      <span className="tw-text-gray-500">
-                        Aucun résultat trouvé pour ces critères.
+                      <span className="tw-bg-gray-100 tw-text-gray-600 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
+                        <EmptyState message="Aucune dépense trouvée pour les filtres sélectionnés." />
                       </span>
                     </td>
                   </tr>

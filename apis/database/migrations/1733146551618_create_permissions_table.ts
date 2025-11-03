@@ -46,6 +46,8 @@ export default class extends BaseSchema {
       table.boolean('paye_depense').defaultTo(false)
       table.boolean('bloque_depense').defaultTo(false)
       table.boolean('decharge_depense').defaultTo(false)
+      table.boolean('read_edition').defaultTo(false)
+      table.boolean('export_edition').defaultTo(false)
 
       table.boolean('read_pack').defaultTo(false)
       table.boolean('create_pack').defaultTo(false)

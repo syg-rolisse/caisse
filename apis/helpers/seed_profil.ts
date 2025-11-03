@@ -7,6 +7,7 @@ export async function seedProfile(companieId: number) {
     { wording: 'Admin', companieId: companieId },
     { wording: 'Employé', companieId: companieId },
     { wording: 'Sécrétaire', companieId: companieId },
+    { wording: 'Stagiaire', companieId: companieId },
   ]
 
   const trx = await db.transaction()

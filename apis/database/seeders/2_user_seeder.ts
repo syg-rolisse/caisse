@@ -16,6 +16,15 @@ export default class UserSeeder extends BaseSeeder {
         companieId: 1,
       },
       {
+        fullName: 'Rolisse ADJEVI',
+        email: 'rolisse.adjevi@oraadvices.com',
+        password: 'password',
+        profilId: 3,
+        validEmail: true,
+        status: true,
+        companieId: 2,
+      },
+      {
         fullName: 'Martinien SEHOUHOUE',
         email: 'martinien.sehouhoue@oraadvices.com',
         password: 'password',

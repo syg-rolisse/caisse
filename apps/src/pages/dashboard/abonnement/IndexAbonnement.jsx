@@ -65,7 +65,7 @@ export default function IndexAbonnement() {
       {isLoading ? (
         <div className="tw-flex tw-justify-center tw-py-20"><Spinner /></div>
       ) : (
-        <div className="col-xl-12">
+        <div className="col-xl-12 tw-pb-12">
           {/* Section de l'abonnement actuel */}
           <div className="card custom-card">
             <div className="card-header">

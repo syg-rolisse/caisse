@@ -127,8 +127,18 @@ export default class TypeDeDepensesController {
     }
   }
 
-  public async create({ request, response }: HttpContext) {
+  public async create({ auth, bouncer, request, response }: HttpContext) {
     try {
+      const userConnected = auth.user
+      await userConnected?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', userConnected.companieId)
+        })
+      })
+
+      if (await bouncer.with('TypeDeDepensePolicy').denies('create')) {
+        return response.forbidden("Vous n'êtes pas autorisé à ajouter un type de dépense.")
+      }
       const payload = await request.validateUsing(createTypeDepenseValidator)
       const typeDepense = await TypeDeDepense.create({ ...payload })
 
@@ -163,8 +173,18 @@ export default class TypeDeDepensesController {
     }
   }
 
-  async update({ request, response }: HttpContext) {
+  async update({ auth, bouncer, request, response }: HttpContext) {
     try {
+      const userConnected = auth.user
+      await userConnected?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', userConnected.companieId)
+        })
+      })
+
+      if (await bouncer.with('TypeDeDepensePolicy').denies('update')) {
+        return response.forbidden("Vous n'êtes pas autorisé à modifier ce type de dépense.")
+      }
       const { typeDepenseId } = request.qs()
       const typededepense = await TypeDeDepense.findOrFail(typeDepenseId)
       const payload = await request.validateUsing(updateTypeDepenseValidator)
@@ -183,10 +203,30 @@ export default class TypeDeDepensesController {
     }
   }
 
-  async delete({ request, response }: HttpContext) {
+  async delete({ auth, bouncer, request, response }: HttpContext) {
     try {
+      const userConnected = auth.user
+      await userConnected?.load('Profil', (profilQuery) => {
+        profilQuery.preload('Permission', (permissionQuery: any) => {
+          permissionQuery.where('companie_id', userConnected.companieId)
+        })
+      })
+
+      if (await bouncer.with('TypeDeDepensePolicy').denies('delete')) {
+        return response.forbidden("Vous n'êtes pas autorisé à supprimer ce type de dépense.")
+      }
       const { typeDepenseId } = request.qs()
-      const typededepense = await TypeDeDepense.findOrFail(typeDepenseId)
+      const typededepense = await TypeDeDepense.query()
+        .where('id', typeDepenseId)
+        .preload('Depenses')
+        .firstOrFail()
+
+      if (typededepense.Depenses.length > 0) {
+        return response.badRequest({
+          status: 400,
+          error: 'Désolé, ce type de dépense est utilisé.',
+        })
+      }
       const companyId = typededepense.companieId
 
       await typededepense.delete()

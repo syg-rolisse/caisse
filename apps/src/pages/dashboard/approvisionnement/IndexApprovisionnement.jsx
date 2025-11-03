@@ -12,6 +12,7 @@ import { useFetchApprovisionnement } from "../../../hook/api/useFetchApprovision
 import { useSocket } from "../../../context/socket.jsx";
 import { usePermissions } from "../../../hook/usePermissions";
 import { ServerCrash } from "lucide-react";
+import EmptyState from "../../../components/EmptyState";
 import "../../../fade.css";
 
 export default function IndexApprovisionnement() {
@@ -131,7 +132,11 @@ export default function IndexApprovisionnement() {
               <div className="tw-mt-6">
                 {isLoading && (<div className="tw-flex tw-justify-center tw-py-10"><Spinner /></div>)}
                 {isError && (<div className="tw-flex tw-flex-col tw-items-center tw-gap-2 tw-text-red-500 tw-py-10"><ServerCrash className="w-8 h-8" /><span>{error?.message || "Impossible de charger les données."}</span></div>)}
-                {!isLoading && !isError && filteredApprovisionnements.length === 0 && (<div className="tw-text-center tw-py-10"><span className="tw-text-gray-500">Aucun approvisionnement trouvé.</span></div>)}
+                {!isLoading && !isError && filteredApprovisionnements.length === 0 && (<div className="col-12 text-center">
+                              <span className="tw-bg-gray-100 tw-text-gray-600 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
+                                <EmptyState message="Aucun approvisionnement trouvé." />
+                              </span>
+                            </div>)}
 
                 {!isLoading && !isError && filteredApprovisionnements.length > 0 && (
                   <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-6">
