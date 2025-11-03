@@ -12,6 +12,7 @@ export default class ProfilSeeder extends BaseSeeder {
         { wording: 'Admin', companieId: company.id },
         { wording: 'Employé', companieId: company.id },
         { wording: 'Secrétaire', companieId: company.id },
+        { wording: 'Stagiaire', companieId: company.id },
       ])
     }
   }

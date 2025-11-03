@@ -87,8 +87,9 @@ jobs:
             echo "${{ secrets.STAGING_ENV_APPS }}" > ./apps/.env
             echo "${{ secrets.STAGING_ENV_BACKOFFICE }}" > ./backoffice/.env
             
-            echo "Reconstruction forcée et démarrage des nouveaux services de staging..."
-            docker compose -f docker-compose.staging.yml -p caisse_staging up -d --build --force-recreate
+            echo "Reconstruction forcée sans cache et démarrage des nouveaux services de staging..."
+            docker compose -f docker-compose.staging.yml -p caisse_staging build --no-cache
+            docker compose -f docker-compose.staging.yml -p caisse_staging up -d --force-recreate
             
             echo "Nettoyage des anciennes images Docker..."
             docker image prune -f
@@ -140,8 +141,9 @@ jobs:
             echo "${{ secrets.PRODUCTION_ENV_APPS }}" > ./apps/.env
             echo "${{ secrets.PRODUCTION_ENV_BACKOFFICE }}" > ./backoffice/.env
             
-            echo "Reconstruction forcée et démarrage des nouveaux services de production..."
-            docker compose -f docker-compose.prod.yml -p caisse_prod up -d --build --force-recreate
+            echo "Reconstruction forcée sans cache et démarrage des nouveaux services de production..."
+            docker compose -f docker-compose.prod.yml -p caisse_prod build --no-cache
+            docker compose -f docker-compose.prod.yml -p caisse_prod up -d --force-recreate
             
             echo "Nettoyage des anciennes images Docker..."
             docker image prune -f
