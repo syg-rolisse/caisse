@@ -86,12 +86,21 @@ jobs:
             echo "${{ secrets.STAGING_ENV_DB }}" > ./apis/.env.db
             echo "${{ secrets.STAGING_ENV_APPS }}" > ./apps/.env
             echo "${{ secrets.STAGING_ENV_BACKOFFICE }}" > ./backoffice/.env
-            
-            echo "Reconstruction forcée et démarrage des nouveaux services de staging..."
-            docker compose -f docker-compose.staging.yml -p caisse_staging up -d --build --force-recreate --no-cache
-            
-            echo "Nettoyage des anciennes images Docker..."
-            docker image prune -f
+
+            echo "Nettoyage complet du cache Docker et des builds précédents..."
+            docker compose -f docker-compose.staging.yml -p caisse_staging down
+            docker builder prune -af
+            docker image prune -af
+            docker volume prune -f
+            docker rm -f $(docker ps -aq) || true
+            docker rmi -f $(docker images -q) || true
+
+            echo "Reconstruction propre des images (sans cache)..."
+            docker compose -f docker-compose.staging.yml -p caisse_staging build --no-cache
+
+            echo "Démarrage des services de staging..."
+            docker compose -f docker-compose.staging.yml -p caisse_staging up -d --force-recreate
+
 
   deploy-production:
     name: 🚀 Déployer sur Production
