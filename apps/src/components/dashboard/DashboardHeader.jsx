@@ -8,7 +8,7 @@ const DashboardHeader = () => {
       <div className="tw-flex tw-flex-col md:tw-flex-row md:tw-items-center md:tw-justify-between tw-gap-4">
         {/* Titre et sous-titre */}
         <div>
-          <h1 className="tw-text-3xl tw-font-bold tw-tracking-tight tw-text-gray-800 dark:tw-text-gray-100">
+          <h1 className="tw-text-3xl tw-font-bold tw-tracking-tight tw-text-gray-800 dark:tw-text-gray-800">
             Tableau de Bord
           </h1>
           <p className="tw-mt-1 tw-text-md tw-text-gray-500 dark:tw-text-gray-400">
