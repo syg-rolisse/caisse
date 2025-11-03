@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
-import { FolderSearch } from 'lucide-react';
+import { SearchX  } from 'lucide-react';
 
 const EmptyState = ({ message }) => {
   return (
-    <div className="flex flex-col items-center justify-center p-10 text-center text-gray-500">
-      <FolderSearch size={48} className="mb-4" />
-      <p className="text-lg">{message}</p>
+    <div className="tw-flex tw-flex-col tw-items-center tw-justify-center tw-p-3 tw-text-center tw-text-gray-500">
+      <SearchX  size={56} className="tw-text-gray-500" />
+      <p className="tw-text-md tw-text-gray-500 tw-font-semibold tw-bg-gray-100 tw-rounded-full tw-text-center">{message}</p>
     </div>
   );
 };

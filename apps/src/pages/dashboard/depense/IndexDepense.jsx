@@ -15,6 +15,8 @@ import { useSocket } from "../../../context/socket.jsx";
 import { usePermissions } from "../../../hook/usePermissions";
 import { ServerCrash } from "lucide-react";
 import UserAndDateRangeFilter from "../../../components/UserAndDateRangeFilter";
+import EmptyState from "../../../components/EmptyState";
+
 
 export default function IndexDepense() {
   const [page, setPage] = useState(1);
@@ -159,9 +161,8 @@ export default function IndexDepense() {
           )}
           {!isLoading && !isError && filteredDepense.length === 0 && (
             <div className="col-12 text-center">
-              <span className="tw-bg-gray-100 tw-text-gray-600 tw-p-3 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
-                <i className="fe fe-info me-2"></i>
-                Aucune dépense trouvée pour les filtres sélectionnés.
+              <span className="tw-bg-gray-100 tw-text-gray-600 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
+                <EmptyState message="Aucune dépense trouvée pour les filtres sélectionnés." />
               </span>
             </div>
           )}

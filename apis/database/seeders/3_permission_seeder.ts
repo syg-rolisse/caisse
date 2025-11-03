@@ -37,6 +37,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: true,
       updatePack: true,
       deletePack: true,
+      readEdition: true,
+      exportEdition: true,
     })
     await Permission.create({
       profilId: 1,
@@ -59,7 +61,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: true,
       updateTypeDeDepense: true,
       deleteTypeDeDepense: true,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: true,
       bloqueDepense: true,
       dechargeDepense: true,
@@ -71,6 +73,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: true,
       updatePack: true,
       deletePack: true,
+      readEdition: true,
+      exportEdition: true,
     })
 
     //Profil Utilisateur 1 (profilId: 2) - Seul `createUser` à true
@@ -95,7 +99,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: true,
       updateTypeDeDepense: true,
       deleteTypeDeDepense: true,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: true,
       bloqueDepense: true,
       dechargeDepense: true,
@@ -107,6 +111,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: true,
       updatePack: true,
       deletePack: true,
+      readEdition: false,
+      exportEdition: false,
     })
     await Permission.create({
       profilId: 2,
@@ -129,7 +135,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: true,
       updateTypeDeDepense: true,
       deleteTypeDeDepense: true,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: true,
       bloqueDepense: true,
       dechargeDepense: true,
@@ -141,6 +147,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: true,
       updatePack: true,
       deletePack: true,
+      readEdition: false,
+      exportEdition: false,
     })
 
     // Profil Utilisateur 2 (profilId: 3) - Seul `createUser` à true
@@ -165,7 +173,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: false,
       updateTypeDeDepense: false,
       deleteTypeDeDepense: false,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: false,
       bloqueDepense: false,
       dechargeDepense: false,
@@ -177,6 +185,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: false,
       updatePack: false,
       deletePack: false,
+      readEdition: false,
+      exportEdition: false,
     })
     await Permission.create({
       profilId: 3,
@@ -199,7 +209,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: false,
       updateTypeDeDepense: false,
       deleteTypeDeDepense: false,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: false,
       bloqueDepense: false,
       dechargeDepense: false,
@@ -211,6 +221,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: false,
       updatePack: false,
       deletePack: false,
+      readEdition: false,
+      exportEdition: false,
     })
     await Permission.create({
       profilId: 4,
@@ -233,7 +245,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: false,
       updateTypeDeDepense: false,
       deleteTypeDeDepense: false,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: false,
       bloqueDepense: false,
       dechargeDepense: false,
@@ -245,6 +257,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: false,
       updatePack: false,
       deletePack: false,
+      readEdition: false,
+      exportEdition: false,
     })
     await Permission.create({
       profilId: 4,
@@ -267,7 +281,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: false,
       updateTypeDeDepense: false,
       deleteTypeDeDepense: false,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: false,
       bloqueDepense: false,
       dechargeDepense: false,
@@ -279,6 +293,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: false,
       updatePack: false,
       deletePack: false,
+      readEdition: false,
+      exportEdition: false,
     })
     await Permission.create({
       profilId: 5,
@@ -301,7 +317,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: false,
       updateTypeDeDepense: false,
       deleteTypeDeDepense: false,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: false,
       bloqueDepense: false,
       dechargeDepense: false,
@@ -313,6 +329,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: false,
       updatePack: false,
       deletePack: false,
+      readEdition: false,
+      exportEdition: false,
     })
     await Permission.create({
       profilId: 5,
@@ -335,7 +353,7 @@ export default class PermissionSeeder extends BaseSeeder {
       createTypeDeDepense: false,
       updateTypeDeDepense: false,
       deleteTypeDeDepense: false,
-      rejectDepense: true,
+      rejectDepense: false,
       payeDepense: false,
       bloqueDepense: false,
       dechargeDepense: false,
@@ -347,6 +365,8 @@ export default class PermissionSeeder extends BaseSeeder {
       createPack: false,
       updatePack: false,
       deletePack: false,
+      readEdition: false,
+      exportEdition: false,
     })
   }
 }

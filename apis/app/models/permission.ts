@@ -87,6 +87,12 @@ export default class Permission extends BaseModel {
   declare dechargeDepense: boolean
 
   @column()
+  declare readEdition: boolean
+
+  @column()
+  declare exportEdition: boolean
+
+  @column()
   declare readDepense: boolean
 
   @column()
