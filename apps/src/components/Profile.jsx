@@ -15,15 +15,16 @@ function ProfileComponent({ user, onUpdateSuccess }) {
     defaultValues: {
       fullName: user?.fullName || "",
       email: user?.email || "",
-      address: user?.address || "",
-      phoneNumber: user?.phoneNumber || "",
+      // address: user?.address || "",
+      // phoneNumber: user?.phoneNumber || "",
       photo: null,
     }
   });
 
+
   const photoFile = watch("photo");
   const selectedImage = photoFile && photoFile[0] ? URL.createObjectURL(photoFile[0]) : null;
-  const avatarSrc = selectedImage || `${import.meta.env.VITE_BACKEND_URL}/${user?.avatarUrl || `uploads/avatars/${(user?.id % 5) + 1}.png`}`;
+  const avatarSrc = selectedImage || `${import.meta.env.VITE_BACKEND_URL}/uploads/${user?.photoProfil || `uploads/avatars/${(user?.id % 5) + 1}.png`}`;
 
   const { mutate: updateUser, isLoading } = useMutation({
     mutationFn: (formData) =>
@@ -45,7 +46,8 @@ function ProfileComponent({ user, onUpdateSuccess }) {
   const onSubmit = (data) => {
     const formDataToSend = new FormData();
     Object.keys(data).forEach(key => {
-      if (key === 'photo' && data.photo[0]) {
+      // ✅ CORRECTION: Vérifier que data.photo existe avant d'accéder à data.photo[0]
+      if (key === 'photo' && data.photo && data.photo[0]) {
         formDataToSend.append(key, data.photo[0]);
       } else if (key !== 'photo') {
         formDataToSend.append(key, data[key]);
@@ -97,18 +99,18 @@ function ProfileComponent({ user, onUpdateSuccess }) {
           </div>
           <div className="form-group">
             <label className="tw-flex tw-items-center">Email 
-                {user?.validEmail ? <MailCheck size={14} className="tw-ml-2 tw-text-green-600"/> : <MailWarning size={14} className="tw-ml-2 tw-text-orange-500"/>}
+              {user?.validEmail ? <MailCheck size={14} className="tw-ml-2 tw-text-green-600"/> : <MailWarning size={14} className="tw-ml-2 tw-text-orange-500"/>}
             </label>
             <input type="email" className="form-control" {...register("email")} disabled={!isEditing} />
           </div>
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>Adresse</label>
             <input type="text" className="form-control" {...register("address")} disabled={!isEditing} />
           </div>
           <div className="form-group">
             <label>Téléphone</label>
             <input type="text" className="form-control" {...register("phoneNumber")} disabled={!isEditing} />
-          </div>
+          </div> */}
         </div>
 
         {isEditing && (
