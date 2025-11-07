@@ -25,7 +25,7 @@ import "../../../fade.css";
 
 export default function IndexMouvement() {
   const [page, setPage] = useState(1);
-  const [perpage, setPerPage] = useState(5);
+  const [perpage, setPerPage] = useState(100);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDepense, setCurrentDepense] = useState(null);
   const [currentMouvement, setCurrentMouvement] = useState(null);
@@ -179,26 +179,35 @@ export default function IndexMouvement() {
                 </div>
               </div>
               <div className="table-responsive">
-                <table className="customTable table table-bordered text-nowrap mb-0">
+                <table className="customTable table table-bordered text-nowrap mb-0 tw-text-xs table-sm">
+                  {" "}
+                  {/* table-sm pour le padding natif Bootstrap + tw-text-xs */}
                   <thead>
                     <tr>
-                      <th className="fw-bold"></th>
-                      <th className="fw-bold">Intitulé</th>
-                      <th className="fw-bold tw-text-center">Montant Total</th>
-                      <th className="fw-bold">Saisi par</th>
-                      <th className="fw-bold tw-text-center">Statut</th>
-                      <th className="fw-bold tw-text-center">Mouvements</th>
+                      <th className="fw-bold tw-py-1"></th>
+                      <th className="fw-bold tw-py-1">Intitulé</th>
+                      <th className="fw-bold tw-text-center tw-py-1">
+                        Montant Total
+                      </th>
+                      <th className="fw-bold tw-py-1">Effectué par</th>
+                      <th className="fw-bold tw-text-center tw-py-1">Statut</th>
+                      <th className="fw-bold tw-text-center tw-py-1">
+                        Mouvements
+                      </th>
                       {hasAnyActionPermission && (
-                        <th className="fw-bold tw-text-center">Actions</th>
+                        <th className="fw-bold tw-text-center tw-py-1">
+                          Actions
+                        </th>
                       )}
                     </tr>
                   </thead>
                   <tbody>
+                    {/* Lignes de chargement, erreur, et vide (padding minimal) */}
                     {isLoading && (
                       <tr>
                         <td
                           colSpan={hasAnyActionPermission ? "7" : "6"}
-                          className="text-center py-5"
+                          className="text-center tw-py-2"
                         >
                           <Spinner />
                         </td>
@@ -208,11 +217,11 @@ export default function IndexMouvement() {
                       <tr>
                         <td
                           colSpan={hasAnyActionPermission ? "7" : "6"}
-                          className="text-center py-5"
+                          className="text-center tw-py-2"
                         >
-                          <div className="flex flex-col items-center gap-2 text-red-500">
-                            <ServerCrash className="w-8 h-8" />
-                            <span>
+                          <div className="flex flex-col items-center gap-1 text-red-500">
+                            <ServerCrash className="w-5 h-5" />
+                            <span className="tw-text-xs">
                               {error?.message ||
                                 "Impossible de charger les données."}
                             </span>
@@ -226,12 +235,13 @@ export default function IndexMouvement() {
                         <tr>
                           <td
                             colSpan={hasAnyActionPermission ? "7" : "6"}
-                            className="text-center"
+                            className="text-center tw-py-2"
                           >
                             <EmptyState message="Aucune dépense trouvée" />
                           </td>
                         </tr>
                       )}
+                    {/* Lignes de données (padding minimal) */}
                     {!isLoading &&
                       !isError &&
                       filteredDepenses.map((depense) => (
@@ -239,93 +249,106 @@ export default function IndexMouvement() {
                           <tr
                             className={`${
                               depense.bloquer ? "tw-bg-gray-100" : ""
-                            } ${depense.rejeter ? "tw-bg-red-50" : ""}`}
+                            } ${
+                              depense.rejeter ? "tw-bg-red-50" : ""
+                            } hover:tw-bg-gray-50`}
                           >
-                            <td>
+                            {/* TD 1 (Icône) - Padding minimal */}
+                            <td align="center" className="tw-p-1">
                               <div
                                 className="
-                                tw-w-10 tw-h-10                  
-                                tw-rounded-full                 
-                                tw-bg-blue-100 dark:tw-bg-blue-500/20 
-                                tw-flex tw-items-center tw-justify-center 
-                                "
-                                >
+                                    tw-w-6 tw-h-6 
+                                    tw-rounded-full
+                                    tw-bg-blue-100 dark:tw-bg-blue-500/20 
+                                    tw-flex tw-items-center tw-justify-center 
+                                    "
+                              >
                                 <CircleDollarSign
                                   className="tw-text-blue-600 dark:tw-text-blue-400"
-                                  size={20}
+                                  size={14}
                                 />
                               </div>
                             </td>
-                            <td className="tw-p-3 align-baseline">
-                              <div className="tw-flex tw-flex-col tw-items-start tw-gap-1.5">
-                                <div className="tw-font-medium tw-text-gray-900">
+                            <td className="tw-p-1 align-middle">
+                              <div className="tw-flex tw-flex-col tw-items-start tw-gap-0">
+                                {" "}
+                                {/* Gap minimal */}
+                                <div className="tw-font-medium tw-text-gray-900 tw-text-xs tw-mb-1">
                                   {depense.wording}
                                 </div>
+                                <div className="tw-flex tw-items-center tw-gap-1">
+                                  <h6 className="tw-text-2xs tw-font-semibold tw-text-blue-800 tw-bg-blue-100 tw-rounded tw-p-1">
+                                    {depense.typeDeDepense?.wording}
+                                  </h6>
 
-                                <div className="tw-text-xs tw-font-semibold tw-text-blue-800 tw-bg-blue-100 tw-rounded-full tw-px-2 tw-py-0.5">
-                                  {depense.typeDeDepense?.wording}
+                                  {depense?.rejeter ? (
+                                    <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-red-600">
+                                      <X size={12} />
+                                      Rejeté
+                                    </span>
+                                  ) : (
+                                    <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-green-600">
+                                      <CheckCheck size={12} />
+                                      Approuvé
+                                    </span>
+                                  )}
                                 </div>
-
-                                {depense?.rejeter ? (
-                                  <div className="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-font-semibold tw-text-red-600">
-                                    <X size={16} />
-                                    <span>Rejeté</span>
-                                  </div>
-                                ) : (
-                                  <div className="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-font-semibold tw-text-green-600">
-                                    <CheckCheck size={16} />
-                                    <span>Approuvé</span>
-                                  </div>
-                                )}
                               </div>
                             </td>
-                            <td className="tw-text-center tw-font-semibold">
+                            {/* TD 3 (Montant) - Padding minimal */}
+                            <td className="tw-p-1 tw-text-center tw-font-semibold align-middle">
                               {depense.montant.toLocaleString()} F
                             </td>
-                            <td>{depense.user?.fullName}</td>
-                            <td className="tw-text-center">
+                            {/* TD 4 (Saisi par) - Padding minimal */}
+                            <td className="tw-p-1 align-middle tw-text-xs">
+                              {depense.user?.fullName}
+                            </td>
+                            {/* TD 5 (Statut) - Padding minimal */}
+                            <td className="tw-p-1 tw-text-center align-middle">
                               <span
                                 className={`badge ${
                                   depense.status
                                     ? "bg-success-transparent"
                                     : "bg-warning-transparent"
-                                }`}
+                                } tw-text-2xs`}
                               >
                                 {depense.status ? "Payé" : "En attente"}
                               </span>
                               {depense.rejeter && (
-                                <span className="badge bg-danger-transparent ms-1">
+                                <span className="badge bg-danger-transparent tw-ms-0.5 tw-text-2xs">
                                   Rejeté
                                 </span>
                               )}
                               {depense.bloquer && (
-                                <span className="badge bg-dark-transparent ms-1">
+                                <span className="badge bg-dark-transparent tw-ms-0.5 tw-text-2xs">
                                   Bloqué
                                 </span>
                               )}
                             </td>
-                            <td className="tw-text-center">
+                            {/* TD 6 (Mouvements) - Padding minimal */}
+                            <td className="tw-p-1 tw-text-center align-middle">
                               {depense.Mouvements.length > 0 ? (
                                 <button
                                   onClick={() => toggleRow(depense.id)}
-                                  className="btn btn-sm btn-light d-flex align-items-center mx-auto"
+                                  className="btn btn-xs btn-light d-flex align-items-center mx-auto tw-py-0 tw-px-1 tw-text-xs"
                                 >
                                   {expandedRows[depense.id] ? (
-                                    <ChevronDown size={16} className="me-1" />
+                                    <ChevronDown size={12} className="me-1" />
                                   ) : (
-                                    <ChevronRight size={16} className="me-1" />
+                                    <ChevronRight size={12} className="me-1" />
                                   )}
                                   {depense.Mouvements.length} Paiement(s)
                                 </button>
                               ) : (
-                                <span className="badge tw-bg-red-200 tw-text-red-600">
+                                <span className="badge tw-bg-red-200 tw-text-red-600 tw-text-2xs">
                                   Aucun
                                 </span>
                               )}
                             </td>
+                            {/* TD 7 (Actions) - Padding minimal et densité maximale */}
                             {hasAnyActionPermission && (
-                              <td>
-                                <div className="d-flex justify-content-center align-items-center">
+                              <td className="tw-p-1 align-middle">
+                                <div className="d-flex justify-content-center align-items-center tw-gap-1 tw-text-2xs">
                                   {can("payeDepense") && (
                                     <button
                                       onClick={() => {
@@ -333,7 +356,7 @@ export default function IndexMouvement() {
                                         setCurrentMouvement(null);
                                         setShowCreateSortieModal(true);
                                       }}
-                                      className="btn btn-sm btn-primary-transparent d-flex align-items-center"
+                                      className="btn btn-sm btn-primary-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
                                       title="Payer / Gérer les paiements"
                                       disabled={
                                         depense.status ||
@@ -351,7 +374,7 @@ export default function IndexMouvement() {
                                         setCurrentDepense(depense);
                                         setShowRejeteModal(true);
                                       }}
-                                      className="btn btn-sm tw-ml-2 btn-warning-transparent d-flex align-items-center"
+                                      className="btn btn-sm tw-ml-0 btn-warning-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
                                       title={
                                         depense.rejeter
                                           ? "Annuler le rejet"
@@ -369,7 +392,7 @@ export default function IndexMouvement() {
                                         setCurrentDepense(depense);
                                         setShowBloquerModal(true);
                                       }}
-                                      className="btn btn-sm tw-ml-2 btn-dark-transparent d-flex align-items-center"
+                                      className="btn btn-sm tw-ml-0 btn-danger-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
                                       title={
                                         depense.bloquer
                                           ? "Débloquer la dépense"
@@ -392,44 +415,53 @@ export default function IndexMouvement() {
                               </td>
                             )}
                           </tr>
+                          {/* Ligne d'expansion (Mouvements) */}
                           {expandedRows[depense.id] && (
                             <tr>
                               <td
-                                colSpan={hasAnyActionPermission ? "6" : "5"}
+                                colSpan={hasAnyActionPermission ? "7" : "6"}
                                 className="p-0"
                                 style={{
                                   backgroundColor: "#fafafa",
-                                  borderBottom: "2px solid #dee2e6",
+                                  borderBottom: "1px solid #dee2e6",
                                 }}
                               >
-                                <div className="tw-p-4">
-                                  <h6 className="tw-font-semibold tw-mb-3">
+                                <div className="tw-p-2">
+                                  {" "}
+                                  {/* Padding réduit */}
+                                  <h6 className="tw-font-semibold tw-mb-1 tw-text-xs">
                                     Détails des Paiements
                                   </h6>
                                   <table className="table table-sm mb-0">
                                     <tbody>
                                       {depense.Mouvements.map((mouvement) => (
-                                        <tr key={mouvement.id}>
-                                          <td className="tw-font-medium">
+                                        <tr
+                                          key={mouvement.id}
+                                          className="tw-text-xs"
+                                        >
+                                          <td className="tw-font-medium tw-py-1">
                                             {mouvement.montant.toLocaleString()}{" "}
                                             F
                                           </td>
-                                          <td>
-                                            <p className="tw-text-xs tw-text-gray-500 mb-0">
+                                          <td className="tw-py-1">
+                                            <p className="tw-text-2xs tw-text-gray-500 mb-0">
                                               Payé par{" "}
                                               {mouvement.user?.fullName}
                                             </p>
                                           </td>
-                                          <td>
-                                            <p className="tw-text-xs tw-text-gray-500 mb-0">
+                                          <td className="tw-py-1">
+                                            <p className="tw-text-2xs tw-text-gray-500 mb-0">
                                               Le{" "}
                                               {new Date(
                                                 mouvement.createdAt
-                                              ).toLocaleString("fr-FR")}
+                                              ).toLocaleDateString(
+                                                "fr-FR"
+                                              )}{" "}
+                                              {/* date courte */}
                                             </p>
                                           </td>
                                           {can("payeDepense") && (
-                                            <td className="text-end">
+                                            <td className="text-end tw-py-1">
                                               <button
                                                 onClick={() => {
                                                   setCurrentDepense(depense);
@@ -440,7 +472,7 @@ export default function IndexMouvement() {
                                                     true
                                                   );
                                                 }}
-                                                className="btn btn-icon btn-sm btn-primary-transparent"
+                                                className="btn btn-icon btn-sm btn-primary-transparent tw-w-5 tw-h-5"
                                                 title="Modifier ce paiement"
                                                 disabled={
                                                   depense.bloquer ||
@@ -458,7 +490,7 @@ export default function IndexMouvement() {
                                                     true
                                                   );
                                                 }}
-                                                className="btn btn-icon btn-sm btn-danger-transparent ms-2"
+                                                className="btn btn-icon btn-sm btn-danger-transparent ms-1 tw-w-5 tw-h-5"
                                                 title="Supprimer ce paiement"
                                                 disabled={
                                                   depense.bloquer ||
