@@ -18,6 +18,7 @@ export default function Editions() {
     dateDebut: `${currentYear}-01-01`,
     dateFin: `${currentYear}-12-31`,
     userId: null,
+    typeDeDepenseId: null,
   };
 
   const [filters, setFilters] = useState(initialFilters);
@@ -42,11 +43,10 @@ export default function Editions() {
     userId: filters.userId,
     dateDebut: filters.dateDebut,
     dateFin: filters.dateFin,
+    typeDeDepenseId: filters.typeDeDepenseId,
   });
 
   const handleSearch = useCallback((newFilters) => {
-    console.log(newFilters);
-
     setFilters(newFilters);
   }, []);
 
@@ -121,6 +121,42 @@ export default function Editions() {
   const isLoading = isLoadingUsers || isLoadingEditions;
   const visibleColumnCount =
     Object.values(columnVisibility).filter(Boolean).length;
+
+  // Calcul des totaux
+  const calculateTotals = () => {
+    if (isLoading || isError) {
+      return { totalMontant: 0, totalDecaisse: 0, totalResteAPayer: 0 };
+    }
+
+    const totals = depenses.reduce(
+      (acc, depense) => {
+        const decaisse = depense.Mouvements.reduce(
+          (sum, m) => sum + m.montant,
+          0
+        );
+        const reste = depense.montant - decaisse;
+
+        acc.totalMontant += depense.montant;
+        acc.totalDecaisse += decaisse;
+        acc.totalResteAPayer += reste;
+        return acc;
+      },
+      { totalMontant: 0, totalDecaisse: 0, totalResteAPayer: 0 }
+    );
+    return totals;
+  };
+
+  const totals = calculateTotals();
+  // Fin du calcul des totaux
+
+  // Nombre de colonnes avant "Montant Dû"
+  const colsBeforeMontant = [
+    "typeDepense",
+    "id",
+    "user",
+    "dateOperation",
+    "wording",
+  ].filter((col) => columnVisibility[col]).length;
 
   return (
     <div>
@@ -278,8 +314,8 @@ export default function Editions() {
                         )}
                         {columnVisibility.id && (
                           <td className="text-center">
-                            <span className="tw-bg-blue-100 tw-text-blue-600 tw-rounded-full tw-text-[13px] tw-p-3">
-                              {depenses?.length - index}
+                            <span className="tw-bg-blue-700 tw-text-blue-600 tw-rounded-full tw-text-[13px] tw-px-1">
+                              {/* {depenses?.length - index} */}
                             </span>
                           </td>
                         )}
@@ -400,6 +436,46 @@ export default function Editions() {
                     );
                   })}
               </tbody>
+
+              {/* ⭐ Ligne de Total ajoutée dans le <tfoot> */}
+              {!isLoading && !isError && depenses.length > 0 && (
+                <tfoot>
+                  <tr className="tw-bg-gray-200  dark:tw-text-gray-200 tw-font-extrabold tw-border-t-4 tw-border-orange-500">
+  <td colSpan={colsBeforeMontant} className="text-end tw-align-middle tw-py-2 tw-text-xl">
+    Total Général :
+  </td>
+  {columnVisibility.montant && (
+    <td className="tw-text-center tw-text-2xl tw-text-orange-700 dark:tw-text-orange-400 tw-align-middle">
+      {totals.totalMontant.toLocaleString()} F
+    </td>
+  )}
+  {columnVisibility.totalDecaisse && (
+    <td className="tw-text-center tw-text-2xl tw-text-blue-700 dark:tw-text-blue-400 tw-align-middle">
+      {totals.totalDecaisse.toLocaleString()} F
+    </td>
+  )}
+  {columnVisibility.resteAPayer && (
+    <td
+      className={`tw-text-center tw-text-2xl tw-align-middle ${
+        totals.totalResteAPayer > 0
+          ? "tw-text-red-700 dark:tw-text-red-400"
+          : "tw-text-green-700 dark:tw-text-green-400"
+      }`}
+    >
+      {totals.totalResteAPayer.toLocaleString()} F
+    </td>
+  )}
+  {/* Colonnes restantes (Statut à Créé le) */}
+  <td
+    colSpan={
+      visibleColumnCount - colsBeforeMontant - 3
+    }
+  ></td>
+</tr>
+                </tfoot>
+              )}
+              {/* Fin de la ligne de Total */}
+
             </table>
           </div>
         </div>

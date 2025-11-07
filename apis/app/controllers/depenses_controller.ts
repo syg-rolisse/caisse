@@ -171,7 +171,7 @@ export default class DepensesController {
         )
       }
       const payload = await request.validateUsing(updateDepenseValidator)
-      if (depense.Mouvements && depense.Mouvements.length > 0) {
+      if (depense.Mouvements && depense.Mouvements.length > 0 && depense.decharger) {
         return response.forbidden(
           'Désolé, le décaissement est déjà engagé, elle ne peut être modifiée.'
         )

@@ -140,13 +140,13 @@ export default function UpdatePermission({ permission, onSuccess, onClose }) {
               <PermissionCheckbox id="deleteTypeDeDepense" label="Supprimer" register={register} />
             </div>
 
-            <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
+            {/* <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
               <h4 className="tw-font-semibold">Packs</h4>
               <PermissionCheckbox id="readPacks" label="Lire" register={register} />
               <PermissionCheckbox id="createPacks" label="Créer" register={register} />
               <PermissionCheckbox id="updatePacks" label="Modifier" register={register} />
               <PermissionCheckbox id="deletePacks" label="Supprimer" register={register} />
-            </div>
+            </div> */}
 
             <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">
               <h4 className="tw-font-semibold">Abonnements</h4>

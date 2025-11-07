@@ -160,7 +160,7 @@ export default function IndexPermission() {
                           </ul>
                         </div>
 
-                        <div>
+                        {/* <div>
                           <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Packs</h4>
                            <ul className="tw-space-y-1">
                             <PermissionItem label="Créer" hasPermission={permission.createPack} />
@@ -168,7 +168,7 @@ export default function IndexPermission() {
                             <PermissionItem label="Modifier" hasPermission={permission.updatePack} />
                             <PermissionItem label="Supprimer" hasPermission={permission.deletePack} />
                           </ul>
-                        </div>
+                        </div> */}
                      
                          <div className="">
                           <h4 className="tw-font-semibold tw-text-sm tw-mb-2">Editions (Stats Dépenses)</h4>

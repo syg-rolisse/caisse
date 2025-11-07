@@ -5,7 +5,12 @@ import { FileText } from "lucide-react";
 
 const ExportToPDFButton = ({ tableId, fileNamePrefix = "brouillard_de_caisse" }) => {
   const user = JSON.parse(localStorage.getItem("user"));
-  
+
+  const companyName = user?.company?.companyName || "Mon Entreprise";
+  const companyAddress = user?.company?.address || "Adresse non spécifiée";
+  const companyPhone = user?.company?.phoneNumber || "Contact non spécifié";
+  const userFullName = user?.fullName || "Utilisateur inconnu";
+
   const exportToPDF = () => {
     const table = document.getElementById(tableId);
     if (!table) {
@@ -21,22 +26,21 @@ const ExportToPDFButton = ({ tableId, fileNamePrefix = "brouillard_de_caisse" })
     });
 
     doc.setFont("helvetica", "bold");
-    
+
     const mainTitle = "Brouillard de caisse";
     const reportDate = new Date().toLocaleDateString("fr-FR");
-    const companyName = user?.company?.name || "Mon Entreprise"; // Correction de companyName -> name
 
     doc.autoTable({
       html: `#${tableId}`,
-      startY: 30,
+      startY: 50, // Augmenté pour laisser de la place au nouvel en-tête étendu
       theme: "grid",
       styles: {
         fontSize: 8,
         cellPadding: 2,
         overflow: 'linebreak',
-        // MODIFICATION N°1 : Bordures plus fines et couleur plus douce
-        lineWidth: 0.1,
-        lineColor: [220, 220, 220], 
+        // ⭐ MODIFICATION CLÉ : Bordures noires (lineWidth: 0.3 est une bonne épaisseur pour le noir)
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0], // Noir
       },
       headStyles: {
         fillColor: [41, 128, 185],
@@ -44,36 +48,93 @@ const ExportToPDFButton = ({ tableId, fileNamePrefix = "brouillard_de_caisse" })
         fontStyle: "bold",
         halign: 'center',
       },
-      // MODIFICATION N°2 : Couleur de ligne alternée plus subtile
       alternateRowStyles: {
-        fillColor: [239, 247, 254], // Un bleu très clair au lieu du gris
+        fillColor: [239, 247, 254],
       },
       columnStyles: {
-        0: { 
+        0: { // Type de Dépense
           valign: 'middle', 
+          halign: 'left',
+        },
+        5: { // Montant Dû
+          halign: 'center',
+        },
+        6: { // Total Décaissé
+          halign: 'center',
+        },
+        7: { // Reste à Payer
           halign: 'center',
         },
       },
+      
       didParseCell: (data) => {
-        if (data.section === 'body') {
-          const cellText = data.cell.text[0];
-          if (typeof cellText === 'string' && /\d/.test(cellText)) {
-            data.cell.text[0] = cellText.replace(/[\s/]/g, '');
+        const cellText = data.cell.text[0];
+
+        if (data.section === 'foot') {
+          // Style général du pied de tableau
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.halign = 'center';
+          data.cell.styles.fontSize = 10;
+          data.cell.styles.fillColor = [220, 220, 220]; 
+          
+          // Montants totaux en noir
+          if (data.column.index >= 5 && data.column.index <= 7) {
+             data.cell.styles.textColor = 0; 
+          }
+
+          // Titre "TOTAL" en noir et aligné à gauche
+          if (data.column.index === 0) {
+            data.cell.styles.halign = 'left';
+            data.cell.styles.fontSize = 12; 
+            data.cell.styles.textColor = 0; 
+            return;
           }
         }
-      },
-      didDrawPage: (data) => {
-        doc.setFontSize(16);
-        doc.setTextColor(40);
-        doc.text(mainTitle, data.settings.margin.left, 20);
 
-        doc.setFontSize(10);
-        doc.text(`Date: ${reportDate}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, 20, { align: "right" });
+        // Nettoyage des nombres dans le corps du tableau ET le pied
+        if (typeof cellText === 'string' && /\d/.test(cellText)) {
+          data.cell.text[0] = cellText.replace(/\s/g, '').replace(/\//g, '').trim();
+        }
+      },
+      
+      didDrawPage: (data) => {
+        const margin = data.settings.margin;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
         
+        // ⭐ NOUVELLE PRÉSENTATION DE L'IDENTITÉ DE L'ENTREPRISE
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        
+        // Nom de l'entreprise (en gras, grande taille)
+        doc.text(companyName, margin.left, 10);
+        
+        // Détails de contact (taille normale)
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Adresse : ${companyAddress}`, margin.left, 15);
+        doc.text(`Contact : ${companyPhone}`, margin.left, 20);
+
+        // Ligne de séparation visuelle
+        doc.setDrawColor(0, 0, 0); // Noir
+        doc.line(margin.left, 25, pageWidth - margin.right, 25);
+        
+        // 2. Titre principal (Centré, position ajustée)
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(40);
+        doc.text(mainTitle, pageWidth / 2, 35, { align: "center" }); 
+        
+        // 3. Infos sur le rapport (En-tête, à droite)
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Date du rapport : ${reportDate}`, pageWidth - margin.right, 10, { align: "right" });
+        doc.text(`Imprimé par : ${userFullName}`, pageWidth - margin.right, 15, { align: "right" });
+        
+        // 4. Numérotation des pages (Pied de page)
         const pageCount = doc.internal.getNumberOfPages();
         doc.setFontSize(8);
-        doc.text(companyName, data.settings.margin.left, doc.internal.pageSize.getHeight() - 10);
-        doc.text(`Page ${data.pageNumber} sur ${pageCount}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+        doc.text(`Page ${data.pageNumber} sur ${pageCount}`, pageWidth - margin.right, pageHeight - 10, { align: "right" });
       },
     });
 
