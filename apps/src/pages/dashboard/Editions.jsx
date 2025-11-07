@@ -202,7 +202,6 @@ export default function Editions() {
                   {columnVisibility.typeDepense && (
                     <th className="fw-bold">Type</th>
                   )}
-                  {columnVisibility.id && <th className="fw-bold"></th>}
                   {columnVisibility.user && (
                     <th className="fw-bold">Effectué par</th>
                   )}
@@ -310,13 +309,6 @@ export default function Editions() {
                             className="align-middle text-center"
                           >
                             {depense.typeDeDepense.wording}
-                          </td>
-                        )}
-                        {columnVisibility.id && (
-                          <td className="text-center">
-                            <span className="tw-bg-blue-700 tw-text-blue-600 tw-rounded-full tw-text-[13px] tw-px-1">
-                              {/* {depenses?.length - index} */}
-                            </span>
                           </td>
                         )}
                         {columnVisibility.user && (

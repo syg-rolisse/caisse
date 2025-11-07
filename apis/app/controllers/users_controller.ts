@@ -271,18 +271,15 @@ export default class UsersController {
   }
 
   // 6. update()
+  // Imports requis (assumés pour fs, app, cuid, etc.)
+
   async update({ request, response }: HttpContext) {
     try {
       const { userId } = request.qs()
       const user = await User.findOrFail(userId)
-      const payload = await request.validateUsing(updateUserValidator(userId))
 
-      if (payload.profilId === 1) {
-        return response.badRequest({
-          status: 400,
-          error: "Les informations de l'admin ne peuvent être modifiées.",
-        })
-      }
+      // 1. Validation des données de formulaire (texte)
+      const payload = await request.validateUsing(updateUserValidator(userId))
 
       if (payload.email && payload.email !== user.email) {
         const existingUser = await User.query().where('email', payload.email).first()
@@ -291,20 +288,35 @@ export default class UsersController {
         }
       }
 
-      let avatarUrl: any = user.avatarUrl
-      const profil = request.file('photo', { extnames: ['jpg', 'jpeg', 'png'], size: '5mb' })
+      // 🛑 ATTENTION : Suppression de l'appel qui consomme le fichier
+      // console.log(request.file('photo'));
+      // console.log(payload)
 
+      let avatarUrl: any = user.avatarUrl
+
+      // 2. Récupération et validation du fichier une seule fois
+      const profil = request.file('photo', {
+        extnames: ['jpg', 'jpeg', 'png'],
+        size: '5mb',
+      })
+
+      // 3. Vérification : le fichier existe et n'a pas d'erreurs
       if (profil && !profil.hasErrors) {
-        if (avatarUrl) {
-          fs.unlink(app.makePath('uploads', avatarUrl)).catch(() =>
-            console.warn('Ancienne image introuvable.')
+        if (user.avatarUrl) {
+          // Utiliser user.avatarUrl au lieu d'avatarUrl (qui a la même valeur mais c'est plus clair)
+          // Tentative de suppression de l'ancien fichier
+          fs.unlink(app.makePath('uploads', user.avatarUrl)).catch(() =>
+            console.warn('Ancienne image introuvable ou déjà supprimée.')
           )
         }
+
         const fileName = `${cuid()}.${profil.extname}`
+        // Utilisation du chemin correct pour le move
         await profil.move(app.makePath('uploads/photoProfil'), { name: fileName, overwrite: true })
         avatarUrl = `photoProfil/${fileName}`
       }
 
+      // Si aucun nouveau fichier n'est fourni, avatarUrl garde la valeur précédente de user.avatarUrl.
       user.merge({ ...payload, avatarUrl })
       await user.save()
 
@@ -314,6 +326,7 @@ export default class UsersController {
 
       return response.ok({ status: 200, message: 'Utilisateur modifié avec succès' })
     } catch (error) {
+      console.log(error?.message)
       const message = processErrorMessages(error)
       return response.badRequest({ status: 400, error: message })
     }

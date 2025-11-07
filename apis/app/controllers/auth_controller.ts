@@ -73,6 +73,7 @@ export default class AuthController {
           validEmail: userConnected.validEmail,
           status: userConnected.status,
           company: userConnected?.Companies,
+          photoProfil: userConnected?.avatarUrl,
           token: token,
         },
       })

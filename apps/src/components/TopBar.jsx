@@ -21,7 +21,7 @@ export default function TopBar({ fullOverlay }) {
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
   
-  const avatarSrc = `${import.meta.env.VITE_BACKEND_URL}/${user?.avatarUrl || `uploads/avatars/default/${(user?.id % 5) + 1}.png`}`;
+  const avatarSrc = `${import.meta.env.VITE_BACKEND_URL}/uploads/${user?.photoProfil || `uploads/avatars/default/${(user?.id % 5) + 1}.png`}`;
 
   const { mutate: serverLogout, isLoading } = useMutation({
     mutationFn: () => axiosInstance.post(`${import.meta.env.VITE_BACKEND_URL}/api/v1/logout`),
@@ -63,16 +63,16 @@ export default function TopBar({ fullOverlay }) {
 
   return (
     <>
-      <div className="tw-relative mt-2">
+      <div className="tw-relative">
         <button
           ref={buttonRef}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="tw-mr-4 tw-flex tw-items-center tw-gap-2 tw-p-1.5 tw-rounded-full tw-bg-white/50 hover:tw-bg-white/80 tw-transition-colors tw-shadow-sm"
+          className="tw-mr-4 tw-flex tw-items-center tw-gap-2 tw-rounded-full tw-bg-white/50 hover:tw-bg-white/80 tw-transition-colors tw-shadow-sm"
         >
           <img
             src={avatarSrc}
             alt="Avatar"
-            className="tw-w-8 tw-h-8 tw-rounded-full tw-object-cover"
+            className="tw-w-16 tw-h-16 tw-rounded-full tw-object-cover"
           />
           {/* <span className="tw-font-semibold tw-text-sm tw-text-gray-700 max-sm:tw-hidden">{user?.fullName}</span> */}
           <ChevronDown size={16} className={`tw-text-gray-600 tw-transition-transform ${isMenuOpen ? 'tw-rotate-180' : ''}`} />

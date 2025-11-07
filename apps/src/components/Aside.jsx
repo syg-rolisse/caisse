@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import axiosInstance from "../config/axiosConfig";
 import PropTypes from "prop-types";
+import { useEffect } from "react"; // ⭐ Import de useEffect ajouté
 
 // Import de la nouvelle liste complète d'icônes modernes de Lucide
 import {
@@ -23,6 +24,21 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
+  // ⭐ NOUVEAU useEffect pour empêcher le défilement du body
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.classList.add("tw-overflow-hidden");
+    } else {
+      document.body.classList.remove("tw-overflow-hidden");
+    }
+
+    // Fonction de nettoyage
+    return () => {
+      document.body.classList.remove("tw-overflow-hidden");
+    };
+  }, [isSidebarOpen]);
+  // Fin du NOUVEAU useEffect
+  
   const handleError = (error) => {
     const validationErrors = error?.response?.data?.error;
     if (validationErrors && Array.isArray(validationErrors)) {
@@ -52,16 +68,22 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
 
   return (
     <>
+      {/* Si vous utilisez un overlay (arrière-plan sombre derrière la sidebar) 
+        il faut l'inclure ici pour les écrans mobiles 
+      */}
+
       <aside
         className={`
           tw-fixed tw-top-0 tw-left-0 tw-h-full tw-z-40
           tw-w-64 tw-bg-white tw-border-r tw-border-gray-200
           tw-transition-transform tw-duration-300 ease-in-out
+          tw-flex tw-flex-col tw-h-full
           ${isSidebarOpen ? 'tw-translate-x-0' : '-tw-translate-x-full'}
         `}
         id="sidebar"
       >
-        <div className="tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-space-y-4 tw-p-4 tw-bg-slate-50 tw-border-b">
+        {/* HEADER: Fixe en haut */}
+        <div className="tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-space-y-4 tw-p-4 tw-bg-slate-50 tw-border-b tw-flex-shrink-0">
           <button 
             onClick={toggleSidebar} 
             className="tw-absolute tw-top-2 tw-right-2 tw-h-10 tw-w-10 tw-flex tw-items-center tw-justify-center tw-rounded-full hover:tw-bg-slate-200 lg:tw-hidden"
@@ -70,14 +92,14 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
             <X className="tw-h-6 tw-w-6 tw-text-slate-600" />
           </button>
 
-            <div className="tw-p-1 tw-bg-gray-200 tw-rounded-full -tw-mt-6 tw-mb-2 tw-w-36 tw-h-36 ">
-              <img
-                src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${user?.company?.logoUrl || `uploads/avatars/ri3uadefault.jpg`}`}
-                alt="Logo de l’entreprise"
-                className="tw-w-36 tw-h-36 tw-object-cover tw-rounded-full"
-              />
-            </div>
-         
+          <div className="tw-p-1 tw-bg-gray-200 tw-rounded-full -tw-mt-6 tw-mb-2 tw-w-36 tw-h-36 ">
+            <img
+              src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${user?.company?.logoUrl || `uploads/avatars/ri3uadefault.jpg`}`}
+              alt="Logo de l’entreprise"
+              className="tw-w-36 tw-h-36 tw-object-cover tw-rounded-full"
+            />
+          </div>
+        
           {user?.company?.showCompanyName && (
             <p className="tw-text-center tw-font-semibold tw-text-lg tw-text-slate-800">
               {user?.company?.companyName}
@@ -86,7 +108,7 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
         </div>
         
         {/* CORPS DE LA SIDEBAR AVEC LE MENU COMPLET ET SCROLLABLE */}
-        <div className="tw-h-[calc(100vh-170px)] tw-overflow-y-auto tw-py-4">
+        <div className="tw-flex-grow tw-overflow-y-auto tw-py-4">
           <nav>
             <ul className="tw-px-4 tw-space-y-1">
               {/* Catégorie PRINCIPALE */}
