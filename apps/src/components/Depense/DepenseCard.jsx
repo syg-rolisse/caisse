@@ -1,21 +1,31 @@
+// src/components/Depense/DepenseCard.jsx
+
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
-import { 
-  Pencil, Trash2, Lock, Unlock, Tag, Calendar, User, Info, MoreVertical, FileText 
+import {
+  Pencil, Trash2, Lock, Unlock, Tag, Calendar, User, Info, MoreVertical, FileText, Download
 } from 'lucide-react';
 import WelcomeModal from "../../components/WelcomeModal";
+// Import des utilitaires PDF
+import { downloadSingleDepense, simpleFormatDate } from '../../utils/downloadDepense'; 
 
-const DepenseCard = ({ depense, onEdit, onDelete }) => {
+
+const DepenseCard = ({ depense, onEdit, onDelete, canEdit, canDelete }) => {
   const [showRejetModal, setShowRejetModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString("fr-FR", {
-      day: '2-digit', month: '2-digit', year: 'numeric'
-    });
+  // Récupération des informations d'entreprise/utilisateur
+  const user = JSON.parse(localStorage.getItem("user"));
+  const companyInfo = {
+    name: user?.company?.companyName || "Mon Entreprise",
+    address: user?.company?.address || "Adresse non spécifiée",
+    phone: user?.company?.phoneNumber || "Contact non spécifié",
+    userFullName: user?.fullName || "Utilisateur inconnu",
   };
+
+  // La fonction de formatage est maintenant importée
+  const formatDate = simpleFormatDate;
 
   const isPaid = depense.status;
   const unpaidAmount = Math.max(0, depense.montant - (depense.Mouvements?.reduce((total, m) => total + m.montant, 0) || 0));
@@ -26,10 +36,15 @@ const DepenseCard = ({ depense, onEdit, onDelete }) => {
     exit: { opacity: 0, scale: 0.95 },
   };
 
+  // Fonction wrapper pour appeler la logique PDF
+  const handleDownloadPdf = () => {
+    downloadSingleDepense(depense, companyInfo, formatDate);
+  };
+
   const ActionMenu = () => (
     <div className="tw-relative">
-      <button 
-        onClick={() => setIsMenuOpen(!isMenuOpen)} 
+      <button
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
         onBlur={() => setTimeout(() => setIsMenuOpen(false), 150)}
         className="tw-p-2 tw-rounded-full hover:tw-bg-gray-200"
       >
@@ -38,9 +53,12 @@ const DepenseCard = ({ depense, onEdit, onDelete }) => {
       {isMenuOpen && (
         <div className="tw-absolute tw-right-0 tw-mt-2 tw-w-48 tw-bg-white tw-rounded-md tw-shadow-xl tw-z-10 tw-border tw-border-gray-100">
           <div className="tw-py-1">
-            <button onClick={onEdit} className="tw-w-full tw-text-left tw-flex tw-items-center tw-px-4 tw-py-2 tw-text-sm tw-text-gray-700 hover:tw-bg-gray-100">
-              <Pencil size={16} className="tw-mr-3" /> Modifier
-            </button>
+            {canEdit && (
+              <button onClick={onEdit} className="tw-w-full tw-text-left tw-flex tw-items-center tw-px-4 tw-py-2 tw-text-sm tw-text-gray-700 hover:tw-bg-gray-100">
+                <Pencil size={16} className="tw-mr-3" /> Modifier
+              </button>
+            )}
+
             {depense?.factureUrl && (
               <a
                 href={`${import.meta.env.VITE_BACKEND_URL}/uploads/${depense?.factureUrl}`}
@@ -48,13 +66,18 @@ const DepenseCard = ({ depense, onEdit, onDelete }) => {
                 rel="noopener noreferrer"
                 className="tw-flex tw-items-center tw-px-4 tw-py-2 tw-text-sm tw-text-gray-700 hover:tw-bg-gray-100"
               >
-                <FileText size={16} className="tw-mr-3" /> Voir le document
+                <FileText size={16} className="tw-mr-3" /> Voir le document (Facture)
               </a>
             )}
-            <div className="tw-my-1 tw-border-t tw-border-gray-100"></div>
-            <button onClick={onDelete} className="tw-w-full tw-text-left tw-flex tw-items-center tw-px-4 tw-py-2 tw-text-sm tw-text-red-600 hover:tw-bg-red-50">
-              <Trash2 size={16} className="tw-mr-3" /> Supprimer
-            </button>
+
+            {canDelete && (
+                <>
+                    <div className="tw-my-1 tw-border-t tw-border-gray-100"></div>
+                    <button onClick={onDelete} className="tw-w-full tw-text-left tw-flex tw-items-center tw-px-4 tw-py-2 tw-text-sm tw-text-red-600 hover:tw-bg-red-50">
+                      <Trash2 size={16} className="tw-mr-3" /> Supprimer
+                    </button>
+                </>
+            )}
           </div>
         </div>
       )}
@@ -91,27 +114,37 @@ const DepenseCard = ({ depense, onEdit, onDelete }) => {
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="tw-bg-white tw-rounded-xl tw-shadow-md hover:tw-shadow-lg tw-transition-shadow tw-duration-300 tw-border tw-border-gray-200 tw-flex tw-flex-col"
       >
-        <div className="tw-p-4 tw-flex tw-justify-between tw-items-center tw-border-b tw-border-gray-200">
+        <div className="tw-p-4 tw-flex tw-justify-between tw-items-start tw-border-b tw-border-gray-200">
           <div className="tw-flex tw-items-center tw-gap-3 tw-min-w-0">
             <div className="tw-p-2 tw-bg-blue-100 tw-rounded-lg tw-flex-shrink-0">
               <Tag className="tw-w-5 tw-h-5 tw-text-blue-600" />
             </div>
             <h3 className="tw-font-bold tw-text-gray-800 tw-truncate">{depense?.typeDeDepense?.wording}</h3>
           </div>
-          <ActionMenu />
+          <div className="tw-flex tw-gap-2 tw-flex-shrink-0">
+             {/* Bouton PDF direct sur la carte */}
+            <button 
+                onClick={handleDownloadPdf} 
+                className="tw-p-2 tw-rounded-full hover:tw-bg-gray-200 tw-text-blue-600"
+                title="Télécharger la fiche de dépense"
+            >
+                <Download size={20} />
+            </button>
+            <ActionMenu />
+          </div>
         </div>
 
         <div className="tw-p-4 tw-flex-grow">
           <p className="tw-text-3xl tw-font-bold tw-text-gray-800">{depense.montant.toLocaleString('fr-FR')} CFA</p>
           <p className="tw-text-gray-600 tw-mt-1 tw-min-h-[20px]">{depense?.wording}</p>
-          
+
           <div className="tw-mt-4 tw-flex tw-flex-wrap tw-gap-2">
             {depense.rejeter ? (
               <StatusBadge color="red" text="Rejeté" hasInfo={!!depense.rejetMessage} onInfoClick={() => setShowRejetModal(true)} />
             ) : (
               <StatusBadge color="green" text="Approuvé" />
             )}
-            
+
             {isPaid ? (
               <StatusBadge color="green" text="Payé" />
             ) : (
@@ -153,11 +186,12 @@ DepenseCard.propTypes = {
   depense: PropTypes.object.isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
+  canEdit: PropTypes.bool.isRequired,
+  canDelete: PropTypes.bool.isRequired,
   color: PropTypes.string,
   text: PropTypes.string,
   hasInfo: PropTypes.bool,
   onInfoClick: PropTypes.func,
-
 };
 
 export default DepenseCard;
