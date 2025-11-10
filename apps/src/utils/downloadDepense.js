@@ -3,7 +3,6 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable'; 
 
-// IMPORTANT: Assurez-vous d'avoir les polices Quicksand si vous utilisez ces noms.
 const FONT_NORMAL = 'Quicksand';
 const FONT_BOLD = 'Quicksand-Bold'; 
 
