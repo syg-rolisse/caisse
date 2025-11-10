@@ -8,7 +8,6 @@ const FONT_BOLD = 'Quicksand-Bold';
 
 /**
  * Fonction centrale pour dessiner une fiche de dépense sur un document PDF.
- * (Mise en page latérale pour maximiser deux fiches sur A5)
  */
 export const drawDepenseFiche = (doc, depense, companyInfo, formatDate, yStart) => {
     let y = yStart;
