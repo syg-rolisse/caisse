@@ -392,7 +392,11 @@ export default function IndexMouvement() {
                                         setCurrentDepense(depense);
                                         setShowBloquerModal(true);
                                       }}
-                                      className="btn btn-sm tw-ml-0 btn-danger-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
+                                      className={
+                                        depense.bloquer
+                                          ? "btn btn-sm tw-ml-0 btn-secondary-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
+                                          : "btn btn-sm tw-ml-0 btn-danger-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
+                                      }
                                       title={
                                         depense.bloquer
                                           ? "Débloquer la dépense"
@@ -407,7 +411,7 @@ export default function IndexMouvement() {
                                         }-line tw-mr-1`}
                                       ></i>
                                       {depense.bloquer
-                                        ? "Débloquer"
+                                        ? "Modifier"
                                         : "Bloquer"}
                                     </button>
                                   )}

@@ -23,7 +23,7 @@ function BloquerDepense({ depense, onSuccess, onClose }) {
   const { mutate: updateDepense, isLoading } = useMutation({
     mutationFn: (data) =>
       axiosInstance.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/bloquerDepense?userConnectedId=${user.id}&depenseId=${depense.id}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/bloquerDepense?userConnectedId=${user.id}&depenseId=${depense.id}&bloquer=${isBloquerChecked}`,
         data
       ),
     onSuccess: (response) => {
