@@ -269,32 +269,45 @@ export default function IndexMouvement() {
                                 />
                               </div>
                             </td>
-                            <td className="tw-p-1 align-middle">
-                              <div className="tw-flex tw-flex-col tw-items-start tw-gap-0">
-                                {" "}
-                                {/* Gap minimal */}
-                                <div className="tw-font-medium tw-text-gray-900 tw-text-xs tw-mb-1">
-                                  {depense.wording}
-                                </div>
-                                <div className="tw-flex tw-items-center tw-gap-1">
-                                  <h6 className="tw-text-2xs tw-font-semibold tw-text-blue-800 tw-bg-blue-100 tw-rounded tw-p-1">
-                                    {depense.typeDeDepense?.wording}
-                                  </h6>
+                           <td className="tw-p-1 align-middle">
+  <div className="tw-flex tw-flex-col tw-items-start tw-justify-between tw-gap-0">
+    {/* Libellé principal */}
+    <div className="tw-font-medium tw-text-gray-900 tw-text-xs tw-mb-1">
+      {depense.wording}
+    </div>
 
-                                  {depense?.rejeter ? (
-                                    <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-red-600">
-                                      <X size={12} />
-                                      Rejeté
-                                    </span>
-                                  ) : (
-                                    <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-green-600">
-                                      <CheckCheck size={12} />
-                                      Approuvé
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
+    {/* Ligne des statuts */}
+    <div className="tw-flex tw-items-center tw-justify-between tw-w-full">
+      {/* Type de dépense + statut */}
+      <div className="tw-flex tw-items-center tw-gap-1">
+        <h6 className="tw-text-2xs tw-font-semibold tw-text-blue-800 tw-bg-blue-100 tw-rounded tw-p-1">
+          {depense.typeDeDepense?.wording}
+        </h6>
+
+        {depense?.rejeter ? (
+          <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-red-600">
+            <X size={16} />
+            Rejeté
+          </span>
+        ) : (
+          <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-green-600">
+            <CheckCheck size={16} />
+            Approuvé
+          </span>
+        )}
+      </div>
+
+      {/* Décharge alignée à droite */}
+      {depense?.decharger && (
+        <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-violet-600">
+          <CheckCheck size={16} />
+          Déchargé
+        </span>
+      )}
+    </div>
+  </div>
+</td>
+
                             {/* TD 3 (Montant) - Padding minimal */}
                             <td className="tw-p-1 tw-text-center tw-font-semibold align-middle">
                               {depense.montant.toLocaleString()} F
