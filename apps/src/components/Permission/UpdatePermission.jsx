@@ -81,6 +81,7 @@ export default function UpdatePermission({ permission, onSuccess, onClose }) {
         readPacks: permission.readPacks,
         updatePacks: permission.updatePacks,
         deletePacks: permission.deletePacks,
+        voirLeSolde: permission.voirLeSolde,
       });
     }
   }, [permission, reset]);
@@ -106,6 +107,7 @@ export default function UpdatePermission({ permission, onSuccess, onClose }) {
               <PermissionCheckbox id="readDashboard" label="Voir le TdB" register={register} />
               <PermissionCheckbox id="readPermission" label="Lire les permissions" register={register} />
               <PermissionCheckbox id="updatePermission" label="Modifier les permissions" register={register} />
+              <PermissionCheckbox id="voirLeSolde" label="Voir le solde" register={register} />
             </div>
 
             <div className="tw-border tw-p-4 tw-rounded-lg tw-space-y-3">

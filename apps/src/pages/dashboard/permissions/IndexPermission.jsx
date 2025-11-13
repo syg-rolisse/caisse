@@ -120,6 +120,7 @@ export default function IndexPermission() {
                             <PermissionItem label="Gérer Permissions" hasPermission={permission.updatePermission} />
                             <PermissionItem label="Renouveler l'abonnement" hasPermission={permission.createAbonnement} />
                             <PermissionItem label="Voir les abonnements" hasPermission={permission.readAbonnement} />
+                            <PermissionItem label="Voir le solde de la caisse" hasPermission={permission.voirLeSolde} />
                           </ul>
                         </div>
                         <div>

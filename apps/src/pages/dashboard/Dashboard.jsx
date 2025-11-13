@@ -13,6 +13,7 @@ import DashboardHeader from "../../components/dashboard/DashboardHeader";
 import ExpenseChart from "../../components/dashboard/ExpenseChart";
 import { Loader2, ServerCrash } from "lucide-react";
 
+
 export default function Dashboard() {
   const queryClient = useQueryClient();
   const socket = useSocket();

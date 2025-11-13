@@ -116,6 +116,9 @@ export default class Permission extends BaseModel {
   @column()
   declare deleteTypeDeDepense: boolean
 
+  @column()
+  declare voirLeSolde: boolean
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

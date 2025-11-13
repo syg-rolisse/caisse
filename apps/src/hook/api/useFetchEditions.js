@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchEditions({ companyId, dateDebut, dateFin, userId, typeDeDepenseId }) {
+export function useFetchEditions({ companyId, dateDebut, dateFin, userId, typeDeDepenseId, by }) {
   const handleError = useHandleError();
 
   return useQuery({
-    queryKey: ["editions", companyId, dateDebut, dateFin, userId, typeDeDepenseId],
+    queryKey: ["editions", companyId, dateDebut, dateFin, userId, typeDeDepenseId, by],
 
     queryFn: async () => {
       const response = await axiosInstance.get(
@@ -18,6 +18,7 @@ export function useFetchEditions({ companyId, dateDebut, dateFin, userId, typeDe
             dateFin,
             userId: userId || "",
             typeDeDepenseId: typeDeDepenseId || null,
+            by: by || "",
           },
         }
       );

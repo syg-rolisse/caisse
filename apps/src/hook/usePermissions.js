@@ -11,6 +11,9 @@ export const usePermissions = () => {
   // C'est la source unique de vérité.
   const { permissions } = useAuth();
 
+  console.log(permissions);
+  
+
   /**
    * Vérifie si l'utilisateur actuel a une permission spécifique.
    * @param {string} action - Le nom de la permission à vérifier (ex: "createDepense", "deleteUser").
