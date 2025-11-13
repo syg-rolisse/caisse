@@ -83,8 +83,8 @@ export default class TypeDeDepensesController {
 
   async editions({ request, response }: HttpContext) {
     try {
-      const { companieId, userId, dateDebut, dateFin, typeDeDepenseId } = request.qs()
-      console.log(companieId, userId, dateDebut, dateFin, typeDeDepenseId)
+      const { companieId, userId, dateDebut, dateFin, typeDeDepenseId, by } = request.qs()
+
       if (!companieId) {
         return response.badRequest({ message: 'Le paramètre companieId est manquant.' })
       }
@@ -118,6 +118,18 @@ export default class TypeDeDepensesController {
 
       if (typeDeDepenseId) {
         query.where({ typeDeDepenseId: Number.parseInt(typeDeDepenseId) })
+      }
+
+      if (by && by === 'paye') {
+        query.where({ status: true })
+      }
+
+      if (by && by === 'impaye') {
+        query.where({ status: false })
+      }
+
+      if (by && by === 'rejete') {
+        query.where({ rejeter: true })
       }
 
       const depenses = await query

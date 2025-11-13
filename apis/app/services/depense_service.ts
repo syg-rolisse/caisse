@@ -7,7 +7,9 @@ export default class DepenseService {
     perPage = 1000,
     userId: number | undefined | null,
     dateDebut: string,
-    dateFin: string
+    dateFin: string,
+    typeDeDepenseId: number | undefined | null,
+    by: string | undefined | null
   ) {
     const query = Depense.query()
       .where({ companieId: companyId })
@@ -25,6 +27,25 @@ export default class DepenseService {
 
     if (dateFin) {
       query.where('createdAt', '<=', dateFin)
+    }
+
+    if (typeDeDepenseId) {
+      query.where({ typeDeDepenseId })
+    }
+
+    //impaye
+    //rejete
+
+    if (by && by === 'paye') {
+      query.where({ status: true })
+    }
+
+    if (by && by === 'impaye') {
+      query.where({ status: false })
+    }
+
+    if (by && by === 'rejete') {
+      query.where({ rejeter: true })
     }
 
     const [allDepenses, depenses] = await Promise.all([

@@ -15,6 +15,7 @@ export const updatePermissionValidator = vine.compile(
     updateAppro: vine.boolean().optional(),
 
     readSortie: vine.boolean().optional(),
+    voirLeSolde: vine.boolean().optional(),
 
     createDepense: vine.boolean().optional(),
     deleteDepense: vine.boolean().optional(),

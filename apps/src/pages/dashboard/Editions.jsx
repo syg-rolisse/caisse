@@ -19,6 +19,7 @@ export default function Editions() {
     dateFin: `${currentYear}-12-31`,
     userId: null,
     typeDeDepenseId: null,
+    by: null,
   };
 
   const [filters, setFilters] = useState(initialFilters);
@@ -44,6 +45,7 @@ export default function Editions() {
     dateDebut: filters.dateDebut,
     dateFin: filters.dateFin,
     typeDeDepenseId: filters.typeDeDepenseId,
+    by: filters.by,
   });
 
   const handleSearch = useCallback((newFilters) => {
@@ -150,13 +152,13 @@ export default function Editions() {
   // Fin du calcul des totaux
 
   // Nombre de colonnes avant "Montant Dû"
-  const colsBeforeMontant = [
-    "typeDepense",
-    "id",
-    "user",
-    "dateOperation",
-    "wording",
-  ].filter((col) => columnVisibility[col]).length;
+  // const colsBeforeMontant = [
+  //   "typeDepense",
+  //   "id",
+  //   "user",
+  //   "dateOperation",
+  //   "wording",
+  // ].filter((col) => columnVisibility[col]).length;
 
   return (
     <div>
@@ -433,8 +435,8 @@ export default function Editions() {
               {!isLoading && !isError && depenses.length > 0 && (
                 <tfoot>
                   <tr className="tw-bg-gray-200  dark:tw-text-gray-200 tw-font-extrabold tw-border-t-4 tw-border-orange-500">
-  <td colSpan={colsBeforeMontant} className="text-end tw-align-middle tw-py-2 tw-text-xl">
-    Total Général :
+  <td colSpan={4} className="text-end tw-align-middle tw-py-2 tw-text-xl">
+    ⭐ Total Général :
   </td>
   {columnVisibility.montant && (
     <td className="tw-text-center tw-text-2xl tw-text-orange-700 dark:tw-text-orange-400 tw-align-middle">
@@ -458,11 +460,7 @@ export default function Editions() {
     </td>
   )}
   {/* Colonnes restantes (Statut à Créé le) */}
-  <td
-    colSpan={
-      visibleColumnCount - colsBeforeMontant - 3
-    }
-  ></td>
+  <td colSpan={6}></td>
 </tr>
                 </tfoot>
               )}

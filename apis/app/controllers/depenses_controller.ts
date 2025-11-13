@@ -24,7 +24,8 @@ export default class DepensesController {
   // index() et create() étaient déjà corrects, pas de changement majeur
   async index({ request, response }: HttpContext) {
     try {
-      const { page, perpage, companieId, userId, dateDebut, dateFin } = request.qs()
+      const { page, perpage, companieId, userId, dateDebut, dateFin, typeDeDepenseId, by } =
+        request.qs()
 
       const pageNumber = page ? Number.parseInt(page) : 1
       const perPageNumber = perpage ? Number.parseInt(perpage) : 10
@@ -35,7 +36,9 @@ export default class DepensesController {
         perPageNumber,
         userId,
         dateDebut,
-        dateFin
+        dateFin,
+        typeDeDepenseId,
+        by
       )
 
       return response.ok({ depenses, allDepenses })

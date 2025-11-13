@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, Fragment } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-
 import Spinner from "../../../components/Spinner";
 import Pagination from "../../../components/Pagination";
 import WelcomeModal from "../../../components/WelcomeModal";
@@ -13,6 +12,7 @@ import { useFetchDepenses } from "../../../hook/api/useFetchDepense";
 import { useSocket } from "../../../context/socket.jsx";
 import { usePermissions } from "../../../hook/usePermissions";
 import EmptyState from "../../../components/EmptyState";
+import UserAndDateRangeFilter from "../../../components/UserAndDateRangeFilter";
 import {
   ChevronDown,
   ChevronRight,
@@ -40,12 +40,33 @@ export default function IndexMouvement() {
   const queryClient = useQueryClient();
   const user = JSON.parse(localStorage.getItem("user"));
   const companyId = user?.company?.id;
+ const currentYear = new Date().getFullYear();
+    const initialFilters = {
+    dateDebut: `${currentYear}-01-01`,
+    dateFin: `${currentYear}-12-31`,
+    userId: null,
+    typeDeDepenseId: null,
+    by: null,
+  };
+
+  const [filters, setFilters] = useState(initialFilters);
 
   const { data, isLoading, isError, error } = useFetchDepenses({
     page,
     perpage,
     companyId,
+    userId: filters.userId,
+    dateDebut: filters.dateDebut,
+    dateFin: filters.dateFin,
+    typeDeDepenseId: filters.typeDeDepenseId,
+    by: filters.by,
   });
+
+
+
+  const handleSearch = useCallback((newFilters) => {
+    setFilters(newFilters);
+  }, []);
 
   const depenses = data?.depenses?.data || [];
   const allDepenses = data?.allDepenses || [];
@@ -145,13 +166,21 @@ export default function IndexMouvement() {
 
       <div className="container-fluid">
         <PageHeaderActions indexTitle="Gestion des Mouvements / Dépenses" />
-
+        <div className="tw-my-4 tw-bg-gray-50 dark:tw-bg-gray-800 tw-rounded-lg">
+          <UserAndDateRangeFilter
+            companyId={companyId}
+            onSearch={handleSearch}
+          />
+        </div>
         <div className="col-xl-12">
           <div className="card custom-card">
             <div className="card-header justify-content-between">
               <div className="card-title">Liste des Dépenses | Mouvements</div>
             </div>
             <div className="card-body card-border tw-rounded-md tw-m-5">
+
+              
+
               <div className="d-sm-flex mb-4 justify-content-between">
                 <div className="tw-flex tw-items-center tw-gap-2">
                   <span>Voir</span>
@@ -269,44 +298,44 @@ export default function IndexMouvement() {
                                 />
                               </div>
                             </td>
-                           <td className="tw-p-1 align-middle">
-  <div className="tw-flex tw-flex-col tw-items-start tw-justify-between tw-gap-0">
-    {/* Libellé principal */}
-    <div className="tw-font-medium tw-text-gray-900 tw-text-xs tw-mb-1">
-      {depense.wording}
-    </div>
+                            <td className="tw-p-1 align-middle">
+                              <div className="tw-flex tw-flex-col tw-items-start tw-justify-between tw-gap-0">
+                                {/* Libellé principal */}
+                                <div className="tw-font-medium tw-text-gray-900 tw-text-xs tw-mb-1">
+                                  {depense.wording}
+                                </div>
 
-    {/* Ligne des statuts */}
-    <div className="tw-flex tw-items-center tw-justify-between tw-w-full">
-      {/* Type de dépense + statut */}
-      <div className="tw-flex tw-items-center tw-gap-1">
-        <h6 className="tw-text-2xs tw-font-semibold tw-text-blue-800 tw-bg-blue-100 tw-rounded tw-p-1">
-          {depense.typeDeDepense?.wording}
-        </h6>
+                                {/* Ligne des statuts */}
+                                <div className="tw-flex tw-items-center tw-justify-between tw-w-full">
+                                  {/* Type de dépense + statut */}
+                                  <div className="tw-flex tw-items-center tw-gap-1">
+                                    <h6 className="tw-text-2xs tw-font-semibold tw-text-blue-800 tw-bg-blue-100 tw-rounded tw-p-1">
+                                      {depense.typeDeDepense?.wording}
+                                    </h6>
 
-        {depense?.rejeter ? (
-          <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-red-600">
-            <X size={16} />
-            Rejeté
-          </span>
-        ) : (
-          <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-green-600">
-            <CheckCheck size={16} />
-            Approuvé
-          </span>
-        )}
-      </div>
+                                    {depense?.rejeter ? (
+                                      <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-red-600">
+                                        <X size={16} />
+                                        Rejeté
+                                      </span>
+                                    ) : (
+                                      <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-green-600">
+                                        <CheckCheck size={16} />
+                                        Approuvé
+                                      </span>
+                                    )}
+                                  </div>
 
-      {/* Décharge alignée à droite */}
-      {depense?.decharger && (
-        <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-violet-600">
-          <CheckCheck size={16} />
-          Déchargé
-        </span>
-      )}
-    </div>
-  </div>
-</td>
+                                  {/* Décharge alignée à droite */}
+                                  {depense?.decharger && (
+                                    <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-violet-600">
+                                      <CheckCheck size={16} />
+                                      Déchargé
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
 
                             {/* TD 3 (Montant) - Padding minimal */}
                             <td className="tw-p-1 tw-text-center tw-font-semibold align-middle">
@@ -423,9 +452,7 @@ export default function IndexMouvement() {
                                             : "lock"
                                         }-line tw-mr-1`}
                                       ></i>
-                                      {depense.bloquer
-                                        ? "Modifier"
-                                        : "Bloquer"}
+                                      {depense.bloquer ? "Modifier" : "Bloquer"}
                                     </button>
                                   )}
                                 </div>
@@ -543,3 +570,5 @@ export default function IndexMouvement() {
     </div>
   );
 }
+
+
