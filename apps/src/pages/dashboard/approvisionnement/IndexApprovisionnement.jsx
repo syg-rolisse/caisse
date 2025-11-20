@@ -17,7 +17,7 @@ import "../../../fade.css";
 
 export default function IndexApprovisionnement() {
   const [page, setPage] = useState(1);
-  const [perpage, setPerPage] = useState(6); // Ajusté pour une meilleure mise en page en grille
+  const [perpage, setPerPage] = useState(20); // Ajusté pour une meilleure mise en page en grille
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -113,7 +113,7 @@ export default function IndexApprovisionnement() {
                     onChange={handlePerPageChange}
                     value={perpage}
                   >
-                    <option value="6">6</option><option value="12">12</option><option value="24">24</option>
+                    <option value="20">20</option><option value="40">40</option><option value="60">60</option>
                   </select>
                 </div>
                 <div className="d-flex gap-2 mt-sm-0 tw-w-full md:tw-w-auto">

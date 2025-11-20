@@ -160,15 +160,15 @@ export default function UserAndDateRangeFilter({ companyId, onSearch }) {
 }
 
 UserAndDateRangeFilter.propTypes = {
-  companyId: PropTypes.number.isRequired,
-  onSearch: PropTypes.func.isRequired,
+  companyId: PropTypes.number,
+  onSearch: PropTypes.func,
   options: PropTypes.arrayOf(
     PropTypes.shape({
       value: PropTypes.string,
       label: PropTypes.string,
     })
-  ).isRequired,
-  selectedValue: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-  name: PropTypes.string.isRequired,
+  ),
+  selectedValue: PropTypes.string,
+  onChange: PropTypes.func,
+  name: PropTypes.string,
 };

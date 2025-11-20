@@ -1,57 +1,86 @@
 import { useMutation } from "@tanstack/react-query";
 import PropTypes from "prop-types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../../hook/useHandleError";
-import { Loader2, CheckCircle, X, PlusCircle } from "lucide-react";
+import { Loader2, CheckCircle, X, PlusCircle, Pencil, Save } from "lucide-react";
 import InputField from "../InputField";
 
 function CreateSortie({ depense, onSuccess, onClose }) {
   const { handleError } = useHandleError();
   const user = JSON.parse(localStorage.getItem("user"));
+  const [editingMouvement, setEditingMouvement] = useState(null);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({ defaultValues: { montant: "", wording: "" } });
 
+  // Calculs des totaux
   const totalDejaPaye = depense?.Mouvements?.reduce((sum, mov) => sum + mov.montant, 0) || 0;
   const resteAPayer = (depense?.montant || 0) - totalDejaPaye;
 
-  // Mutation pour AJOUTER un mouvement
-  const { mutate: createMouvement, isLoading: isCreating } = useMutation({
-    mutationFn: (data) =>
-      axiosInstance.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/sortie`, // Votre endpoint de création de 'sortie' (mouvement)
-        data
-      ),
+  const { mutate, isLoading } = useMutation({
+    mutationFn: (data) => {
+      const isEdit = !!editingMouvement;
+      const url = isEdit
+        ? `${import.meta.env.VITE_BACKEND_URL}/api/v1/sortie?sortieId=${editingMouvement.id}` // Vérifie bien si c'est ?id= ou ?sortieId= selon ton back
+        : `${import.meta.env.VITE_BACKEND_URL}/api/v1/sortie`;
+      
+      const method = isEdit ? axiosInstance.put : axiosInstance.post;
+      return method(url, data);
+    },
     onSuccess: (response) => {
       toast.success(response?.data?.message);
+      handleCancelEdit();
       onSuccess();
     },
     onError: handleError,
   });
 
   const onSubmit = (data) => {
-    if (data.montant > resteAPayer) {
-      toast.error(`Le montant ne peut pas dépasser le reste à payer (${resteAPayer.toLocaleString()} F).`);
-      return;
+    // 1. Calcul du plafond autorisé
+    const maxAuthorised = editingMouvement 
+      ? resteAPayer + editingMouvement.montant 
+      : resteAPayer;
+
+    // 2. Vérification manuelle ici (maintenant que validate est retiré, ce code va s'exécuter)
+    if (data.montant > maxAuthorised) {
+      toast.error(`Le montant ne peut pas dépasser ${maxAuthorised.toLocaleString()} F.`);
+      return; // On arrête tout ici
     }
-    createMouvement({
+
+    const payload = {
       ...data,
       depenseId: depense.id,
       userId: user.id,
       companieId: user.company.id,
-    });
+    };
+
+    mutate(payload);
+  };
+
+  const handleEditClick = (mouvement) => {
+    setEditingMouvement(mouvement);
+    setValue("montant", mouvement.montant);
+    setValue("wording", mouvement.wording || "");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMouvement(null);
+    reset({ montant: "", wording: "" });
   };
 
   useEffect(() => {
-    reset({ montant: "", wording: "" });
-  }, [depense, reset]);
+    if (!editingMouvement) {
+      reset({ montant: "", wording: "" });
+    }
+  }, [depense, reset, editingMouvement]);
 
   return (
     <div className="tw-bg-white tw-p-2">
@@ -70,11 +99,25 @@ function CreateSortie({ depense, onSuccess, onClose }) {
         <h4 className="tw-text-md tw-font-semibold tw-text-gray-700">Paiements déjà effectués</h4>
         {depense?.Mouvements?.length > 0 ? (
           depense.Mouvements.map((mouvement) => (
-            <div key={mouvement.id} className="tw-flex tw-items-center tw-justify-between tw-p-2 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-md">
+            <div 
+              key={mouvement.id} 
+              className={`tw-flex tw-items-center tw-justify-between tw-p-2 tw-border tw-rounded-md ${editingMouvement?.id === mouvement.id ? 'tw-bg-orange-50 tw-border-orange-300' : 'tw-bg-green-50 tw-border-green-200'}`}
+            >
               <div>
-                <p className="tw-font-semibold tw-text-green-800">{mouvement.montant.toLocaleString()} F</p>
-                <p className="tw-text-xs tw-text-gray-500">par {mouvement.user?.fullName} le {new Date(mouvement.createdAt).toLocaleDateString('fr-FR')}</p>
+                <p className="tw-font-semibold tw-text-gray-800">{mouvement.montant.toLocaleString()} F</p>
+                <p className="tw-text-xs tw-text-gray-500">
+                  {mouvement.wording ? `${mouvement.wording} - ` : ""} 
+                  {new Date(mouvement.createdAt).toLocaleDateString('fr-FR')}
+                </p>
               </div>
+              <button 
+                type="button" 
+                onClick={() => handleEditClick(mouvement)}
+                className="tw-p-1 tw-text-gray-500 hover:tw-text-orange-600 hover:tw-bg-orange-100 tw-rounded transition-colors"
+                title="Modifier ce paiement"
+              >
+                <Pencil size={16} />
+              </button>
             </div>
           ))
         ) : (
@@ -82,18 +125,32 @@ function CreateSortie({ depense, onSuccess, onClose }) {
         )}
       </div>
 
-      {resteAPayer > 0 ? (
+      {(resteAPayer > 0 || editingMouvement) ? (
         <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-4 tw-pt-4 tw-border-t">
-          <h4 className="tw-text-md tw-font-semibold tw-text-gray-700">Ajouter un nouveau paiement</h4>
+          <div className="tw-flex tw-justify-between tw-items-center">
+            <h4 className="tw-text-md tw-font-semibold tw-text-gray-700">
+              {editingMouvement ? "Modifier le paiement" : "Ajouter un nouveau paiement"}
+            </h4>
+            {editingMouvement && (
+              <button 
+                type="button" 
+                onClick={handleCancelEdit}
+                className="tw-text-xs tw-text-red-500 hover:tw-underline"
+              >
+                Annuler modification
+              </button>
+            )}
+          </div>
+          
           <InputField
             id="montant"
             label="Montant à payer"
             type="number"
-            placeholder={`Max: ${resteAPayer.toLocaleString()}`}
+            placeholder="Montant"
             {...register("montant", { 
               required: "Le montant est requis.",
               valueAsNumber: true,
-              max: { value: resteAPayer, message: `Le montant ne peut pas dépasser ${resteAPayer.toLocaleString()} F.` }
+              // J'ai supprimé le 'validate' ici pour laisser le onSubmit gérer l'erreur via Toast
             })}
             errors={errors}
           />
@@ -106,13 +163,25 @@ function CreateSortie({ depense, onSuccess, onClose }) {
               {...register("wording")}
             />
           </div>
+          
           <div className="tw-pt-4 tw-flex tw-justify-between tw-items-center">
             <button type="button" className="btn btn-light" onClick={onClose}>
               <X size={16} className="tw-inline tw-mr-1" />
               Fermer
             </button>
-            <button type="submit" className="btn btn-success tw-text-white" disabled={isCreating}>
-              {isCreating ? <Loader2 className="tw-animate-spin" /> : <><PlusCircle size={16} className="tw-inline tw-mr-2" /> Ajouter Paiement</>}
+            <button 
+              type="submit" 
+              className={`btn ${editingMouvement ? 'btn-warning' : 'btn-success'} tw-text-white`} 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="tw-animate-spin" />
+              ) : (
+                <>
+                  {editingMouvement ? <Save size={16} className="tw-inline tw-mr-2" /> : <PlusCircle size={16} className="tw-inline tw-mr-2" />}
+                  {editingMouvement ? "Mettre à jour" : "Ajouter Paiement"}
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -127,9 +196,9 @@ function CreateSortie({ depense, onSuccess, onClose }) {
 }
 
 CreateSortie.propTypes = {
-  depense: PropTypes.object.isRequired,
-  onSuccess: PropTypes.func.isRequired,
-  onClose: PropTypes.func.isRequired,
+  depense: PropTypes.object,
+  onSuccess: PropTypes.func,
+  onClose: PropTypes.func,
 };
 
 export default CreateSortie;

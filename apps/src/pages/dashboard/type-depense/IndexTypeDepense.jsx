@@ -16,7 +16,7 @@ import "../../../fade.css";
 
 export default function IndexTypeDepense() {
   const [page, setPage] = useState(1);
-  const [perpage, setPerPage] = useState(6); // Ajusté pour une grille
+  const [perpage, setPerPage] = useState(24); // Ajusté pour une grille
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);

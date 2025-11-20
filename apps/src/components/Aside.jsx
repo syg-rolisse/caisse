@@ -77,7 +77,7 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
           tw-fixed tw-top-0 tw-left-0 tw-h-full tw-z-40
           tw-w-64 tw-bg-white tw-border-r tw-border-gray-200
           tw-transition-transform tw-duration-300 ease-in-out
-          tw-flex tw-flex-col tw-h-full
+          tw-flex tw-flex-col
           ${isSidebarOpen ? 'tw-translate-x-0' : '-tw-translate-x-full'}
         `}
         id="sidebar"
