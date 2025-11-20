@@ -253,7 +253,7 @@ function DepenseForm({ depense, onSuccess, onClose }) {
 
 DepenseForm.propTypes = {
   depense: PropTypes.object,
-  onSuccess: PropTypes.func.isRequired,
+  onSuccess: PropTypes.func,
   onClose: PropTypes.func,
 };
 

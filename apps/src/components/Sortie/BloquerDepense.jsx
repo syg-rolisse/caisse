@@ -117,9 +117,9 @@ function BloquerDepense({ depense, onSuccess, onClose }) {
 }
 
 BloquerDepense.propTypes = {
-  depense: PropTypes.object.isRequired,
-  onSuccess: PropTypes.func.isRequired,
-  onClose: PropTypes.func.isRequired,
+  depense: PropTypes.object,
+  onSuccess: PropTypes.func,
+  onClose: PropTypes.func,
 };
 
 export default BloquerDepense;

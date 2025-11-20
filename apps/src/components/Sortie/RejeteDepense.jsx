@@ -136,9 +136,9 @@ function RejeteDepense({ depense, onSuccess, onClose }) {
 }
 
 RejeteDepense.propTypes = {
-  depense: PropTypes.object.isRequired,
-  onSuccess: PropTypes.func.isRequired,
-  onClose: PropTypes.func.isRequired,
+  depense: PropTypes.object,
+  onSuccess: PropTypes.func,
+  onClose: PropTypes.func,
 };
 
 export default RejeteDepense;

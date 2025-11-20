@@ -24,7 +24,7 @@ import {
 
 export default function IndexDepense() {
   const [page, setPage] = useState(1);
-  const [perpage] = useState(10); //setPerPage
+  const [perpage] = useState(100); //setPerPage
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
