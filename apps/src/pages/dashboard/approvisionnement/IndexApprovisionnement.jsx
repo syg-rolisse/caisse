@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import PageHeaderActions from "../../../components/common/PageHeaderActions";
@@ -15,13 +15,30 @@ import { ServerCrash } from "lucide-react";
 import EmptyState from "../../../components/EmptyState";
 import "../../../fade.css";
 
+// Hook de debounce simple intégré (à extraire si nécessaire)
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
+
 export default function IndexApprovisionnement() {
   const [page, setPage] = useState(1);
-  const [perpage, setPerPage] = useState(20); // Ajusté pour une meilleure mise en page en grille
+  const [perpage, setPerPage] = useState(50);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentApprovisionnement, setCurrentApprovisionnement] = useState(null);
+
+  // Utilisation du debounce sur le terme de recherche
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const socket = useSocket();
   const { can } = usePermissions();
@@ -29,29 +46,16 @@ export default function IndexApprovisionnement() {
   const user = JSON.parse(localStorage.getItem("user"));
   const companyId = user?.company?.id;
 
+  // On passe le terme déouncé au hook API
   const { data, isLoading, isError, error } = useFetchApprovisionnement({
     page,
     perpage,
     companyId,
+    keyword: debouncedSearchTerm, 
   });
 
   const approvisionnements = data?.approvisionnements?.data || [];
-  const allApprovisionnements = data?.allApprovisionnements || [];
   const meta = data?.approvisionnements?.meta || { total: 0, currentPage: 1, lastPage: 1 };
-
-  const filteredApprovisionnements = useMemo(() => {
-    if (searchTerm.trim() === "") {
-      return approvisionnements;
-    }
-    return allApprovisionnements.filter((item) => {
-      const searchTermLower = searchTerm.toLowerCase();
-      return (
-        item.wording?.toLowerCase().includes(searchTermLower) ||
-        item.montant?.toString().includes(searchTermLower) ||
-        item.user?.fullName?.toLowerCase().includes(searchTermLower)
-      );
-    });
-  }, [approvisionnements, allApprovisionnements, searchTerm]);
 
   const handlePerPageChange = (e) => {
     setPerPage(Number(e.target.value));
@@ -123,7 +127,10 @@ export default function IndexApprovisionnement() {
                       type="text"
                       placeholder="Rechercher..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setPage(1); // Reset page lors d'une nouvelle recherche
+                      }}
                     />
                   </div>
                 </div>
@@ -132,15 +139,18 @@ export default function IndexApprovisionnement() {
               <div className="tw-mt-6">
                 {isLoading && (<div className="tw-flex tw-justify-center tw-py-10"><Spinner /></div>)}
                 {isError && (<div className="tw-flex tw-flex-col tw-items-center tw-gap-2 tw-text-red-500 tw-py-10"><ServerCrash className="w-8 h-8" /><span>{error?.message || "Impossible de charger les données."}</span></div>)}
-                {!isLoading && !isError && filteredApprovisionnements.length === 0 && (<div className="col-12 text-center">
-                              <span className="tw-bg-gray-100 tw-text-gray-600 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
-                                <EmptyState message="Aucun approvisionnement trouvé." />
-                              </span>
-                            </div>)}
+                
+                {!isLoading && !isError && approvisionnements.length === 0 && (
+                  <div className="col-12 text-center">
+                    <span className="tw-bg-gray-100 tw-text-gray-600 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
+                      <EmptyState message="Aucun approvisionnement trouvé." />
+                    </span>
+                  </div>
+                )}
 
-                {!isLoading && !isError && filteredApprovisionnements.length > 0 && (
+                {!isLoading && !isError && approvisionnements.length > 0 && (
                   <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-6">
-                    {filteredApprovisionnements.map((item) => (
+                    {approvisionnements.map((item) => (
                       <ApprovisionnementCard
                         key={item.id}
                         item={item}
@@ -154,7 +164,8 @@ export default function IndexApprovisionnement() {
                 )}
               </div>
             </div>
-            {meta && meta.total > perpage && searchTerm.trim() === "" && (
+            
+            {meta && (
               <div className="card-footer">
                 <Pagination meta={meta} onPageChange={setPage} />
               </div>

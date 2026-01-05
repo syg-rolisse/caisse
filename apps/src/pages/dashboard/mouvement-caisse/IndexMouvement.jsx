@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, useEffect, Fragment } from "react";
+import { useState, useCallback, useEffect, Fragment } from "react";
+import PropTypes from "prop-types"; // Import pour corriger l'erreur ESLint
 import { useQueryClient } from "@tanstack/react-query";
 import Spinner from "../../../components/Spinner";
 import Pagination from "../../../components/Pagination";
@@ -18,15 +19,50 @@ import {
   ChevronRight,
   ServerCrash,
   CircleDollarSign,
-  CheckCheck,
-  X,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Lock,
+  Unlock,
+  Banknote,
+  Search,
+  Edit2,
+  Trash2,
+  Ban
 } from "lucide-react";
 import "../../../fade.css";
+
+// Hook de debounce
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+// --- COMPOSANT INTERNE : BADGE STATUT (Sorti pour ESLint) ---
+const StatusBadge = ({ status, rejeter, bloquer }) => {
+  if (rejeter) return <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-bold tw-bg-red-100 tw-text-red-700 tw-border tw-border-red-200"><XCircle size={12}/> Rejeté</span>;
+  if (bloquer) return <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-bold tw-bg-gray-100 tw-text-gray-700 tw-border tw-border-gray-200"><Lock size={12}/> Bloqué</span>;
+  if (status) return <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-bold tw-bg-emerald-100 tw-text-emerald-700 tw-border tw-border-emerald-200"><CheckCircle2 size={12}/> Payé</span>;
+  return <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-bold tw-bg-amber-100 tw-text-amber-700 tw-border tw-border-amber-200"><Clock size={12}/> En attente</span>;
+};
+
+// Validation des props pour éviter l'erreur ESLint
+StatusBadge.propTypes = {
+  status: PropTypes.bool,
+  rejeter: PropTypes.bool,
+  bloquer: PropTypes.bool,
+};
 
 export default function IndexMouvement() {
   const [page, setPage] = useState(1);
   const [perpage, setPerPage] = useState(100);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
   const [currentDepense, setCurrentDepense] = useState(null);
   const [currentMouvement, setCurrentMouvement] = useState(null);
   const [showCreateSortieModal, setShowCreateSortieModal] = useState(false);
@@ -40,10 +76,10 @@ export default function IndexMouvement() {
   const queryClient = useQueryClient();
   const user = JSON.parse(localStorage.getItem("user"));
   const companyId = user?.company?.id;
- const currentYear = new Date().getFullYear();
-    const initialFilters = {
-    dateDebut: `${currentYear}-01-01`,
-    dateFin: `${currentYear}-12-31`,
+
+  const initialFilters = {
+    dateDebut: '',
+    dateFin: '',
     userId: null,
     typeDeDepenseId: null,
     by: null,
@@ -60,35 +96,16 @@ export default function IndexMouvement() {
     dateFin: filters.dateFin,
     typeDeDepenseId: filters.typeDeDepenseId,
     by: filters.by,
+    keyword: debouncedSearchTerm,
   });
-
-
 
   const handleSearch = useCallback((newFilters) => {
     setFilters(newFilters);
+    setPage(1);
   }, []);
 
   const depenses = data?.depenses?.data || [];
-  const allDepenses = data?.allDepenses || [];
-  const meta = data?.depenses?.meta || {
-    total: 0,
-    currentPage: 1,
-    lastPage: 1,
-  };
-
-  const filteredDepenses = useMemo(() => {
-    if (searchTerm.trim() === "") {
-      return depenses;
-    }
-    return allDepenses.filter((item) => {
-      const term = searchTerm.toLowerCase();
-      return (
-        item.wording?.toLowerCase().includes(term) ||
-        item.typeDeDepense?.wording?.toLowerCase().includes(term) ||
-        item.user?.fullName?.toLowerCase().includes(term)
-      );
-    });
-  }, [depenses, allDepenses, searchTerm]);
+  const meta = data?.depenses?.meta || { total: 0, currentPage: 1, lastPage: 1 };
 
   const handleSuccess = useCallback(() => {
     setShowCreateSortieModal(false);
@@ -102,17 +119,11 @@ export default function IndexMouvement() {
 
   useEffect(() => {
     if (!socket || !companyId) return;
-
     socket.emit("join_company_room", companyId);
-
-    const handleDataUpdate = () => {
-      queryClient.invalidateQueries(["depenses"]);
-    };
-
+    const handleDataUpdate = () => queryClient.invalidateQueries(["depenses"]);
     socket.on("depense_created", handleDataUpdate);
     socket.on("depense_updated", handleDataUpdate);
     socket.on("depense_deleted", handleDataUpdate);
-
     return () => {
       socket.off("depense_created", handleDataUpdate);
       socket.off("depense_updated", handleDataUpdate);
@@ -129,63 +140,43 @@ export default function IndexMouvement() {
     setExpandedRows((prev) => ({ ...prev, [depenseId]: !prev[depenseId] }));
   };
 
-  const hasAnyActionPermission =
-    can("payeDepense") || can("rejectDepense") || can("bloqueDepense");
+  const hasAnyActionPermission = can("payeDepense") || can("rejectDepense") || can("bloqueDepense");
 
   return (
     <div>
+      {/* Modales */}
       <WelcomeModal isActive={showCreateSortieModal} onClose={handleSuccess}>
-        <CreateSortie
-          depense={currentDepense}
-          mouvement={currentMouvement}
-          onSuccess={handleSuccess}
-          onClose={handleSuccess}
-        />
+        <CreateSortie depense={currentDepense} mouvement={currentMouvement} onSuccess={handleSuccess} onClose={handleSuccess} />
       </WelcomeModal>
       <WelcomeModal isActive={showDeleteSortieModal} onClose={handleSuccess}>
-        <DeleteSortie
-          sortie={currentMouvement}
-          onSuccess={handleSuccess}
-          onClose={handleSuccess}
-        />
+        <DeleteSortie sortie={currentMouvement} onSuccess={handleSuccess} onClose={handleSuccess} />
       </WelcomeModal>
       <WelcomeModal isActive={showRejeteModal} onClose={handleSuccess}>
-        <RejeteDepense
-          depense={currentDepense}
-          onSuccess={handleSuccess}
-          onClose={handleSuccess}
-        />
+        <RejeteDepense depense={currentDepense} onSuccess={handleSuccess} onClose={handleSuccess} />
       </WelcomeModal>
       <WelcomeModal isActive={showBloquerModal} onClose={handleSuccess}>
-        <BloquerDepense
-          depense={currentDepense}
-          onSuccess={handleSuccess}
-          onClose={handleSuccess}
-        />
+        <BloquerDepense depense={currentDepense} onSuccess={handleSuccess} onClose={handleSuccess} />
       </WelcomeModal>
 
-      <div className="container-fluid">
+      <div className="container-fluid tw-pb-20">
         <PageHeaderActions indexTitle="Gestion des Mouvements / Dépenses" />
-        <div className="tw-my-4 tw-bg-gray-50 dark:tw-bg-gray-800 tw-rounded-lg">
-          <UserAndDateRangeFilter
-            companyId={companyId}
-            onSearch={handleSearch}
-          />
+        
+        <div className="tw-my-4 tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-sm tw-p-4 tw-border tw-border-gray-100">
+          <UserAndDateRangeFilter companyId={companyId} onSearch={handleSearch} />
         </div>
+
         <div className="col-xl-12">
-          <div className="card custom-card">
-            <div className="card-header justify-content-between">
-              <div className="card-title">Liste des Dépenses | Mouvements</div>
+          <div className="card custom-card tw-shadow-sm tw-rounded-xl tw-border-0 tw-overflow-hidden">
+            <div className="card-header justify-content-between tw-bg-white tw-py-4 tw-border-b tw-border-gray-100">
+              <div className="card-title tw-text-lg tw-font-bold tw-text-gray-800">Liste des Dépenses</div>
             </div>
-            <div className="card-body card-border tw-rounded-md tw-m-5">
-
-              
-
-              <div className="d-sm-flex mb-4 justify-content-between">
+            
+            <div className="card-body tw-p-0">
+              <div className="d-sm-flex tw-p-4 tw-bg-gray-50/50 justify-content-between tw-border-b tw-border-gray-100">
                 <div className="tw-flex tw-items-center tw-gap-2">
-                  <span>Voir</span>
+                  <span className="tw-text-sm tw-font-medium tw-text-gray-600">Afficher</span>
                   <select
-                    className="form-select form-select-sm tw-h-10"
+                    className="form-select form-select-sm tw-h-9 tw-text-sm tw-border-gray-300 tw-rounded-lg"
                     onChange={handlePerPageChange}
                     value={perpage}
                   >
@@ -193,373 +184,206 @@ export default function IndexMouvement() {
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
+                    <option value="100">100</option>
                   </select>
                 </div>
-                <div className="d-flex gap-2 mt-sm-0 tw-w-full">
-                  <div className="tw-w-full max-sm:tw-mt-2 tw-ml-3">
-                    <input
-                      className="form-control form-control-xl"
-                      type="text"
-                      placeholder="Rechercher ici..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
+                <div className="tw-relative tw-w-full md:tw-w-72 mt-2 mt-sm-0">
+                  <Search className="tw-absolute tw-left-3 tw-top-1/2 -tw-translate-y-1/2 tw-text-gray-400" size={16} />
+                  <input
+                    className="form-control form-control-sm tw-pl-9 tw-rounded-lg tw-border-gray-300"
+                    type="text"
+                    placeholder="Rechercher..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(1);
+                    }}
+                  />
                 </div>
               </div>
+
               <div className="table-responsive">
-                <table className="customTable table table-bordered text-nowrap mb-0 tw-text-xs table-sm">
-                  {" "}
-                  {/* table-sm pour le padding natif Bootstrap + tw-text-xs */}
-                  <thead>
+                <table className="table tw-w-full tw-text-left tw-border-collapse">
+                  <thead className="tw-bg-gray-50">
                     <tr>
-                      <th className="fw-bold tw-py-1"></th>
-                      <th className="fw-bold tw-py-1">Intitulé</th>
-                      <th className="fw-bold tw-text-center tw-py-1">
-                        Montant Total
-                      </th>
-                      <th className="fw-bold tw-py-1">Effectué par</th>
-                      <th className="fw-bold tw-text-center tw-py-1">Statut</th>
-                      <th className="fw-bold tw-text-center tw-py-1">
-                        Mouvements
-                      </th>
+                      <th className="tw-py-3 tw-px-4 tw-text-xs tw-font-semibold tw-text-gray-500 tw-uppercase tw-tracking-wider tw-w-10"></th>
+                      <th className="tw-py-3 tw-px-4 tw-text-xs tw-font-semibold tw-text-gray-500 tw-uppercase tw-tracking-wider">Détails Dépense</th>
+                      <th className="tw-py-3 tw-px-4 tw-text-xs tw-font-semibold tw-text-gray-500 tw-uppercase tw-tracking-wider tw-text-right">Montant</th>
+                      <th className="tw-py-3 tw-px-4 tw-text-xs tw-font-semibold tw-text-gray-500 tw-uppercase tw-tracking-wider">Auteur</th>
+                      <th className="tw-py-3 tw-px-4 tw-text-xs tw-font-semibold tw-text-gray-500 tw-uppercase tw-tracking-wider tw-text-center">Statut</th>
+                      <th className="tw-py-3 tw-px-4 tw-text-xs tw-font-semibold tw-text-gray-500 tw-uppercase tw-tracking-wider tw-text-center">Mouvements</th>
                       {hasAnyActionPermission && (
-                        <th className="fw-bold tw-text-center tw-py-1">
-                          Actions
-                        </th>
+                        <th className="tw-py-3 tw-px-4 tw-text-xs tw-font-semibold tw-text-gray-500 tw-uppercase tw-tracking-wider tw-text-right">Actions</th>
                       )}
                     </tr>
                   </thead>
-                  <tbody>
-                    {/* Lignes de chargement, erreur, et vide (padding minimal) */}
+                  <tbody className="tw-divide-y tw-divide-gray-100">
                     {isLoading && (
-                      <tr>
-                        <td
-                          colSpan={hasAnyActionPermission ? "7" : "6"}
-                          className="text-center tw-py-2"
-                        >
-                          <Spinner />
-                        </td>
-                      </tr>
+                      <tr><td colSpan="7" className="tw-py-12 tw-text-center"><Spinner /></td></tr>
                     )}
                     {isError && (
                       <tr>
-                        <td
-                          colSpan={hasAnyActionPermission ? "7" : "6"}
-                          className="text-center tw-py-2"
-                        >
-                          <div className="flex flex-col items-center gap-1 text-red-500">
-                            <ServerCrash className="w-5 h-5" />
-                            <span className="tw-text-xs">
-                              {error?.message ||
-                                "Impossible de charger les données."}
-                            </span>
+                        <td colSpan="7" className="tw-py-12 tw-text-center tw-text-red-500">
+                          <div className="tw-flex tw-flex-col tw-items-center tw-gap-2">
+                            <ServerCrash size={24} />
+                            <span>{error?.message || "Erreur de chargement."}</span>
                           </div>
                         </td>
                       </tr>
                     )}
-                    {!isLoading &&
-                      !isError &&
-                      filteredDepenses.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan={hasAnyActionPermission ? "7" : "6"}
-                            className="text-center tw-py-2"
-                          >
-                            <EmptyState message="Aucune dépense trouvée" />
+                    {!isLoading && !isError && depenses.length === 0 && (
+                      <tr><td colSpan="7" className="tw-py-12"><EmptyState message="Aucune dépense trouvée" /></td></tr>
+                    )}
+
+                    {!isLoading && !isError && depenses.map((depense) => (
+                      <Fragment key={depense.id}>
+                        <tr className={`tw-transition-colors hover:tw-bg-gray-50 ${expandedRows[depense.id] ? 'tw-bg-gray-50/80' : ''}`}>
+                          <td className="tw-py-3 tw-px-4">
+                            <div className="tw-w-8 tw-h-8 tw-rounded-full tw-bg-indigo-50 tw-flex tw-items-center tw-justify-center">
+                              <CircleDollarSign size={16} className="tw-text-indigo-600" />
+                            </div>
                           </td>
-                        </tr>
-                      )}
-                    {/* Lignes de données (padding minimal) */}
-                    {!isLoading &&
-                      !isError &&
-                      filteredDepenses.map((depense) => (
-                        <Fragment key={depense.id}>
-                          <tr
-                            className={`${
-                              depense.bloquer ? "tw-bg-gray-100" : ""
-                            } ${
-                              depense.rejeter ? "tw-bg-red-50" : ""
-                            } hover:tw-bg-gray-50`}
-                          >
-                            {/* TD 1 (Icône) - Padding minimal */}
-                            <td align="center" className="tw-p-1">
-                              <div
-                                className="
-                                    tw-w-6 tw-h-6 
-                                    tw-rounded-full
-                                    tw-bg-blue-100 dark:tw-bg-blue-500/20 
-                                    tw-flex tw-items-center tw-justify-center 
-                                    "
-                              >
-                                <CircleDollarSign
-                                  className="tw-text-blue-600 dark:tw-text-blue-400"
-                                  size={14}
-                                />
-                              </div>
-                            </td>
-                            <td className="tw-p-1 align-middle">
-                              <div className="tw-flex tw-flex-col tw-items-start tw-justify-between tw-gap-0">
-                                {/* Libellé principal */}
-                                <div className="tw-font-medium tw-text-gray-900 tw-text-xs tw-mb-1">
-                                  {depense.wording}
-                                </div>
-
-                                {/* Ligne des statuts */}
-                                <div className="tw-flex tw-items-center tw-justify-between tw-w-full">
-                                  {/* Type de dépense + statut */}
-                                  <div className="tw-flex tw-items-center tw-gap-1">
-                                    <h6 className="tw-text-2xs tw-font-semibold tw-text-blue-800 tw-bg-blue-100 tw-rounded tw-p-1">
-                                      {depense.typeDeDepense?.wording}
-                                    </h6>
-
-                                    {depense?.rejeter ? (
-                                      <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-red-600">
-                                        <X size={16} />
-                                        Rejeté
-                                      </span>
-                                    ) : (
-                                      <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-green-600">
-                                        <CheckCheck size={16} />
-                                        Approuvé
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Décharge alignée à droite */}
-                                  {depense?.decharger && (
-                                    <span className="tw-flex tw-items-center tw-gap-0.5 tw-text-xs tw-font-semibold tw-text-violet-600">
-                                      <CheckCheck size={16} />
-                                      Déchargé
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* TD 3 (Montant) - Padding minimal */}
-                            <td className="tw-p-1 tw-text-center tw-font-semibold align-middle">
-                              {depense.montant.toLocaleString()} F
-                            </td>
-                            {/* TD 4 (Saisi par) - Padding minimal */}
-                            <td className="tw-p-1 align-middle tw-text-xs">
-                              {depense.user?.fullName}
-                            </td>
-                            {/* TD 5 (Statut) - Padding minimal */}
-                            <td className="tw-p-1 tw-text-center align-middle">
-                              <span
-                                className={`badge ${
-                                  depense.status
-                                    ? "bg-success-transparent"
-                                    : "bg-warning-transparent"
-                                } tw-text-2xs`}
-                              >
-                                {depense.status ? "Payé" : "En attente"}
-                              </span>
-                              {depense.rejeter && (
-                                <span className="badge bg-danger-transparent tw-ms-0.5 tw-text-2xs">
-                                  Rejeté
+                          <td className="tw-py-3 tw-px-4">
+                            <div className="tw-flex tw-flex-col">
+                              <span className="tw-font-medium tw-text-gray-900 tw-text-sm">{depense.wording}</span>
+                              <div className="tw-flex tw-items-center tw-gap-2 tw-mt-1">
+                                <span className="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wide tw-text-gray-500 tw-bg-gray-100 tw-px-2 tw-py-0.5 tw-rounded">
+                                  {depense.typeDeDepense?.wording}
                                 </span>
-                              )}
-                              {depense.bloquer && (
-                                <span className="badge bg-dark-transparent tw-ms-0.5 tw-text-2xs">
-                                  Bloqué
-                                </span>
-                              )}
-                            </td>
-                            {/* TD 6 (Mouvements) - Padding minimal */}
-                            <td className="tw-p-1 tw-text-center align-middle">
-                              {depense.Mouvements.length > 0 ? (
-                                <button
-                                  onClick={() => toggleRow(depense.id)}
-                                  className="btn btn-xs btn-light d-flex align-items-center mx-auto tw-py-0 tw-px-1 tw-text-xs"
-                                >
-                                  {expandedRows[depense.id] ? (
-                                    <ChevronDown size={12} className="me-1" />
-                                  ) : (
-                                    <ChevronRight size={12} className="me-1" />
-                                  )}
-                                  {depense.Mouvements.length} Paiement(s)
+                                {depense.decharger && (
+                                  <span className="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wide tw-text-blue-600 tw-bg-blue-50 tw-px-2 tw-py-0.5 tw-rounded">
+                                    Déchargé
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="tw-py-3 tw-px-4 tw-text-right">
+                             <span className="tw-font-bold tw-text-gray-900">{depense.montant.toLocaleString()} F</span>
+                          </td>
+                          <td className="tw-py-3 tw-px-4">
+                            <div className="tw-flex tw-items-center tw-gap-2 tw-text-xs tw-text-gray-500">
+                                {/* <User size={14} /> */} {depense.user?.fullName}
+                            </div>
+                          </td>
+                          <td className="tw-py-3 tw-px-4 tw-text-center">
+                            <StatusBadge status={depense.status} rejeter={depense.rejeter} bloquer={depense.bloquer} />
+                          </td>
+                          <td className="tw-py-3 tw-px-4 tw-text-center">
+                             {depense.Mouvements.length > 0 ? (
+                                <button onClick={() => toggleRow(depense.id)} className="tw-inline-flex tw-items-center tw-gap-1 tw-text-xs tw-font-medium tw-text-indigo-600 hover:tw-text-indigo-800 tw-transition-colors">
+                                    {expandedRows[depense.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                    {depense.Mouvements.length} Paiement(s)
                                 </button>
-                              ) : (
-                                <span className="badge tw-bg-red-200 tw-text-red-600 tw-text-2xs">
-                                  Aucun
-                                </span>
-                              )}
+                             ) : (
+                                <span className="tw-text-xs tw-text-gray-400 tw-italic">Aucun</span>
+                             )}
+                          </td>
+                          {hasAnyActionPermission && (
+                            <td className="tw-py-3 tw-px-4 tw-text-right">
+                              <div className="tw-flex tw-justify-end tw-gap-2">
+                                
+                                {/* BOUTON PAYER */}
+                                {can("payeDepense") && !depense.status && !depense.bloquer && !depense.rejeter && (
+                                  <button 
+                                    onClick={() => { setCurrentDepense(depense); setCurrentMouvement(null); setShowCreateSortieModal(true); }} 
+                                    className="tw-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1.5 tw-rounded-md tw-bg-emerald-50 tw-text-emerald-700 hover:tw-bg-emerald-100 tw-border tw-border-emerald-200 tw-transition-colors tw-text-xs tw-font-semibold"
+                                    title="Effectuer un paiement"
+                                  >
+                                    <Banknote size={14} />
+                                    <span>Payer</span>
+                                  </button>
+                                )}
+
+                                {/* BOUTON REJETER / ANNULER */}
+                                {can("rejectDepense") && !depense.status && (
+                                  <button 
+                                    onClick={() => { setCurrentDepense(depense); setShowRejeteModal(true); }} 
+                                    className={`tw-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1.5 tw-rounded-md tw-transition-colors tw-text-xs tw-font-semibold tw-border
+                                        ${depense.rejeter 
+                                            ? "tw-bg-amber-50 tw-text-amber-700 tw-border-amber-200 hover:tw-bg-amber-100" 
+                                            : "tw-bg-rose-50 tw-text-rose-700 tw-border-rose-200 hover:tw-bg-rose-100"
+                                        }`}
+                                    title={depense.rejeter ? "Annuler le rejet" : "Rejeter la dépense"}
+                                  >
+                                     {depense.rejeter ? <CheckCircle2 size={14} /> : <Ban size={14} />}
+                                     <span>{depense.rejeter ? "Rétablir" : "Rejeter"}</span>
+                                  </button>
+                                )}
+
+                                {/* BOUTON BLOQUER / DÉBLOQUER */}
+                                {can("bloqueDepense") && (
+                                  <button 
+                                    onClick={() => { setCurrentDepense(depense); setShowBloquerModal(true); }} 
+                                    className={`tw-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1.5 tw-rounded-md tw-transition-colors tw-text-xs tw-font-semibold tw-border
+                                        ${depense.bloquer 
+                                            ? "tw-bg-indigo-50 tw-text-indigo-700 tw-border-indigo-200 hover:tw-bg-indigo-100" 
+                                            : "tw-bg-slate-50 tw-text-slate-700 tw-border-slate-200 hover:tw-bg-slate-100"
+                                        }`}
+                                    title={depense.bloquer ? "Débloquer" : "Bloquer pour modification"}
+                                  >
+                                     {depense.bloquer ? <Unlock size={14} /> : <Lock size={14} />}
+                                     {/* <span>{depense.bloquer ? "Débloquer" : "Bloquer"}</span> */}
+                                  </button>
+                                )}
+                              </div>
                             </td>
-                            {/* TD 7 (Actions) - Padding minimal et densité maximale */}
-                            {hasAnyActionPermission && (
-                              <td className="tw-p-1 align-middle">
-                                <div className="d-flex justify-content-center align-items-center tw-gap-1 tw-text-2xs">
-                                  {can("payeDepense") && (
-                                    <button
-                                      onClick={() => {
-                                        setCurrentDepense(depense);
-                                        setCurrentMouvement(null);
-                                        setShowCreateSortieModal(true);
-                                      }}
-                                      className="btn btn-sm btn-primary-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
-                                      title="Payer / Gérer les paiements"
-                                      disabled={
-                                        depense.status ||
-                                        depense.bloquer ||
-                                        depense.rejeter
-                                      }
-                                    >
-                                      <i className="ri-hand-coin-line tw-mr-1"></i>
-                                      Payer
-                                    </button>
-                                  )}
-                                  {can("rejectDepense") && (
-                                    <button
-                                      onClick={() => {
-                                        setCurrentDepense(depense);
-                                        setShowRejeteModal(true);
-                                      }}
-                                      className="btn btn-sm tw-ml-0 btn-warning-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
-                                      title={
-                                        depense.rejeter
-                                          ? "Annuler le rejet"
-                                          : "Rejeter la dépense"
-                                      }
-                                      disabled={depense.status}
-                                    >
-                                      <i className="ri-close-circle-line tw-mr-1"></i>
-                                      {depense.rejeter ? "Annuler" : "Rejeter"}
-                                    </button>
-                                  )}
-                                  {can("bloqueDepense") && (
-                                    <button
-                                      onClick={() => {
-                                        setCurrentDepense(depense);
-                                        setShowBloquerModal(true);
-                                      }}
-                                      className={
-                                        depense.bloquer
-                                          ? "btn btn-sm tw-ml-0 btn-secondary-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
-                                          : "btn btn-sm tw-ml-0 btn-danger-transparent d-flex align-items-center tw-py-0 tw-px-1.5"
-                                      }
-                                      title={
-                                        depense.bloquer
-                                          ? "Débloquer la dépense"
-                                          : "Bloquer la dépense"
-                                      }
-                                    >
-                                      <i
-                                        className={`ri-${
-                                          depense.bloquer
-                                            ? "lock-unlock"
-                                            : "lock"
-                                        }-line tw-mr-1`}
-                                      ></i>
-                                      {depense.bloquer ? "Modifier" : "Bloquer"}
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            )}
-                          </tr>
-                          {/* Ligne d'expansion (Mouvements) */}
-                          {expandedRows[depense.id] && (
-                            <tr>
-                              <td
-                                colSpan={hasAnyActionPermission ? "7" : "6"}
-                                className="p-0"
-                                style={{
-                                  backgroundColor: "#fafafa",
-                                  borderBottom: "1px solid #dee2e6",
-                                }}
-                              >
-                                <div className="tw-p-2">
-                                  {" "}
-                                  {/* Padding réduit */}
-                                  <h6 className="tw-font-semibold tw-mb-1 tw-text-xs">
-                                    Détails des Paiements
-                                  </h6>
-                                  <table className="table table-sm mb-0">
-                                    <tbody>
-                                      {depense.Mouvements.map((mouvement) => (
-                                        <tr
-                                          key={mouvement.id}
-                                          className="tw-text-xs"
-                                        >
-                                          <td className="tw-font-medium tw-py-1">
-                                            {mouvement.montant.toLocaleString()}{" "}
-                                            F
-                                          </td>
-                                          <td className="tw-py-1">
-                                            <p className="tw-text-2xs tw-text-gray-500 mb-0">
-                                              Payé par{" "}
-                                              {mouvement.user?.fullName}
-                                            </p>
-                                          </td>
-                                          <td className="tw-py-1">
-                                            <p className="tw-text-2xs tw-text-gray-500 mb-0">
-                                              Le{" "}
-                                              {new Date(
-                                                mouvement.createdAt
-                                              ).toLocaleDateString(
-                                                "fr-FR"
-                                              )}{" "}
-                                              {/* date courte */}
-                                            </p>
-                                          </td>
-                                          {can("payeDepense") && (
-                                            <td className="text-end tw-py-1">
-                                              <button
-                                                onClick={() => {
-                                                  setCurrentDepense(depense);
-                                                  setCurrentMouvement(
-                                                    mouvement
-                                                  );
-                                                  setShowCreateSortieModal(
-                                                    true
-                                                  );
-                                                }}
-                                                className="btn btn-icon btn-sm btn-primary-transparent tw-w-5 tw-h-5"
-                                                title="Modifier ce paiement"
-                                                disabled={
-                                                  depense.bloquer ||
-                                                  depense.rejeter
-                                                }
-                                              >
-                                                <i className="ri-edit-line"></i>
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  setCurrentMouvement(
-                                                    mouvement
-                                                  );
-                                                  setShowDeleteSortieModal(
-                                                    true
-                                                  );
-                                                }}
-                                                className="btn btn-icon btn-sm btn-danger-transparent ms-1 tw-w-5 tw-h-5"
-                                                title="Supprimer ce paiement"
-                                                disabled={
-                                                  depense.bloquer ||
-                                                  depense.rejeter
-                                                }
-                                              >
-                                                <i className="ri-delete-bin-line"></i>
-                                              </button>
-                                            </td>
-                                          )}
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </td>
-                            </tr>
                           )}
-                        </Fragment>
-                      ))}
+                        </tr>
+
+                        {/* ROW DETAILS EXPANSION (Mouvements) */}
+                        {expandedRows[depense.id] && (
+                            <tr className="tw-bg-gray-50/50">
+                                <td colSpan={7} className="tw-p-0 tw-border-b tw-border-gray-200">
+                                    <div className="tw-p-4 tw-pl-14">
+                                        <div className="tw-bg-white tw-rounded-lg tw-border tw-border-gray-100 tw-shadow-sm tw-overflow-hidden">
+                                            <table className="tw-w-full tw-text-xs">
+                                                <thead className="tw-bg-gray-50 tw-text-gray-500">
+                                                    <tr>
+                                                        <th className="tw-py-2 tw-px-4 tw-font-medium">Date</th>
+                                                        <th className="tw-py-2 tw-px-4 tw-font-medium">Auteur</th>
+                                                        <th className="tw-py-2 tw-px-4 tw-font-medium tw-text-right">Montant</th>
+                                                        <th className="tw-py-2 tw-px-4 tw-font-medium tw-text-right">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="tw-divide-y tw-divide-gray-50">
+                                                    {depense.Mouvements.map((mvt) => (
+                                                        <tr key={mvt.id} className="hover:tw-bg-gray-50">
+                                                            <td className="tw-py-2 tw-px-4 tw-text-gray-600">
+                                                                <div className="tw-flex tw-items-center tw-gap-1.5">
+                                                                    <Clock size={12} className="tw-text-gray-400"/>
+                                                                    {new Date(mvt.createdAt).toLocaleDateString('fr-FR')}
+                                                                </div>
+                                                            </td>
+                                                            <td className="tw-py-2 tw-px-4 tw-text-gray-600">{mvt.user?.fullName}</td>
+                                                            <td className="tw-py-2 tw-px-4 tw-text-right tw-font-bold tw-text-gray-800">
+                                                                {mvt.montant.toLocaleString()} F
+                                                            </td>
+                                                            <td className="tw-py-2 tw-px-4 tw-text-right">
+                                                                {can("payeDepense") && !depense.bloquer && !depense.rejeter && (
+                                                                    <div className="tw-flex tw-justify-end tw-gap-2">
+                                                                        <button onClick={() => { setCurrentDepense(depense); setCurrentMouvement(mvt); setShowCreateSortieModal(true); }} className="tw-p-1 hover:tw-bg-indigo-50 tw-rounded tw-text-indigo-600 tw-transition-colors" title="Modifier le montant"><Edit2 size={14}/></button>
+                                                                        <button onClick={() => { setCurrentMouvement(mvt); setShowDeleteSortieModal(true); }} className="tw-p-1 hover:tw-bg-red-50 tw-rounded tw-text-red-600 tw-transition-colors" title="Supprimer le paiement"><Trash2 size={14}/></button>
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                      </Fragment>
+                    ))}
                   </tbody>
                 </table>
               </div>
-              {meta && meta.total > perpage && searchTerm.trim() === "" && (
-                <div className="card-footer">
+
+              {meta && (
+                <div className="card-footer tw-border-t tw-border-gray-100 tw-p-4">
                   <Pagination meta={meta} onPageChange={setPage} />
                 </div>
               )}
@@ -570,5 +394,3 @@ export default function IndexMouvement() {
     </div>
   );
 }
-
-

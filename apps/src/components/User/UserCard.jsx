@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Mail, Shield, UserCheck, UserX, Calendar, Pencil, Trash2, MailCheck, MailX } from 'lucide-react';
+import { Mail, Shield, UserCheck, UserX, Calendar, Pencil, Trash2, MailCheck, MailX, User } from 'lucide-react';
 
 export default function UserCard({ user, onChangeRole, onDelete, canChangeRole, canDelete }) {
   const formattedDate = new Date(user.createdAt).toLocaleDateString("fr-CA");
@@ -11,72 +11,130 @@ export default function UserCard({ user, onChangeRole, onDelete, canChangeRole, 
 
   const avatarSrc = `${import.meta.env.VITE_BACKEND_URL}/${user?.avatarUrl || getDefaultAvatar()}`;
 
+  // Helper pour déterminer les couleurs de statut
+  const isSuperAdmin = user.Profil?.wording === 'Superadmin';
+  const isActive = user.status;
+  const isValidEmail = user.validEmail;
+
   return (
-    <div className="tw-bg-white tw-rounded-xl tw-shadow-md hover:tw-shadow-lg tw-transition-shadow tw-duration-300 tw-border tw-border-gray-200 tw-flex tw-flex-col">
-      <div className="tw-p-4 tw-flex-grow">
-       <div className="tw-flex tw-items-start tw-gap-4">
+    <div className="tw-bg-white tw-rounded-xl tw-border tw-border-gray-200 tw-shadow-sm hover:tw-shadow-md tw-transition-all tw-duration-300 tw-flex tw-flex-col tw-overflow-hidden">
+      
+      <div className="tw-p-5 tw-flex-grow">
+        {/* Header : Avatar + Nom + Email */}
+        <div className="tw-flex tw-items-center tw-gap-3 tw-mb-5">
           <img
             src={avatarSrc}
             alt={`Avatar de ${user.fullName}`}
-            className="tw-w-16 tw-h-16 tw-object-cover tw-rounded-full tw-border-2 tw-border-gray-200"
+            className="tw-w-10 tw-h-10 tw-object-cover tw-rounded-full tw-border tw-border-gray-100 tw-shadow-sm"
           />
-          <div className="tw-flex-1 tw-min-w-0">
-            <h3 className="tw-font-bold tw-text-lg tw-text-gray-800 tw-truncate">{user.fullName}</h3>
-            <div className="tw-flex  tw-text-sm tw-text-gray-500">
-              <Mail size={24} className="tw-mr-1" />
-              <span className="tw-break-all">{user.email}</span>
+          <div className="tw-min-w-0 tw-flex tw-flex-col tw-gap-0.5">
+            {/* Nom avec icône User */}
+            <div className="tw-flex tw-items-center tw-gap-1.5 tw-text-gray-900">
+                <User size={14} className="tw-text-gray-400 tw-flex-shrink-0" />
+                <h3 className="tw-font-bold tw-text-sm tw-truncate" title={user.fullName}>
+                {user.fullName}
+                </h3>
+            </div>
+            
+            {/* Email avec icône Mail */}
+            <div className="tw-flex tw-items-center tw-gap-1.5 tw-text-xs tw-text-gray-500">
+              <Mail size={14} className="tw-text-gray-400 tw-flex-shrink-0" />
+              <span className="tw-truncate" title={user.email}>{user.email}</span>
             </div>
           </div>
         </div>
 
-        <div className="tw-mt-4 tw-space-y-2 tw-text-sm">
-          <div className="tw-flex tw-items-center">
-            <Shield size={14} className="tw-mr-2 tw-text-gray-400" />
-            <span>Profil : <span className={`tw-font-semibold ${user.Profil?.wording === 'Superadmin' ? 'tw-text-red-600' : 'tw-text-violet-600'}`}>{user.Profil?.wording}</span></span>
+        {/* Corps : Grille d'informations */}
+        <div className="tw-grid tw-grid-cols-2 tw-gap-3">
+          
+          {/* Rôle */}
+          <div className={`tw-col-span-2 tw-flex tw-items-center tw-p-2 tw-rounded-lg tw-border ${isSuperAdmin ? 'tw-bg-red-50 tw-border-red-100' : 'tw-bg-violet-50 tw-border-violet-100'}`}>
+            <div className={`tw-p-1.5 tw-rounded-md tw-mr-2 ${isSuperAdmin ? 'tw-bg-white tw-text-red-600' : 'tw-bg-white tw-text-violet-600'}`}>
+              <Shield size={14} />
+            </div>
+            <div>
+              <p className="tw-text-[10px] tw-text-gray-500 tw-uppercase tw-font-bold">Profil</p>
+              <p className={`tw-text-xs tw-font-bold ${isSuperAdmin ? 'tw-text-red-700' : 'tw-text-violet-700'}`}>
+                {user.Profil?.wording || 'N/A'}
+              </p>
+            </div>
           </div>
-          <div className="tw-flex tw-items-center">
-            {user.status ? (
-              <UserCheck size={14} className="tw-mr-2 tw-text-green-500" />
-            ) : (
-              <UserX size={14} className="tw-mr-2 tw-text-red-500" />
-            )}
-            <span>Statut : <span className={`tw-font-semibold ${user.status ? 'tw-text-green-600' : 'tw-text-red-600'}`}>{user.status ? 'Actif' : 'Inactif'}</span></span>
+
+          {/* Statut Compte */}
+          <div className="tw-flex tw-items-center tw-gap-2">
+            <div className={`tw-p-1.5 tw-rounded-full ${isActive ? 'tw-bg-green-100 tw-text-green-600' : 'tw-bg-red-100 tw-text-red-600'}`}>
+              {isActive ? <UserCheck size={14} /> : <UserX size={14} />}
+            </div>
+            <div className="tw-flex tw-flex-col">
+              <span className="tw-text-[10px] tw-text-gray-400">Compte</span>
+              <span className={`tw-text-xs tw-font-medium ${isActive ? 'tw-text-green-700' : 'tw-text-red-700'}`}>
+                {isActive ? 'Actif' : 'Inactif'}
+              </span>
+            </div>
           </div>
-          <div className="tw-flex tw-items-center">
-            {user.validEmail ? (
-              <MailCheck size={14} className="tw-mr-2 tw-text-green-500" />
-            ) : (
-              <MailX size={14} className="tw-mr-2 tw-text-red-500" />
-            )}
-            <span>Email : <span className={`tw-font-semibold ${user.validEmail ? 'tw-text-green-600' : 'tw-text-red-600'}`}>{user.validEmail ? 'Validé' : 'Non validé'}</span></span>
+
+          {/* Statut Email */}
+          <div className="tw-flex tw-items-center tw-gap-2">
+            <div className={`tw-p-1.5 tw-rounded-full ${isValidEmail ? 'tw-bg-blue-100 tw-text-blue-600' : 'tw-bg-orange-100 tw-text-orange-600'}`}>
+              {isValidEmail ? <MailCheck size={14} /> : <MailX size={14} />}
+            </div>
+            <div className="tw-flex tw-flex-col">
+              <span className="tw-text-[10px] tw-text-gray-400">Email</span>
+              <span className={`tw-text-xs tw-font-medium ${isValidEmail ? 'tw-text-blue-700' : 'tw-text-orange-700'}`}>
+                {isValidEmail ? 'Vérifié' : 'En attente'}
+              </span>
+            </div>
           </div>
-          <div className="tw-flex tw-items-center">
-            <Calendar size={14} className="tw-mr-2 tw-text-gray-400" />
-            <span>Inscrit le : <span className="tw-font-medium tw-text-gray-600">{formattedDate}</span></span>
+
+          {/* Date */}
+          <div className="tw-col-span-2 tw-mt-2 tw-pt-3 tw-border-t tw-border-gray-50 tw-flex tw-items-center tw-justify-end tw-text-xs tw-text-gray-400">
+            <Calendar size={12} className="tw-mr-1.5" />
+            <span>Inscrit le {formattedDate}</span>
           </div>
         </div>
       </div>
 
-      {(canDelete) && (
-        <div className="tw-p-3 tw-bg-gray-50 tw-border-t tw-border-gray-100 tw-flex tw-justify-end tw-items-center tw-gap-2">
-          {canChangeRole && (
-            <button onClick={onChangeRole} className="btn btn-primary-transparent rounded-pill tw-flex tw-items-center tw-justify-center" title="Modifier">
-              <Pencil size={16} /> &nbsp;<span className="tw-hidden md:tw-inline">Role & status</span>
+      {/* Footer : Actions */}
+      {(canDelete || canChangeRole) && (
+        <div className="tw-px-4 tw-py-3 tw-bg-gray-50 tw-border-t tw-border-gray-100 tw-flex tw-justify-end tw-items-center">
+          {canChangeRole ? (
+            <button 
+              onClick={onChangeRole} 
+              className=" tw-mr-2 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-py-1.5 tw-px-3 tw-rounded-lg tw-bg-blue tw-border tw-border-blue-200 tw-text-xs tw-font-semibold tw-text-blue-700 hover:tw-border-violet-300 hover:tw-text-violet-600 tw-transition-colors"
+            >
+              <Pencil size={14} />
+              {/* <span>Gérer</span> */}
             </button>
-          )}
+          ) : <div></div>}
+          
           {canDelete && (
-            <button onClick={onDelete} className="btn btn-icon btn-sm btn-danger-transparent rounded-pill tw-flex tw-items-center tw-justify-center" title="Supprimer">
-              <Trash2 size={32} />
+            <button 
+              onClick={onDelete} 
+              className="tw-flex tw-items-center tw-justify-center tw-p-1.5 tw-rounded-lg tw-bg-red tw-border tw-border-red-200 tw-text-red-400 hover:tw-bg-red-50 hover:tw-border-red-200 hover:tw-text-red-500 tw-transition-colors"
+              title="Supprimer"
+            >
+              <Trash2 size={16} />
             </button>
           )}
         </div>
       )}
     </div>
   );
-};
+}
 
 UserCard.propTypes = {
-  user: PropTypes.object.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    fullName: PropTypes.string,
+    email: PropTypes.string,
+    avatarUrl: PropTypes.string,
+    createdAt: PropTypes.string,
+    status: PropTypes.bool,
+    validEmail: PropTypes.bool,
+    Profil: PropTypes.shape({
+      wording: PropTypes.string
+    })
+  }).isRequired,
   onChangeRole: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   canChangeRole: PropTypes.bool,

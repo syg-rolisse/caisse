@@ -15,15 +15,10 @@ async function emitApproUpdate(companyId: number, eventName: string) {
   if (!companyId) return
 
   try {
-    const { allApprovisionnements, approvisionnements } = await appro_service.fetchAndFormatAppro(
-      companyId,
-      1,
-      10
-    )
+    const { approvisionnements } = await appro_service.fetchAndFormatAppro(companyId, 1, 10)
     const roomName = `company_${companyId}`
     const payload = {
       approvisionnements,
-      allApprovisionnements,
       companyId,
     }
     Ws.io?.to(roomName).emit(eventName, payload)
@@ -36,16 +31,18 @@ async function emitApproUpdate(companyId: number, eventName: string) {
 export default class ApprovisionnementsController {
   async index({ request, response }: HttpContext) {
     try {
-      const { page, perpage, companieId } = request.qs()
+      const { page, perpage, companieId, keyword } = request.qs()
       const pageNumber = page ? Number.parseInt(page) : 1
       const perPageNumber = perpage ? Number.parseInt(perpage) : 10
 
-      const { allApprovisionnements, approvisionnements } = await appro_service.fetchAndFormatAppro(
+      // Récupération des approvisionnements avec recherche
+      const { approvisionnements } = await appro_service.fetchAndFormatAppro(
         companieId,
         pageNumber,
-        perPageNumber
+        perPageNumber,
+        keyword
       )
-      return response.ok({ approvisionnements, allApprovisionnements })
+      return response.ok({ approvisionnements })
     } catch (error) {
       console.error('Erreur lors de la récupération des approvisionnements:', error)
       return response.status(500).send({ error: 'Erreur interne du serveur' })

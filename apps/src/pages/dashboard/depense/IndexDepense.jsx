@@ -1,6 +1,4 @@
-// src/pages/Depense/IndexDepense.jsx
-
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Download, ServerCrash } from "lucide-react";
 
@@ -16,19 +14,33 @@ import { useSocket } from "../../../context/socket.jsx";
 import { usePermissions } from "../../../hook/usePermissions";
 import UserAndDateRangeFilter from "../../../components/UserAndDateRangeFilter";
 import EmptyState from "../../../components/EmptyState";
-// Import des utilitaires PDF centralisés
 import {
   downloadMultipleDepenses,
   simpleFormatDate,
 } from "../../../utils/downloadDepense.js";
+import "../../../fade.css";
+
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 export default function IndexDepense() {
   const [page, setPage] = useState(1);
-  const [perpage] = useState(100); //setPerPage
+  const [perpage] = useState(100); 
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentDepense, setCurrentDepense] = useState(null);
+  
   const [filters, setFilters] = useState({
     userId: null,
     dateDebut: null,
@@ -36,6 +48,8 @@ export default function IndexDepense() {
     typeDeDepenseId: null,
     by: null,
   });
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const socket = useSocket();
   const { can } = usePermissions();
@@ -52,45 +66,20 @@ export default function IndexDepense() {
     dateFin: filters.dateFin,
     typeDeDepenseId: filters.typeDeDepenseId,
     by: filters.by,
+    keyword: debouncedSearchTerm,
   });
 
   const depenses = data?.depenses?.data || [];
-  const allDepense = data?.allDepenses || [];
   const meta = data?.depenses?.meta || {
     total: 0,
     currentPage: 1,
     lastPage: 1,
   };
 
-  const filteredDepense = useMemo(() => {
-    if (searchTerm.trim() === "") {
-      return depenses;
-    }
-    const listToFilter = allDepense.length > 0 ? allDepense : depenses;
-    return listToFilter.filter((depense) => {
-      const searchTermLower = searchTerm.toLowerCase();
-      return (
-        depense.wording?.toLowerCase().includes(searchTermLower) ||
-        depense.typeDeDepense?.wording
-          ?.toLowerCase()
-          .includes(searchTermLower) ||
-        depense.user?.fullName?.toLowerCase().includes(searchTermLower) ||
-        new Date(depense.createdAt)
-          .toLocaleDateString("fr-CA")
-          .includes(searchTerm)
-      );
-    });
-  }, [depenses, allDepense, searchTerm]);
-
   const handleSearch = useCallback((newFilters) => {
     setPage(1);
     setFilters(newFilters);
   }, []);
-
-  // const handlePerPageChange = (e) => {
-  //     setPerPage(Number(e.target.value));
-  //     setPage(1);
-  // };
 
   const handleSuccess = useCallback(() => {
     setShowModal(false);
@@ -100,8 +89,7 @@ export default function IndexDepense() {
   }, [queryClient]);
 
   const handleDownloadAll = () => {
-    // Appel de la fonction centralisée pour le mode fiches multiples
-    downloadMultipleDepenses(filteredDepense, user, simpleFormatDate);
+    downloadMultipleDepenses(depenses, user, simpleFormatDate);
   };
 
   useEffect(() => {
@@ -159,37 +147,22 @@ export default function IndexDepense() {
           />
         </div>
 
-        {/* Bouton de téléchargement des fiches (Placé manuellement) */}
-
         <div className="tw-mb-4">
-          {/* Sélecteur de pagination */}
-          {/* <div className="tw-flex tw-items-center tw-gap-2">
-        <span>Afficher</span>
-        <select
-            className="form-select form-select-sm tw-h-10 tw-w-20"
-            onChange={handlePerPageChange}
-            value={perpage}
-        >
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-        </select>
-    </div> */}
-
-          {/* Champ de recherche */}
           <div className="tw-flex tw-items-center tw-gap-2 tw-justify-between">
             <input
               className="form-control form-control-xl tw-w-full"
               type="text"
-              placeholder="Faites une recherche sur les résultats actuels..."
+              placeholder="Rechercher (Libellé, Montant, Auteur)..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+              }}
             />
 
-            {filteredDepense.length > 0 && (
+            {depenses.length > 0 && (
               <button
-                title="Télécharger toutes les fiches"
+                title="Télécharger les fiches affichées"
                 onClick={handleDownloadAll}
                 className="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-text-sm tw-font-medium tw-rounded-lg tw-text-white tw-bg-green-600 hover:tw-bg-green-700 tw-transition-colors"
               >
@@ -197,11 +170,6 @@ export default function IndexDepense() {
               </button>
             )}
           </div>
-
-          {/* Bouton de téléchargement */}
-          {/* <div className="tw-flex tw-justify-center sm:tw-justify-end tw-col-span-1">
-        
-    </div> */}
         </div>
 
         <div className="row">
@@ -220,7 +188,7 @@ export default function IndexDepense() {
               </div>
             </div>
           )}
-          {!isLoading && !isError && filteredDepense.length === 0 && (
+          {!isLoading && !isError && depenses.length === 0 && (
             <div className="col-12 text-center">
               <span className="tw-bg-gray-100 tw-text-gray-600 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
                 <EmptyState message="Aucune dépense trouvée pour les filtres sélectionnés." />
@@ -228,9 +196,9 @@ export default function IndexDepense() {
             </div>
           )}
 
-          {!isLoading && !isError && filteredDepense.length > 0 && (
+          {!isLoading && !isError && depenses.length > 0 && (
             <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-6">
-              {filteredDepense.map((depense) => (
+              {depenses.map((depense) => (
                 <DepenseCard
                   key={depense.id}
                   depense={depense}
@@ -250,7 +218,7 @@ export default function IndexDepense() {
           )}
         </div>
 
-        {meta && meta.total > perpage && searchTerm.trim() === "" && (
+        {meta && (
           <div className="card-footer tw-mt-5">
             <Pagination meta={meta} onPageChange={setPage} />
           </div>

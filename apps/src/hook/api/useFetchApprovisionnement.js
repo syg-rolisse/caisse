@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchApprovisionnement({ page, perpage, companyId }) {
+export function useFetchApprovisionnement({ page, perpage, companyId, keyword }) {
   const handleError = useHandleError();
 
   return useQuery({
-    queryKey: ["approvisionnements", companyId, page, perpage],
+    queryKey: ["approvisionnements", companyId, page, perpage, keyword],
     
     queryFn: async () => {
       const response = await axiosInstance.get(
@@ -16,13 +16,13 @@ export function useFetchApprovisionnement({ page, perpage, companyId }) {
             companieId: companyId,
             page: page,
             perpage: perpage,
+            keyword: keyword,
           },
         }
       );
 
       return {
         approvisionnements: response.data?.approvisionnements,      
-        allApprovisionnements: response.data?.allApprovisionnements, 
       };
     },
     
