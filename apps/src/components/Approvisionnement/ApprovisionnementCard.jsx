@@ -1,77 +1,102 @@
 import PropTypes from 'prop-types';
-import { Landmark, User, Calendar, Pencil, Trash2, MessageSquare } from 'lucide-react';
+import { Landmark, User, Calendar, Pencil, Trash2, Hash } from 'lucide-react';
 
 export default function ApprovisionnementCard({ item, onEdit, onDelete, canEdit, canDelete }) {
   const formattedDate = new Date(item.createdAt).toLocaleDateString("fr-CA");
 
   return (
-    <div className="tw-bg-white tw-rounded-xl tw-shadow-md hover:tw-shadow-lg tw-transition-shadow tw-duration-300 tw-border tw-border-gray-200 tw-flex tw-flex-col tw-h-full">
-      <div className="tw-p-4 tw-flex tw-justify-between tw-items-start tw-border-b tw-border-gray-100">
-        <div className="tw-flex-shrink-0 tw-bg-green-100 tw-p-3 tw-rounded-lg">
-          <Landmark className="tw-w-6 tw-h-6 tw-text-green-600" />
+    <div className="tw-bg-white tw-rounded-xl tw-shadow-sm hover:tw-shadow-lg tw-transition-all tw-duration-300 tw-border tw-border-gray-100 tw-flex tw-flex-col tw-h-full tw-relative">
+      
+      {/* Partie Supérieure : Montant et Icône */}
+      <div className="tw-p-5 tw-pb-2">
+        <div className="tw-flex tw-items-center tw-justify-between tw-mb-4">
+          <div className="tw-flex tw-items-center tw-gap-3">
+            <div className="tw-h-10 tw-w-10 tw-rounded-full tw-bg-green-50 tw-flex tw-items-center tw-justify-center tw-border tw-border-green-100">
+              <Landmark size={18} className="tw-text-green-600" />
+            </div>
+            <div>
+              <p className="tw-text-xs tw-font-bold tw-text-green-600 tw-uppercase tw-tracking-wide">
+                Crédit Caisse
+              </p>
+              <div className="tw-flex tw-items-center tw-text-gray-400 tw-text-xs">
+                <Hash size={10} className="tw-mr-0.5" />
+                <span>{item.id}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="tw-text-right">
-          <p className="tw-text-2xl tw-font-bold tw-text-green-700">
-            {item.montant?.toLocaleString()} F
-          </p>
-          <p className="tw-text-xs tw-text-gray-500">Appro. #{item.id}</p>
+
+        <div className="tw-mt-2">
+          <h3 className="tw-text-3xl tw-font-bold tw-text-gray-800 tw-tracking-tight">
+            {item.montant?.toLocaleString()} <span className="tw-text-base tw-font-medium tw-text-gray-400">F</span>
+          </h3>
         </div>
       </div>
 
-      <div className="tw-p-4 tw-flex-grow">
-        
-        {/* CORRECTION 1: Affichage du message après la date, de manière claire */}
-        <div className="tw-space-y-2 tw-text-sm tw-mb-4">
-          <div className="tw-flex tw-items-center tw-text-gray-600">
-            <User size={14} className="tw-mr-2 tw-flex-shrink-0" />
-            <span>Saisi par : <span className="tw-font-medium">{item.user?.fullName}</span></span>
-          </div>
-          <div className="tw-flex tw-items-center tw-text-gray-600">
-            <Calendar size={14} className="tw-mr-2 tw-flex-shrink-0" />
-            <span>Le : <span className="tw-font-medium">{formattedDate}</span></span>
-          </div>
-        </div>
-
-        {item.wording && (
-          <div className="tw-border tw-border-gray-200 tw-p-3 tw-rounded-lg tw-bg-gray-50">
-            <div className="tw-flex tw-items-start tw-text-gray-700">
-              <MessageSquare size={16} className="tw-flex-shrink-0 tw-mr-2 tw-mt-0.5 tw-text-gray-500" />
-              <p className="tw-text-sm tw-text-gray-700">{item.wording}</p>
-            </div>
-          </div>
+      {/* Partie Centrale : Description */}
+      <div className="tw-px-5 tw-py-2 tw-flex-grow">
+        {item.wording ? (
+          <p className="tw-text-sm tw-text-gray-600 tw-italic tw-leading-relaxed">
+            {item.wording}
+          </p>
+        ) : (
+          <p className="tw-text-sm tw-text-gray-300 tw-italic">Aucune description</p>
         )}
       </div>
 
-      {(canEdit || canDelete) && (
-        <div className="tw-p-3 tw-bg-gray-50 tw-border-t tw-border-gray-100 tw-flex tw-justify-end tw-gap-2">
-          {canEdit && (
-            // CORRECTION 2: Ajouter 'tw-flex tw-items-center tw-justify-center' au bouton
-            <button 
-              onClick={onEdit} 
-              className="btn btn-primary-transparent rounded-pill tw-flex tw-items-center tw-justify-center" 
-              title="Modifier"
-            >
-              <Pencil size={16} />
-            </button>
-          )}
-          {canDelete && (
-            // CORRECTION 2: Ajouter 'tw-flex tw-items-center tw-justify-center' au bouton
-            <button 
-              onClick={onDelete} 
-              className="btn btn-danger-transparent rounded-pill tw-flex tw-items-center tw-justify-center" 
-              title="Supprimer"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
+      {/* Partie Inférieure : Méta & Actions */}
+      <div className="tw-p-4 tw-mt-2 tw-bg-gray-50/50 tw-border-t tw-border-gray-100 tw-rounded-b-xl tw-flex tw-items-center tw-justify-between">
+        
+        {/* Infos Gauche */}
+        <div className="tw-flex tw-flex-col tw-gap-1">
+          <div className="tw-flex tw-items-center tw-text-xs tw-text-gray-500" title="Auteur">
+            <User size={12} className="tw-mr-1.5 tw-text-gray-400" />
+            <span className="tw-font-medium tw-truncate tw-max-w-[100px]">{item.user?.fullName || 'Inconnu'}</span>
+          </div>
+          <div className="tw-flex tw-items-center tw-text-xs tw-text-gray-400" title="Date de création">
+            <Calendar size={12} className="tw-mr-1.5" />
+            <span>{formattedDate}</span>
+          </div>
         </div>
-      )}
+
+        {/* Boutons Droite */}
+        {(canEdit || canDelete) && (
+          <div className="tw-flex tw-items-center tw-gap-2">
+            {canEdit && (
+              <button 
+                onClick={onEdit} 
+                className="tw-h-8 tw-w-8 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-text-blue-600 tw-bg-white tw-border tw-border-gray-200 hover:tw-border-blue-300 hover:tw-bg-blue-50 tw-transition-all tw-shadow-sm"
+                title="Modifier"
+              >
+                <Pencil size={14} />
+              </button>
+            )}
+            {canDelete && (
+              <button 
+                onClick={onDelete} 
+                className="tw-h-8 tw-w-8 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-text-red-600 tw-bg-white tw-border tw-border-gray-200 hover:tw-border-red-300 hover:tw-bg-red-50 tw-transition-all tw-shadow-sm"
+                title="Supprimer"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
-};
+}
 
 ApprovisionnementCard.propTypes = {
-  item: PropTypes.object.isRequired,
+  item: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    montant: PropTypes.number,
+    wording: PropTypes.string,
+    createdAt: PropTypes.string,
+    user: PropTypes.shape({
+      fullName: PropTypes.string
+    })
+  }).isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   canEdit: PropTypes.bool,

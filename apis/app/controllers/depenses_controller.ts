@@ -24,13 +24,22 @@ export default class DepensesController {
   // index() et create() étaient déjà corrects, pas de changement majeur
   async index({ request, response }: HttpContext) {
     try {
-      const { page, perpage, companieId, userId, dateDebut, dateFin, typeDeDepenseId, by } =
-        request.qs()
+      const {
+        page,
+        perpage,
+        companieId,
+        userId,
+        dateDebut,
+        dateFin,
+        typeDeDepenseId,
+        by,
+        keyword,
+      } = request.qs()
 
       const pageNumber = page ? Number.parseInt(page) : 1
       const perPageNumber = perpage ? Number.parseInt(perpage) : 10
 
-      const { allDepenses, depenses } = await depense_service.fetchAndFormatDepenses(
+      const { depenses } = await depense_service.fetchAndFormatDepenses(
         companieId,
         pageNumber,
         perPageNumber,
@@ -38,10 +47,11 @@ export default class DepensesController {
         dateDebut,
         dateFin,
         typeDeDepenseId,
-        by
+        by,
+        keyword
       )
 
-      return response.ok({ depenses, allDepenses })
+      return response.ok({ depenses })
     } catch (error) {
       console.error('Erreur lors de la récupération des dépenses:', error)
       return response.status(500).send({ error: 'Erreur interne du serveur' })

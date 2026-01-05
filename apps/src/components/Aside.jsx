@@ -1,12 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import axiosInstance from "../config/axiosConfig";
 import PropTypes from "prop-types";
-import { useEffect } from "react"; // ⭐ Import de useEffect ajouté
-
-// Import de la nouvelle liste complète d'icônes modernes de Lucide
+import { useEffect } from "react";
 import {
   X,
   LayoutDashboard,
@@ -22,23 +20,20 @@ import {
 
 function Aside({ isSidebarOpen, toggleSidebar }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // ⭐ NOUVEAU useEffect pour empêcher le défilement du body
   useEffect(() => {
     if (isSidebarOpen) {
       document.body.classList.add("tw-overflow-hidden");
     } else {
       document.body.classList.remove("tw-overflow-hidden");
     }
-
-    // Fonction de nettoyage
     return () => {
       document.body.classList.remove("tw-overflow-hidden");
     };
   }, [isSidebarOpen]);
-  // Fin du NOUVEAU useEffect
-  
+
   const handleError = (error) => {
     const validationErrors = error?.response?.data?.error;
     if (validationErrors && Array.isArray(validationErrors)) {
@@ -55,7 +50,7 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
     },
     {
       onSuccess: (data, route) => {
-        if (data?.isAuthorized) { navigate(route); } 
+        if (data?.isAuthorized) { navigate(route); }
         else { alert("Vous n'êtes pas autorisé à accéder à cette page."); }
       },
       onError: handleError,
@@ -66,12 +61,18 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
     checkAuthorization(route);
   };
 
+  // Gestion du style Orange (Hover, Focus, Active)
+  const getNavItemClass = (route) => {
+    const isActive = location.pathname.includes(route);
+    const baseClass = "tw-w-full tw-flex tw-items-center tw-p-3 tw-rounded-lg tw-transition-all tw-duration-200 tw-outline-none tw-font-medium";
+    const activeClass = "tw-bg-orange-100 tw-text-orange-700";
+    const inactiveClass = "tw-text-slate-600 hover:tw-bg-orange-50 hover:tw-text-orange-600 focus:tw-ring-2 focus:tw-ring-orange-500";
+    
+    return `${baseClass} ${isActive ? activeClass : inactiveClass}`;
+  };
+
   return (
     <>
-      {/* Si vous utilisez un overlay (arrière-plan sombre derrière la sidebar) 
-        il faut l'inclure ici pour les écrans mobiles 
-      */}
-
       <aside
         className={`
           tw-fixed tw-top-0 tw-left-0 tw-h-full tw-z-40
@@ -82,52 +83,54 @@ function Aside({ isSidebarOpen, toggleSidebar }) {
         `}
         id="sidebar"
       >
-        {/* HEADER: Fixe en haut */}
-        <div className="tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-space-y-4 tw-p-4 tw-bg-slate-50 tw-border-b tw-flex-shrink-0">
+        {/* HEADER: Logo Circulaire sans padding */}
+        <div className="tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-pt-8 tw-pb-6 tw-flex-shrink-0">
           <button 
             onClick={toggleSidebar} 
-            className="tw-absolute tw-top-2 tw-right-2 tw-h-10 tw-w-10 tw-flex tw-items-center tw-justify-center tw-rounded-full hover:tw-bg-slate-200 lg:tw-hidden"
-            aria-label="Fermer le menu"
+            className="tw-absolute tw-top-2 tw-right-2 tw-h-10 tw-w-10 tw-flex tw-items-center tw-justify-center tw-rounded-full hover:tw-bg-slate-100 lg:tw-hidden"
           >
             <X className="tw-h-6 tw-w-6 tw-text-slate-600" />
           </button>
 
-          <div className="tw-p-1 tw-bg-gray-200 tw-rounded-full -tw-mt-6 tw-mb-2 tw-w-36 tw-h-36 ">
+          {/* Logo Circulaire pur */}
+          <div className="tw-w-36 tw-h-36 tw-rounded-full tw-overflow-hidden tw-border-2 tw-border-slate-100 tw-shadow-md">
             <img
               src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${user?.company?.logoUrl || `uploads/avatars/ri3uadefault.jpg`}`}
-              alt="Logo de l’entreprise"
-              className="tw-w-36 tw-h-36 tw-object-cover tw-rounded-full"
+              alt="Logo"
+              className="tw-w-full tw-h-full tw-object-cover"
             />
           </div>
         
           {user?.company?.showCompanyName && (
-            <p className="tw-text-center tw-font-semibold tw-text-lg tw-text-slate-800">
+            <p className="tw-mt-4 tw-text-center tw-font-bold tw-text-lg tw-text-slate-800">
               {user?.company?.companyName}
             </p>
           )}
         </div>
         
-        {/* CORPS DE LA SIDEBAR AVEC LE MENU COMPLET ET SCROLLABLE */}
+        {/* CORPS SCROLLABLE */}
         <div className="tw-flex-grow tw-overflow-y-auto tw-py-4">
           <nav>
             <ul className="tw-px-4 tw-space-y-1">
-              {/* Catégorie PRINCIPALE */}
-              <li><span className="tw-px-3 tw-text-xs tw-font-semibold tw-uppercase tw-text-gray-400">Principale</span></li>
-              <li><button onClick={() => handleNavigation("dashboard")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><LayoutDashboard className="tw-h-5 tw-w-5 tw-mr-3" /><span>Tableau de bord</span></button></li>
+              <li><span className="tw-px-3 tw-text-[10px] tw-font-bold tw-uppercase tw-text-gray-400 tw-tracking-widest">Principale</span></li>
+              <li>
+                <button onClick={() => handleNavigation("dashboard")} className={getNavItemClass("dashboard")}>
+                  <LayoutDashboard className="tw-h-5 tw-w-5 tw-mr-3" />
+                  <span>Tableau de bord</span>
+                </button>
+              </li>
 
-              {/* Catégorie Modules */}
-              <li className="tw-pt-2"><span className="tw-px-3 tw-text-xs tw-font-semibold tw-uppercase tw-text-gray-400">Modules</span></li>
-              <li><button onClick={() => handleNavigation("approvisionnements")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Warehouse className="tw-h-5 tw-w-5 tw-mr-3" /><span>Approvisionnement</span></button></li>
-              <li><button onClick={() => handleNavigation("type-de-depense")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Landmark className="tw-h-5 tw-w-5 tw-mr-3" /><span>Type de dépenses</span></button></li>
-              <li><button onClick={() => handleNavigation("depenses")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><CircleDollarSign className="tw-h-5 tw-w-5 tw-mr-3" /><span>Dépenses</span></button></li>
-              <li><button onClick={() => handleNavigation("sorties")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><LogOut className="tw-h-5 tw-w-5 tw-mr-3" /><span>Sortie</span></button></li>
-              <li><button onClick={() => handleNavigation("editions")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Printer className="tw-h-5 tw-w-5 tw-mr-3" /><span>Editions</span></button></li>
+              <li className="tw-pt-4"><span className="tw-px-3 tw-text-[10px] tw-font-bold tw-uppercase tw-text-gray-400 tw-tracking-widest">Modules</span></li>
+              <li><button onClick={() => handleNavigation("approvisionnements")} className={getNavItemClass("approvisionnements")}><Warehouse className="tw-h-5 tw-w-5 tw-mr-3" /><span>Approvisionnement</span></button></li>
+              <li><button onClick={() => handleNavigation("type-de-depense")} className={getNavItemClass("type-de-depense")}><Landmark className="tw-h-5 tw-w-5 tw-mr-3" /><span>Type de dépenses</span></button></li>
+              <li><button onClick={() => handleNavigation("depenses")} className={getNavItemClass("depenses")}><CircleDollarSign className="tw-h-5 tw-w-5 tw-mr-3" /><span>Dépenses</span></button></li>
+              <li><button onClick={() => handleNavigation("sorties")} className={getNavItemClass("sorties")}><LogOut className="tw-h-5 tw-w-5 tw-mr-3" /><span>Sortie</span></button></li>
+              <li><button onClick={() => handleNavigation("editions")} className={getNavItemClass("editions")}><Printer className="tw-h-5 tw-w-5 tw-mr-3" /><span>Editions</span></button></li>
 
-              {/* Catégorie Rôles / Utilisateurs */}
-              <li className="tw-pt-2"><span className="tw-px-3 tw-text-xs tw-font-semibold tw-uppercase tw-text-gray-400">Rôles / Utilisateurs</span></li>
-              <li><button onClick={() => handleNavigation("utilisateurs")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><Users className="tw-h-5 tw-w-5 tw-mr-3" /><span>Utilisateurs</span></button></li>
-              <li><button onClick={() => handleNavigation("abonnements")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><CreditCard className="tw-h-5 tw-w-5 tw-mr-3" /><span>Mes abonnements</span></button></li>
-              <li><button onClick={() => handleNavigation("permissions")} className="tw-w-full tw-flex tw-items-center tw-p-3 tw-text-slate-700 tw-rounded-lg hover:tw-bg-slate-100 tw-transition-colors"><KeyRound className="tw-h-5 tw-w-5 tw-mr-3" /><span>Rôle & Permissions</span></button></li>
+              <li className="tw-pt-4"><span className="tw-px-3 tw-text-[10px] tw-font-bold tw-uppercase tw-text-gray-400 tw-tracking-widest">Rôles / Utilisateurs</span></li>
+              <li><button onClick={() => handleNavigation("utilisateurs")} className={getNavItemClass("utilisateurs")}><Users className="tw-h-5 tw-w-5 tw-mr-3" /><span>Utilisateurs</span></button></li>
+              <li><button onClick={() => handleNavigation("abonnements")} className={getNavItemClass("abonnements")}><CreditCard className="tw-h-5 tw-w-5 tw-mr-3" /><span>Mes abonnements</span></button></li>
+              <li><button onClick={() => handleNavigation("permissions")} className={getNavItemClass("permissions")}><KeyRound className="tw-h-5 tw-w-5 tw-mr-3" /><span>Rôle & Permissions</span></button></li>
             </ul>
           </nav>
         </div>

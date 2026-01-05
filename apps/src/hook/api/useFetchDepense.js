@@ -1,15 +1,12 @@
-// src/hook/api/useFetchDepense.js
-
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../config/axiosConfig";
 import { useHandleError } from "../useHandleError";
 
-export function useFetchDepenses({ page, perpage, companyId, userId, dateDebut, dateFin, typeDeDepenseId, by }) {
+export function useFetchDepenses({ page, perpage, companyId, userId, dateDebut, dateFin, typeDeDepenseId, by, keyword }) {
   const handleError = useHandleError();
 
   return useQuery({
-    // MODIFICATION CLÉ : Ajoutez toutes les dépendances de la requête ici
-    queryKey: ["depenses", companyId, page, perpage, userId, dateDebut, dateFin, typeDeDepenseId, by],
+    queryKey: ["depenses", companyId, page, perpage, userId, dateDebut, dateFin, typeDeDepenseId, by, keyword],
     
     queryFn: async () => {
       const response = await axiosInstance.get(
@@ -24,13 +21,13 @@ export function useFetchDepenses({ page, perpage, companyId, userId, dateDebut, 
             dateFin: dateFin,
             typeDeDepenseId: typeDeDepenseId,
             by: by,
+            keyword: keyword,
           },
         }
       );
 
       return {
         depenses: response.data?.depenses,
-        allDepenses: response.data?.allDepenses,
       };
     },
     

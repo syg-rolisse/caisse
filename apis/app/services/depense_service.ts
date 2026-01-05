@@ -4,18 +4,21 @@ export default class DepenseService {
   static async fetchAndFormatDepenses(
     companyId: number,
     page = 1,
-    perPage = 1000,
+    perPage = 10,
     userId: number | undefined | null,
     dateDebut: string,
     dateFin: string,
     typeDeDepenseId: number | undefined | null,
-    by: string | undefined | null
+    by: string | undefined | null,
+    keyword: string = ''
   ) {
     const query = Depense.query()
       .where({ companieId: companyId })
       .preload('user')
       .preload('typeDeDepense')
       .preload('Mouvements')
+
+    // --- Filtres Existants ---
 
     if (userId) {
       query.where({ userId })
@@ -33,9 +36,7 @@ export default class DepenseService {
       query.where({ typeDeDepenseId })
     }
 
-    //impaye
-    //rejete
-
+    // Gestion des statuts (Payé, Impayé, Rejeté)
     if (by && by === 'paye') {
       query.where({ status: true })
     }
@@ -48,11 +49,20 @@ export default class DepenseService {
       query.where({ rejeter: true })
     }
 
-    const [allDepenses, depenses] = await Promise.all([
-      query.clone().orderBy('id', 'desc'),
-      query.clone().orderBy('id', 'desc').paginate(page, perPage),
-    ])
+    // --- Recherche par Mots-clés (Keyword) ---
+    if (keyword) {
+      query.where((builder) => {
+        // Recherche sur le libellé de la dépense
+        builder.where('wording', 'ilike', `%${keyword}%`)
 
-    return { companyId, depenses, allDepenses }
+        // Recherche sur le montant
+        builder.orWhereRaw('CAST(montant AS TEXT) LIKE ?', [`%${keyword}%`])
+      })
+    }
+
+    // --- Exécution (Pagination uniquement) ---
+    const depenses = await query.orderBy('id', 'desc').paginate(page, perPage)
+
+    return { companyId, depenses }
   }
 }
