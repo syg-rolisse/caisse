@@ -53,14 +53,13 @@ export default class AbonnementsController {
       const userConnected = auth.user
 
       await userConnected?.load('Profil')
-      console.log(userConnected?.Profil?.wording)
 
       if (
         userConnected?.Profil?.wording !== 'Superadmin' &&
         userConnected?.Profil?.wording !== 'Admin'
       ) {
         return response.forbidden({
-          error: "Accès refusé. Vous n'avez pas les droits nécessaires.",
+          error: 'Désolé, seul un administrateur peut ajouter un abonnement...',
         })
       }
 
