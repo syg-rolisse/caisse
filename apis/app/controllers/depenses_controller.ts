@@ -7,6 +7,7 @@ import app from '@adonisjs/core/services/app'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
 import depense_service from '#services/depense_service'
 import Ws from '#services/ws'
+import LastAbonnementService from '#services/last_abonnement_service'
 
 function emitDepenseUpdate(companyId: number, eventName: string) {
   if (!companyId) return
@@ -60,6 +61,15 @@ export default class DepensesController {
 
   public async create({ auth, bouncer, request, response }: HttpContext) {
     try {
+      const lastAbonnement = await LastAbonnementService.fetchLastAbonnement(
+        auth.user?.companieId || 0
+      )
+      if (lastAbonnement.status === 'expired') {
+        return response.status(403).send({
+          error:
+            'Votre abonnement est expiré. Veuillez renouveler votre abonnement pour continuer à utiliser le service.',
+        })
+      }
       const userConnected = auth.user
       const facture = request.file('facture')
       let factureUrl
@@ -143,6 +153,17 @@ export default class DepensesController {
     try {
       const { depenseId, userConnectedId } = request.qs()
       const userConnected = auth.user
+
+      const lastAbonnement = await LastAbonnementService.fetchLastAbonnement(
+        auth.user?.companieId || 0
+      )
+      if (lastAbonnement.status === 'expired') {
+        return response.status(403).send({
+          error:
+            'Votre abonnement est expiré. Veuillez renouveler votre abonnement pour continuer à utiliser le service.',
+        })
+      }
+
       await userConnected?.load('Profil', (profilQuery) => {
         profilQuery.preload('Permission', (permissionQuery: any) => {
           permissionQuery.where('companie_id', userConnected.companieId)

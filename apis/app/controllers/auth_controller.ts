@@ -8,6 +8,7 @@ import mail from '@adonisjs/mail/services/main'
 import { DateTime } from 'luxon'
 import crypto from 'node:crypto'
 import { processErrorMessages } from '../../helpers/remove_duplicate.js'
+import LastAbonnementService from '../services/last_abonnement_service.js'
 // import { seedProfile } from '../../helpers/seed_profil.js'
 
 export default class AuthController {
@@ -286,6 +287,16 @@ export default class AuthController {
           permissionQuery.where('companie_id', user.companieId)
         })
       })
+
+      const lastAbonnement = await LastAbonnementService.fetchLastAbonnement(
+        auth.user?.companieId || 0
+      )
+      if (lastAbonnement.status === 'expired' && route !== 'abonnements') {
+        return response.status(403).send({
+          error:
+            'Désolé, votre abonnement est expiré. Veuillez procéder au renouvellement pour continuer à utiliser le service.',
+        })
+      }
 
       let isAuthorized = false
 

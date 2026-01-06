@@ -164,8 +164,8 @@ export default function IndexTypeDepense() {
             </div>
           </div>
           
-          {/* Pagination affichée seulement si pas de recherche active (car recherche client sur tout) */}
-          {meta && meta.total > perpage && searchTerm.trim() === "" && (
+          {/* && meta.total > perpage && searchTerm.trim() === "" Pagination affichée seulement si pas de recherche active (car recherche client sur tout) */}
+          {meta  && (
             <div className="card-footer">
               <Pagination meta={meta} onPageChange={setPage} />
             </div>

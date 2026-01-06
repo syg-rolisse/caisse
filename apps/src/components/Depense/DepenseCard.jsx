@@ -177,7 +177,7 @@ const DepenseCard = ({ depense, onEdit, onDelete, canEdit, canDelete }) => {
                 onClick={onEdit} 
                 className="tw-flex tw-items-center tw-justify-center tw-gap-1.5 tw-px-3 tw-py-1.5 tw-rounded-full tw-bg-indigo-50 tw-text-indigo-600 hover:tw-bg-indigo-100 hover:tw-text-indigo-700 tw-transition-all tw-text-xs tw-font-bold"
               >
-                <Pencil size={14} /> <span></span>
+                <Pencil size={14} /> <span>Modifier</span>
               </button>
             )}
 
@@ -187,7 +187,7 @@ const DepenseCard = ({ depense, onEdit, onDelete, canEdit, canDelete }) => {
                 onClick={onDelete} 
                 className="tw-flex tw-items-center tw-gap-1.5 tw-px-3 tw-py-1.5 tw-rounded-full tw-bg-rose-50 tw-text-rose-600 hover:tw-bg-rose-100 hover:tw-text-rose-700 tw-transition-all tw-text-xs tw-font-bold"
               >
-                <Trash2 size={14} /> <span></span>
+                <Trash2 size={14} /> <span>Supprimer</span>
               </button>
             )}
         </div>
