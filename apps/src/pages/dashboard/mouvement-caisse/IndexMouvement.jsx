@@ -28,7 +28,8 @@ import {
   Search,
   Edit2,
   Trash2,
-  Ban
+  Ban,
+  CheckCheck
 } from "lucide-react";
 import "../../../fade.css";
 
@@ -44,11 +45,34 @@ function useDebounce(value, delay) {
 
 // --- COMPOSANT INTERNE : BADGE STATUT (Sorti pour ESLint) ---
 const StatusBadge = ({ status, rejeter, bloquer }) => {
-  if (rejeter) return <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-bold tw-bg-red-100 tw-text-red-700 tw-border tw-border-red-200"><XCircle size={12}/> Rejeté</span>;
-  if (bloquer) return <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-bold tw-bg-gray-100 tw-text-gray-700 tw-border tw-border-gray-200"><Lock size={12}/> Bloqué</span>;
-  if (status) return <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-bold tw-bg-emerald-100 tw-text-emerald-700 tw-border tw-border-emerald-200"><CheckCircle2 size={12}/> Payé</span>;
-  return <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-bold tw-bg-amber-100 tw-text-amber-700 tw-border tw-border-amber-200"><Clock size={12}/> En attente</span>;
+  if (rejeter)
+    return (
+      <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-semibold tw-bg-red-100 tw-text-red-700 tw-border tw-border-red-200 tw-whitespace-nowrap">
+        <XCircle size={12}/> Rejeté
+      </span>
+    );
+
+  if (bloquer)
+    return (
+      <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-semibold tw-bg-gray-100 tw-text-gray-700 tw-border tw-border-gray-200 tw-whitespace-nowrap">
+        <Lock size={12}/> Bloqué
+      </span>
+    );
+
+  if (status)
+    return (
+      <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-semibold tw-bg-emerald-100 tw-text-emerald-700 tw-border tw-border-emerald-200 tw-whitespace-nowrap">
+        <CheckCircle2 size={12}/> Payé
+      </span>
+    );
+
+  return (
+    <span className="tw-inline-flex tw-items-center tw-gap-1 tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-semibold tw-bg-amber-100 tw-text-amber-700 tw-border tw-border-amber-200 tw-whitespace-nowrap">
+      <Clock size={12}/> En attente
+    </span>
+  );
 };
+
 
 // Validation des props pour éviter l'erreur ESLint
 StatusBadge.propTypes = {
@@ -247,14 +271,22 @@ export default function IndexMouvement() {
                             <div className="tw-flex tw-flex-col">
                               <span className="tw-font-medium tw-text-gray-900 tw-text-sm">{depense.wording}</span>
                               <div className="tw-flex tw-items-center tw-gap-2 tw-mt-1">
-                                <span className="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wide tw-text-gray-500 tw-bg-gray-100 tw-px-2 tw-py-0.5 tw-rounded">
+                                <span className="tw-text-[10px] tw-tracking-wide tw-text-gray-500 tw-bg-gray-100 tw-px-2 tw-py-0.5 tw-rounded-full">
                                   {depense.typeDeDepense?.wording}
                                 </span>
                                 {depense.decharger && (
-                                  <span className="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wide tw-text-blue-600 tw-bg-blue-50 tw-px-2 tw-py-0.5 tw-rounded">
+                                  <span className="tw-text-[10px] tw-tracking-wide tw-text-blue-600 tw-bg-blue-50 tw-px-2 tw-py-0.5 tw-rounded-full">
                                     Déchargé
                                   </span>
                                 )}
+                                {depense.rejeter ? (
+                                  <span className="tw-text-[10px] tw-tracking-wide tw-text-red-600 tw-bg-red-50 tw-px-2 tw-py-0.5 tw-rounded-full">
+                                    Rejeté
+                                  </span>
+                                ) : 
+                                <span className="tw-text-[10px] tw-tracking-wide tw-text-green-600 tw-bg-green-50 tw-px-2 tw-py-0.5 tw-rounded-full">
+                                  <CheckCheck size={14} />
+                                </span>}
                               </div>
                             </div>
                           </td>
