@@ -41,7 +41,6 @@ export default class AbonnementsController {
       const { abonnements } = await abonnement_service.fetchAndFormatAbonnements(companieId)
       return response.ok({ abonnements })
     } catch (error) {
-      console.error('Erreur lors de la récupération des Abonnements:', error)
       return response.status(500).send({ error: 'Erreur interne du serveur' })
     }
   }
@@ -55,10 +54,6 @@ export default class AbonnementsController {
       if (!companieId) {
         return response.badRequest({ error: "L'identifiant de l'entreprise est requis." })
       }
-
-      console.log(companieId)
-
-      console.log(request.body())
 
       const payload = await request.validateUsing(renewAbonnementValidator)
       const selectedPack = await Pack.findOrFail(payload.packId)
