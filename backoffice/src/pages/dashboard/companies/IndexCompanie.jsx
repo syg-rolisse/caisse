@@ -126,7 +126,7 @@ export default function IndexCompanie() {
                     {/* SECTION 2 : DÉTAILS PAR ENTREPRISE */}
                     <div className="tw-space-y-12">
                       <h2 className="tw-text-xl tw-font-semibold">
-                        Détails par entreprise
+                        Entreprises | Utilisateurs | Abonnements
                       </h2>
                       {filteredCompanies.map((company) => (
                         <div

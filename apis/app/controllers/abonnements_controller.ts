@@ -48,8 +48,22 @@ export default class AbonnementsController {
   /**
    * Renouvelle un abonnement existant ou en crée un nouveau si aucun n'existe.
    */
-  async renouveler({ request, response }: HttpContext) {
+  async renouveler({ auth, request, response }: HttpContext) {
     try {
+      const userConnected = auth.user
+
+      await userConnected?.load('Profil')
+      console.log(userConnected?.Profil?.wording)
+
+      if (
+        userConnected?.Profil?.wording !== 'Superadmin' &&
+        userConnected?.Profil?.wording !== 'Admin'
+      ) {
+        return response.forbidden({
+          error: "Accès refusé. Vous n'avez pas les droits nécessaires.",
+        })
+      }
+
       const { companieId } = request.qs()
       if (!companieId) {
         return response.badRequest({ error: "L'identifiant de l'entreprise est requis." })
