@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
 import { Mail, Shield, UserCheck, UserX, Calendar, Pencil, Trash2, MailCheck, MailX, User } from 'lucide-react';
 
-export default function UserCard({ user, onChangeRole, onDelete, canChangeRole, canDelete }) {
+export default function UserCard({ user, onEdit, onDelete }) {
   const formattedDate = new Date(user.createdAt).toLocaleDateString("fr-CA");
-
+  
   const getDefaultAvatar = () => {
     const defaultAvatarNumber = (user.id % 5) + 1;
     return `uploads/avatars/default/${defaultAvatarNumber}.png`;
@@ -95,19 +95,19 @@ export default function UserCard({ user, onChangeRole, onDelete, canChangeRole, 
       </div>
 
       {/* Footer : Actions */}
-      {(canDelete || canChangeRole) && (
+    
         <div className="tw-px-4 tw-py-3 tw-bg-gray-50 tw-border-t tw-border-gray-100 tw-flex tw-justify-end tw-items-center">
-          {canChangeRole ? (
+         
             <button 
-              onClick={onChangeRole} 
+              onClick={onEdit} 
               className=" tw-mr-2 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-py-1.5 tw-px-3 tw-rounded-lg tw-bg-blue tw-border tw-border-blue-200 tw-text-xs tw-font-semibold tw-text-blue-700 hover:tw-border-violet-300 hover:tw-text-violet-600 tw-transition-colors"
             >
               <Pencil size={14} />
               {/* <span>Gérer</span> */}
             </button>
-          ) : <div></div>}
+         
           
-          {canDelete && (
+         
             <button 
               onClick={onDelete} 
               className="tw-flex tw-items-center tw-justify-center tw-p-1.5 tw-rounded-lg tw-bg-red tw-border tw-border-red-200 tw-text-red-400 hover:tw-bg-red-50 hover:tw-border-red-200 hover:tw-text-red-500 tw-transition-colors"
@@ -115,9 +115,9 @@ export default function UserCard({ user, onChangeRole, onDelete, canChangeRole, 
             >
               <Trash2 size={16} />
             </button>
-          )}
+         
         </div>
-      )}
+    
     </div>
   );
 }
@@ -135,8 +135,6 @@ UserCard.propTypes = {
       wording: PropTypes.string
     })
   }).isRequired,
-  onChangeRole: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  canChangeRole: PropTypes.bool,
-  canDelete: PropTypes.bool,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
 };

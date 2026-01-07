@@ -1,25 +1,24 @@
 import Profil from '#models/profil'
-import db from '@adonisjs/lucid/services/db'
+import { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
-export async function seedProfile(companieId: number) {
-  const roleData = [
-    { wording: 'Superadmin', companieId: companieId },
-    { wording: 'Admin', companieId: companieId },
-    { wording: 'Employé', companieId: companieId },
-    { wording: 'Sécrétaire', companieId: companieId },
-    { wording: 'Stagiaire', companieId: companieId },
-  ]
+export async function seedProfile(
+  companieId: number,
+  trx: TransactionClientContract
+): Promise<Record<string, number>> {
+  const roleNames = ['Superadmin', 'Admin', 'Employé', 'Sécrétaire', 'Stagiaire']
+  const profilesMap: Record<string, number> = {}
 
-  const trx = await db.transaction()
+  for (const wording of roleNames) {
+    let existing = await Profil.query({ client: trx })
+      .where('wording', wording)
+      .where('companie_id', companieId)
+      .first()
 
-  try {
-    for (const role of roleData) {
-      await Profil.create(role, { client: trx })
+    if (!existing) {
+      existing = await Profil.create({ wording, companieId }, { client: trx })
     }
-    await trx.commit()
-    return true
-  } catch (error) {
-    await trx.rollback()
-    return false
+    profilesMap[wording] = existing.id
   }
+
+  return profilesMap
 }

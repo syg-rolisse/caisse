@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axiosConfig";
-import InputField from "../InputField"; // Notre composant réutilisable
+//import InputField from "../InputField"; // Notre composant réutilisable
 import { useHandleError } from "../../hook/useHandleError";
 import { CheckCircle, Loader2, X } from "lucide-react";
 
@@ -23,21 +23,19 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
     register,
     handleSubmit,
     reset,
+    // eslint-disable-next-line no-unused-vars
     formState: { errors },
   } = useForm({ defaultValues: defaultFormValues });
 
+  // Mutation mise à jour pour pointer vers la route changeAccountStatus
   const { mutate, isLoading } = useMutation({
-    mutationFn: ({ data, userId }) => {
-      // Logique pour déterminer l'URL et la méthode
-      const url = userId
-        ? `${import.meta.env.VITE_BACKEND_URL}/api/v1/user?userId=${userId}&userConnectedId=${loggedInUser?.id}`
-        : `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/createUser`;
-      const method = userId ? axiosInstance.put : axiosInstance.post;
-      return method(url, data);
+    mutationFn: (payload) => {
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/changeAccountStatus`;
+      return axiosInstance.put(url, payload);
     },
     onSuccess: (response) => {
-      toast.success(response?.data?.message);
-      onSuccess(); // Appelle la fonction de succès du parent (fermer le modal, etc.)
+      toast.success(response?.data?.message || "Modification effectuée avec succès.");
+      onSuccess(); 
     },
     onError: handleError,
   });
@@ -48,30 +46,28 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
       return;
     }
 
+    // On prépare exactement ce que votre fonction Adonis attend : userId, profilId, status
     const payload = {
-      ...data,
-      companieId: loggedInUser.company.id,
+      userId: userToEdit?.id,
+      profilId: userToEdit?.profilId || userToEdit?.Profil?.id, // Récupère l'ID du profil existant
+      status: data.status,
     };
     
-    // Si on est en mode création, l'email est requis
-    if (!userToEdit) {
-      if (!data.email) {
-        toast.error("L'adresse e-mail est requise pour la création.");
-        return;
-      }
+    // Sécurité côté front : on ne tente pas de modifier un SuperAdmin (profilId 1)
+    if (payload.profilId === 1) {
+       toast.error("Le profil de super admin ne peut être modifié.");
+       return;
     }
 
-    mutate({ data: payload, userId: userToEdit?.id });
+    mutate(payload);
   };
 
-  // Pré-remplir le formulaire si un utilisateur est passé en props
   useEffect(() => {
     if (userToEdit) {
-      console.log(userToEdit);
       reset({
         fullName: userToEdit.fullName || "",
         email: userToEdit.email || "",
-        profilId: userToEdit.Profil?.id || "",
+        profilId: userToEdit.profilId || userToEdit.Profil?.id || "",
         status: userToEdit.status,
       });
     } else {
@@ -81,15 +77,18 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
 
   return (
     <div className="tw-bg-white tw-p-2">
+      
       <div className="tw-mb-4">
         <h3 className="tw-text-lg tw-font-semibold tw-text-gray-900">
-          {userToEdit ? "Modifier l'utilisateur" : "Ajouter un nouvel utilisateur"}
+          Gestion du compte
         </h3>
-        <p className="tw-text-sm tw-text-gray-500">
-          Les champs marqués d&apos;un <span className="tw-text-red-500">*</span> sont obligatoires.
+        <p className="tw-text-sm tw-text-gray-500 tw-italic">
+          Modifier l&apos;accès de l&apos;utilisateur <strong>{userToEdit?.fullName}</strong> au système.
         </p>
       </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-6">
+        {/* 
         <InputField
           id="fullName"
           label="Nom & Prénom"
@@ -104,7 +103,6 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
           type="email"
           placeholder="Ex: john.doe@example.com"
           {...register("email", { 
-            // L'email est requis uniquement à la création
             required: !userToEdit ? "L'adresse e-mail est requise" : false,
             pattern: {
               value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -112,7 +110,6 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
             },
            })}
           errors={errors}
-          // L'email ne peut pas être modifié
           disabled={!!userToEdit} 
         />
         
@@ -133,20 +130,23 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
           </select>
           {errors.profilId && <p className="tw-mt-1 tw-text-sm tw-text-red-600">{errors.profilId.message}</p>}
         </div>
+        */}
 
+        {/* SEUL LE STATUT RESTE VISIBLE ET MODIFIABLE */}
         <div className="tw-relative tw-flex tw-items-start">
           <div className="tw-flex tw-h-6 tw-items-center">
             <input
               id="status"
               type="checkbox"
-              className="tw-h-4 tw-w-4 tw-rounded tw-border-gray-300 tw-text-green-600 focus:tw-ring-green-600"
+              className="tw-h-5 tw-w-5 tw-rounded tw-border-gray-300 tw-text-green-600 focus:tw-ring-green-600 tw-cursor-pointer"
               {...register("status")}
             />
           </div>
           <div className="tw-ml-3 tw-text-sm tw-leading-6">
-            <label htmlFor="status" className="tw-font-medium tw-text-gray-900">
-              Activer le compte de l&apos;utilisateur
+            <label htmlFor="status" className="tw-font-medium tw-text-gray-900 tw-cursor-pointer">
+              Autoriser cet utilisateur à se connecter
             </label>
+            <p className="tw-text-gray-500">Si décoché, l&apos;accès sera immédiatement révoqué.</p>
           </div>
         </div>
 
@@ -169,7 +169,7 @@ function UserForm({ user: userToEdit, onSuccess, onClose }) {
             ) : (
               <>
                 <CheckCircle size={16} className="tw-inline tw-mr-2" />
-                {userToEdit ? "Mettre à jour" : "Enregistrer"}
+                Mettre à jour le statut
               </>
             )}
           </button>

@@ -65,9 +65,7 @@ export default class ApprovisionnementsController {
     try {
       const user = auth.user!
       await user.load('Profil', (profilQuery) => {
-        profilQuery.preload('Permission', (permissionQuery: any) => {
-          permissionQuery.where('companie_id', user?.companieId)
-        })
+        profilQuery.preload('Permission')
       })
 
       if (await bouncer.with('ApproPolicy').denies('create')) {

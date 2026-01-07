@@ -51,7 +51,7 @@ function DeleteUser({ user, onSuccess, onClose }) {
 
       <ConfirmationInput 
         onValidationChange={(isValid) => setIsConfirmed(isValid)} 
-        codeLength={4} // Un code à 4 chiffres est suffisant ici
+        codeLength={8} // Un code à 8 caractères est suffisant ici
       />
 
       <div className="tw-flex tw-justify-between tw-items-center">

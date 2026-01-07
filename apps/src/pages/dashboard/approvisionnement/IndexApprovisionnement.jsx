@@ -142,9 +142,7 @@ export default function IndexApprovisionnement() {
                 
                 {!isLoading && !isError && approvisionnements.length === 0 && (
                   <div className="col-12 text-center">
-                    <span className="tw-bg-gray-100 tw-text-gray-600 tw-rounded-md tw-flex tw-mb-3 tw-items-center tw-justify-center">
-                      <EmptyState message="Aucun approvisionnement trouvé." />
-                    </span>
+                    <EmptyState message="Aucun approvisionnement trouvé." />
                   </div>
                 )}
 

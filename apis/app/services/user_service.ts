@@ -36,7 +36,12 @@ export default class UserService {
   }
 
   static async fetchAndFormatAllCompanies(page = 1, perPage = 1000) {
-    const query = Companie.query().orderBy('id', 'desc').preload('users').preload('abonnements')
+    const query = Companie.query()
+      .orderBy('id', 'desc')
+      .preload('users', (usersQuery) => {
+        usersQuery.preload('Profil')
+      })
+      .preload('abonnements')
 
     const [allCompanies, companies] = await Promise.all([
       query.clone().orderBy('id', 'desc'),

@@ -83,19 +83,17 @@ export default class UsersController {
     }
   }
 
-  // 3. register()
   async register({ request, response }: HttpContext) {
     const trx = await db.transaction()
-    let logoUrl: string = ''
-    const { companyName, address, phoneNumber } = request.body()
 
     try {
       const payload = await request.validateUsing(registerValidator)
+      const { companyName, address, phoneNumber } = request.body()
 
+      let logoUrl: string = ''
       if (payload?.avatar) {
         const uniqueId = cuid()
         const fileName = `${uniqueId}.${payload.avatar.extname}`
-
         await payload.avatar.move(app.makePath('uploads/logo'), {
           name: fileName,
           overwrite: true,
@@ -103,78 +101,80 @@ export default class UsersController {
         logoUrl = `logo/${fileName}`
       }
 
-      const company = await Companie.create({
-        logoUrl,
-        companyName: companyName,
-        address: address,
-        phoneNumber: phoneNumber,
+      const company = await Companie.create(
+        { logoUrl, companyName, address, phoneNumber, showCompanyName: true },
+        { client: trx }
+      )
+
+      const profilesMap = await seedProfile(company.id, trx)
+
+      const user = await User.create(
+        {
+          ...payload,
+          companieId: company.id,
+          profilId: profilesMap['Superadmin'],
+        },
+        { client: trx }
+      )
+
+      await seedTypeDeDepense(company.id, user.id, trx)
+      await seedPermission(company.id, profilesMap, trx)
+
+      let tokenGenerated: string
+      let existingToken: any
+      do {
+        tokenGenerated = crypto.randomBytes(20).toString('hex')
+        existingToken = await VerifMailToken.query().where('token', tokenGenerated).first()
+      } while (existingToken)
+
+      await VerifMailToken.create(
+        { userId: user.id, email: user.email, token: tokenGenerated },
+        { client: trx }
+      )
+
+      const link = `${env.get('VITE_FRONT_URL')}/login?token=${tokenGenerated}&render=register&email=${user.email}&userId=${user.id}`
+      const texto = `${tokenGenerated}${user.email}${user.id}`
+      const mailFrom = env.get('MAIL_FROM') || ''
+      await mail.send((message) => {
+        message
+          .to(user.email)
+          .from(mailFrom)
+          .subject('CAISSE | VALIDATION DE MAIL')
+          .embed(app.publicPath('logo/logo.png'), 'logo')
+          .htmlView('emails/verify_email', { link, texto })
       })
 
-      if (company) {
-        const user = await User.create({ ...payload, companieId: company.id })
-
-        const profilSeedingSuccess = await seedProfile(company.id)
-        if (!profilSeedingSuccess) throw new Error('Erreur lors de la création des profils.')
-
-        const typeDepenseSeedingSuccess = await seedTypeDeDepense(company.id, user.id)
-        if (!typeDepenseSeedingSuccess)
-          throw new Error('Erreur lors de la création des types de dépenses.')
-
-        const permissionSeedingSuccess = await seedPermission(company.id)
-        if (!permissionSeedingSuccess)
-          throw new Error('Erreur lors de la création des permissions.')
-
-        let tokenGenerated: string
-        let existingToken: any
-        do {
-          tokenGenerated = crypto.randomBytes(20).toString('hex')
-          existingToken = await VerifMailToken.query().where('token', tokenGenerated).first()
-        } while (existingToken)
-
-        await VerifMailToken.create({ userId: user.id, email: user.email, token: tokenGenerated })
-
-        const link = `${env.get('VITE_FRONT_URL')}/login?token=${tokenGenerated}&render=register&email=${user.email}&userId=${user.id}`
-        const texto = `${tokenGenerated}${user.email}${user.id}`
-        await mail.send((message) => {
-          message
-            .to(user.email)
-            .from('rolissecodeur@gmail.com')
-            .subject('CAISSE | VALIDATION DE MAIL')
-            .embed('public/logo/logo.png', 'logo')
-            .htmlView('emails/verify_email', { link, texto })
-        })
-
-        const selectedPack = await Pack.query().where('libelle', 'Démo').firstOrFail()
-        let dateDebut: DateTime = DateTime.now()
-
+      const selectedPack = await Pack.query().where('libelle', 'Démo').first()
+      if (selectedPack) {
+        const dateDebut = DateTime.now()
         const dateFin = dateDebut.plus({ days: selectedPack.duree })
 
-        // Ajout d'un abonnement gratuit de 30 jours
-
-        await Abonnement.create({
-          companieId: Number(company.id),
-          packId: selectedPack.id,
-          userId: user.id,
-          packLibelle: selectedPack.libelle,
-          packDescription: selectedPack.description,
-          packMontant: selectedPack.montant,
-          dateDebut: dateDebut,
-          dateFin: dateFin,
-        })
-
-        await trx.commit()
-
-        return response.created({
-          status: 200,
-          message: 'Nous avons bien reçu vos données. Veuillez vérifier votre boîte mail.',
-        })
-      } else {
-        await trx.rollback()
-        return response.forbidden("Echec de la création de l'entreprise.")
+        await Abonnement.create(
+          {
+            companieId: company.id,
+            packId: selectedPack.id,
+            userId: user.id,
+            packLibelle: selectedPack.libelle,
+            packDescription: selectedPack.description,
+            packMontant: selectedPack.montant,
+            dateDebut: dateDebut,
+            dateFin: dateFin,
+          },
+          { client: trx }
+        )
       }
+
+      await trx.commit()
+
+      return response.created({
+        status: 200,
+        message: 'Nous avons bien reçu vos données. Veuillez vérifier votre boîte mail.',
+      })
     } catch (error) {
+      console.log(error.message)
       await trx.rollback()
-      const message = processErrorMessages(error)
+      const message =
+        typeof processErrorMessages === 'function' ? processErrorMessages(error) : error.message
       return response.badRequest({ status: 400, error: message })
     }
   }
@@ -213,10 +213,11 @@ export default class UsersController {
 
       const link = `${env.get('VITE_FRONT_URL')}/login?token=${tokenGenerated}&render=register&email=${user.email}&userId=${user.id}`
       const texto = `${tokenGenerated}${user.email}${user.id}`
+      const mailFrom = env.get('MAIL_FROM') || ''
       await mail.send((message) => {
         message
           .to(user.email)
-          .from('rolissecodeur@gmail.com')
+          .from(mailFrom)
           .subject('CAISSE | VALIDATION DE MAIL')
           .embed('public/logo/logo.png', 'logo')
           .htmlView('emails/compte_mail', { link, texto, email: user.email, password })
@@ -287,10 +288,6 @@ export default class UsersController {
           return response.badRequest({ status: 400, error: "L'adresse e-mail est déjà utilisée." })
         }
       }
-
-      // 🛑 ATTENTION : Suppression de l'appel qui consomme le fichier
-      // console.log(request.file('photo'));
-      // console.log(payload)
 
       let avatarUrl: any = user.avatarUrl
 
@@ -400,9 +397,7 @@ export default class UsersController {
     try {
       const userConnected = auth.user!
       await userConnected?.load('Profil', (profilQuery) => {
-        profilQuery.preload('Permission', (permissionQuery: any) => {
-          permissionQuery.where('companie_id', userConnected.companieId)
-        })
+        profilQuery.preload('Permission')
       })
 
       if (await bouncer.with('UserPolicy').denies('delete')) {

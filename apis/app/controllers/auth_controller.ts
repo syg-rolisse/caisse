@@ -156,10 +156,11 @@ export default class AuthController {
 
         const link = `${env.get('VITE_FRONT_URL')}/login?token=${tokenGenerated}&render=reset-password&email=${user?.email}&userId=${user?.id}`
         const texto = `${tokenGenerated + '' + user?.email + '' + user?.id}`
+        const mailFrom = env.get('MAIL_FROM') || ''
         await mail.send((message) => {
           message
             .to(user.email)
-            .from('rolissecodeur@gmail.com')
+            .from(mailFrom)
             .subject('CAISSE | VALIDATION DE MAIL')
             .htmlView('emails/reset_password_verif_email', {
               link: link,
@@ -281,6 +282,8 @@ export default class AuthController {
       // await user.load('Profil', (profilQuery) => {
       //   profilQuery.preload('Permission')
       // })
+
+      console.log(user.companieId)
 
       await user.load('Profil', (profilQuery) => {
         profilQuery.preload('Permission', (permissionQuery: any) => {
