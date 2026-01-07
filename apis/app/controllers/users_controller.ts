@@ -405,13 +405,40 @@ export default class UsersController {
       }
 
       const { userId } = request.qs()
-      const user = await User.query().where('id', userId).preload('Depense').firstOrFail()
+      const user = await User.query()
+        .where('id', userId)
+        .preload('Depense')
+        .preload('typeDeDepense')
+        .preload('mouvement')
+        .preload('abonnement')
+        .firstOrFail()
       const companyId = user.companieId
+
+      if (Array.isArray(user.typeDeDepense) && user.typeDeDepense.length > 0) {
+        return response.badRequest({
+          status: 400,
+          error: "Vueillez d'abord supprimer les types de dépenses liées à ce compte.",
+        })
+      }
+
+      if (Array.isArray(user.mouvement) && user.mouvement.length > 0) {
+        return response.badRequest({
+          status: 400,
+          error: "Vueillez d'abord supprimer les mouvements liés à ce compte.",
+        })
+      }
 
       if (Array.isArray(user.Depense) && user.Depense.length > 0) {
         return response.badRequest({
           status: 400,
           error: "Vueillez d'abord supprimer les dépenses liées à ce compte.",
+        })
+      }
+
+      if (Array.isArray(user.abonnement) && user.abonnement.length > 0) {
+        return response.badRequest({
+          status: 400,
+          error: "Vueillez d'abord supprimer les abonnements liés à ce compte.",
         })
       }
 

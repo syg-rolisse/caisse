@@ -9,6 +9,9 @@ import { DateTime } from 'luxon'
 import Companies from './companie.js'
 import Profil from './profil.js'
 import Depense from './depense.js'
+import TypeDeDepense from './type_de_depense.js'
+import Mouvement from './mouvement.js'
+import Abonnement from './abonnement.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -42,6 +45,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @hasMany(() => Depense)
   declare Depense: HasMany<typeof Depense>
+
+  @hasMany(() => TypeDeDepense)
+  declare typeDeDepense: HasMany<typeof TypeDeDepense>
+
+  @hasMany(() => Mouvement)
+  declare mouvement: HasMany<typeof Mouvement>
+
+  @hasMany(() => Abonnement)
+  declare abonnement: HasMany<typeof Abonnement>
 
   @column()
   declare email: string
