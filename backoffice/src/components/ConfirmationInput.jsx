@@ -13,7 +13,8 @@ const generateRandomCode = (length) => {
   return result;
 };
 
-function ConfirmationInput({ onValidationChange, codeLength = 6 }) {
+// Modification de codeLength par défaut à 8
+function ConfirmationInput({ onValidationChange, codeLength = 8 }) {
   const confirmationCode = useMemo(() => generateRandomCode(codeLength), [codeLength]);
   const [userInput, setUserInput] = useState("");
 
@@ -43,8 +44,19 @@ function ConfirmationInput({ onValidationChange, codeLength = 6 }) {
         <span>Veuillez recopier le code ci-dessous pour confirmer.</span>
       </div>
       
-      <div className="tw-text-center tw-bg-white tw-p-3 tw-rounded-md tw-border-2 tw-border-dashed tw-border-slate-300">
-        <span className="tw-text-red-500 tw-font-bold tw-tracking-[0.25em] tw-text-2xl">
+      <div className="tw-text-center tw-bg-white tw-p-3 tw-rounded-md tw-border-2 tw-border-dashed tw-border-slate-300 tw-select-none">
+        <span 
+          className="tw-text-red-500 tw-font-bold tw-tracking-[0.25em] tw-text-2xl"
+          style={{
+            // Style pour rendre le code un peu plus difficile à lire
+            display: 'inline-block',
+            fontFamily: 'serif',
+            fontStyle: 'italic',
+            transform: 'skewX(-10deg)',
+            filter: 'blur(0.4px)',
+            letterSpacing: '0.3em'
+          }}
+        >
           {confirmationCode}
         </span>
       </div>

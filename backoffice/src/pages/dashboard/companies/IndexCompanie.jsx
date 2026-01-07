@@ -5,6 +5,9 @@ import PageHeaderActions from "../../../components/common/PageHeaderActions";
 import EmptyState from "../../../components/common/EmptyState";
 import Spinner from "../../../components/Spinner";
 import UserCard from "../../../components/User/UserCard";
+import WelcomeModal from "../../../components/WelcomeModal";
+import DeleteUser from "../../../components/User/DeleteUser.jsx";
+import UserForm from "../../../components/User/UserForm.jsx";
 import AbonnementCard from "../../../components/Abonnement/AbonnementCard";
 import { useFetchCompanies } from "../../../hook/api/useFetchCompanies";
 import { usePermissions } from "../../../hook/usePermissions";
@@ -16,7 +19,10 @@ import "../../../fade.css";
 export default function IndexCompanie() {
   const [searchTerm, setSearchTerm] = useState("");
   const [setCurrentCompany] = useState(null);
-
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+    
   const socket = useSocket();
   const { can } = usePermissions();
   const queryClient = useQueryClient();
@@ -44,11 +50,18 @@ export default function IndexCompanie() {
     socket.on("pack_updated", handleDataUpdate);
     socket.on("pack_deleted", handleDataUpdate);
 
+    socket.on("user_created", handleDataUpdate);
+    socket.on("user_updated", handleDataUpdate);
+    socket.on("user_deleted", handleDataUpdate);
+
     return () => {
       socket.off("abonnement_updated", handleDataUpdate);
       socket.off("pack_created", handleDataUpdate);
       socket.off("pack_updated", handleDataUpdate);
       socket.off("pack_deleted", handleDataUpdate);
+      socket.off("user_created", handleDataUpdate);
+      socket.off("user_updated", handleDataUpdate);
+      socket.off("user_deleted", handleDataUpdate);
     };
   }, [socket, queryClient]);
 
@@ -63,6 +76,13 @@ export default function IndexCompanie() {
           }}
           showPrimaryAction={can("createCompany")}
         />
+
+        <WelcomeModal isActive={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+          <DeleteUser user={currentUser} onSuccess={() => setShowDeleteModal(false)} onClose={() => setShowDeleteModal(false)} />
+        </WelcomeModal>
+        <WelcomeModal isActive={showUpdateModal} onClose={() => setShowUpdateModal(false)}>
+          <UserForm user={currentUser} onSuccess={() => setShowUpdateModal(false)} onClose={() => setShowUpdateModal(false)} />
+        </WelcomeModal>
 
         <div className="col-xl-12">
           <div className="card custom-card">
@@ -149,14 +169,8 @@ export default function IndexCompanie() {
                                   <UserCard
                                     key={user.id}
                                     user={user}
-                                    canEdit={can("updateUser")}
-                                    canDelete={can("deleteUser")}
-                                    onEdit={() => {
-                                      console.log("Edit user:", user);
-                                    }}
-                                    onDelete={() => {
-                                      console.log("Delete user:", user);
-                                    }}
+                                    onEdit={() => { setCurrentUser(user); setShowUpdateModal(true); }}
+                                    onDelete={() => { setCurrentUser(user); setShowDeleteModal(true); }}
                                   />
                                 ))}
                               </div>

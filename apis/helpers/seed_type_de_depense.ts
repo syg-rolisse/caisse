@@ -1,7 +1,11 @@
 import TypeDeDepense from '#models/type_de_depense'
-import db from '@adonisjs/lucid/services/db'
+import { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
-export async function seedTypeDeDepense(companieId: number, userId: number) {
+export async function seedTypeDeDepense(
+  companieId: number,
+  userId: number,
+  trx: TransactionClientContract
+) {
   const typeDeDepenseData = [
     { wording: 'Carburant', userId, companieId },
     { wording: 'Communication', userId, companieId },
@@ -14,16 +18,15 @@ export async function seedTypeDeDepense(companieId: number, userId: number) {
     { wording: 'Autres achats', userId, companieId },
   ]
 
-  const trx = await db.transaction()
+  for (const type of typeDeDepenseData) {
+    const exists = await TypeDeDepense.query({ client: trx })
+      .where('wording', type.wording)
+      .where('companie_id', companieId)
+      .first()
 
-  try {
-    for (const type of typeDeDepenseData) {
+    if (!exists) {
       await TypeDeDepense.create(type, { client: trx })
     }
-    await trx.commit()
-    return true
-  } catch (error) {
-    await trx.rollback()
-    return false
   }
+  return true
 }

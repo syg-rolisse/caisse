@@ -6,15 +6,15 @@ export default class UserSeeder extends BaseSeeder {
     // On définit une liste d'utilisateurs à créer
     const usersToCreate = [
       // --- Utilisateurs pour l'entreprise 1 : Innovatech Solutions ---
-      {
-        fullName: 'Rolisse ADJEVI',
-        email: 'rolissecodeur@gmail.com',
-        password: 'password',
-        profilId: 6,
-        validEmail: true,
-        status: true,
-        companieId: 1,
-      },
+      // {
+      //   fullName: 'Rolisse ADJEVI',
+      //   email: 'rolissecodeur@gmail.com',
+      //   password: 'password',
+      //   profilId: 6,
+      //   validEmail: true,
+      //   status: true,
+      //   companieId: 2,
+      // },
       {
         fullName: 'Rolisse ADJEVI',
         email: 'rolisse.adjevi@oraadvices.com',
@@ -22,7 +22,7 @@ export default class UserSeeder extends BaseSeeder {
         profilId: 3,
         validEmail: true,
         status: true,
-        companieId: 2,
+        companieId: 1,
       },
       {
         fullName: 'Martinien SEHOUHOUE',
@@ -31,7 +31,7 @@ export default class UserSeeder extends BaseSeeder {
         profilId: 3,
         validEmail: true,
         status: true,
-        companieId: 2,
+        companieId: 1,
       },
       {
         fullName: 'Fridos KINDJI',
@@ -40,7 +40,7 @@ export default class UserSeeder extends BaseSeeder {
         profilId: 2,
         validEmail: true,
         status: true,
-        companieId: 2,
+        companieId: 1,
       },
 
       // --- Utilisateurs pour l'entreprise 2 : Creative Buzz Agency ---
@@ -51,7 +51,7 @@ export default class UserSeeder extends BaseSeeder {
         profilId: 1,
         validEmail: true,
         status: true,
-        companieId: 2,
+        companieId: 1,
       },
       {
         fullName: 'Victoire DANON',
@@ -60,7 +60,7 @@ export default class UserSeeder extends BaseSeeder {
         profilId: 2,
         validEmail: true,
         status: true,
-        companieId: 2,
+        companieId: 1,
       },
 
       // --- Utilisateurs pour l'entreprise 3 : EcoBuild Constructions ---
@@ -71,7 +71,7 @@ export default class UserSeeder extends BaseSeeder {
         profilId: 1,
         validEmail: true,
         status: true,
-        companieId: 2,
+        companieId: 1,
       },
     ]
 
