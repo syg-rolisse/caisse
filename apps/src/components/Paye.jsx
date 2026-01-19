@@ -6,8 +6,8 @@ import axiosInstance from "../config/axiosConfig";
 import { useAuth } from "../context/AuthContext";
 
 const Paye = ({ packId, montant }) => {
-  const PUBLIC_KEY = import.meta.env.VITE_FEDA_PUBLIC_SANDBOX_KEY;
-  //const PUBLIC_KEY = import.meta.env.VITE_FEDA_PUBLIC_LIVE_KEY;
+  //const PUBLIC_KEY = import.meta.env.VITE_FEDA_PUBLIC_SANDBOX_KEY;
+  const PUBLIC_KEY = import.meta.env.VITE_FEDA_PUBLIC_LIVE_KEY;
   
   const { user } = useAuth();
 
